@@ -5,8 +5,8 @@ import type { LevelPlayBannerAdViewMethods } from "unity-levelplay-mediation";
 import { initAds } from "../ads";
 
 const EXIT_BANNER_UNIT_ID = Platform.select({
-  ios: "BP_Banner_iOS",
-  default: "BP_Banner_Android",
+  ios: "b6ydyz0hp1lt6if3",
+  default: "gdn9pxh3kbtp9zif",
 })!;
 
 // The 300×250 MREC inside the "게임을 나가시겠어요?" dialog. Its box is held at full size while

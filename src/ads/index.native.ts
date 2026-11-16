@@ -12,21 +12,23 @@ import { setBgmSuspended } from "../sound";
 
 export type AdResult = "earned" | "dismissed" | "failed";
 
-// Unity LevelPlay (ironSource's successor) — Android and iOS are registered as separate apps in
-// the dashboard, each with its own numeric Game ID (used as the SDK init key) and its own
-// placement IDs (used directly as ad unit IDs — the unified dashboard has no separate "ad unit
-// ID" distinct from the placement).
+// Unity LevelPlay (ironSource's successor) — Android and iOS are registered as separate apps on
+// the actual ad-serving backend, platform.ironsrc.com (NOT the newer cloud.unity.com UA/analytics
+// dashboard, whose "Game ID" field is a different, unrelated identifier — using that one here is
+// what caused every init to fail with "Unable to retrieve configurations from the IronSource
+// server"). The real App Key and per-format Ad Unit IDs below come from platform.ironsrc.com's
+// app settings / Ad units pages.
 const APP_KEY = Platform.select({
-  ios: "800436671",
-  default: "800436672",
+  ios: "29973dfd5",
+  default: "29974c5f5",
 })!;
 const REWARDED_UNIT_ID = Platform.select({
-  ios: "BP_Rewarded_iOS",
-  default: "BP_Rewarded_Android",
+  ios: "m5biqto1h7innzsh",
+  default: "aw8gwsvjouyctbd1",
 })!;
 const INTERSTITIAL_UNIT_ID = Platform.select({
-  ios: "BP_Interstitial_iOS",
-  default: "BP_Interstitial_Android",
+  ios: "4qtmoy8vmxohfxue",
+  default: "gvihvrmx6y1g1fu9",
 })!;
 
 // How long a button press waits for a rewarded ad that isn't loaded yet before giving up.
