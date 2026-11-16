@@ -448,6 +448,24 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     previousLevelRef.current = state.level;
   }, [state.level, loaded]);
 
+  // Golden/boss reward toasts never un-set themselves — they just fade out visually inside
+  // their own component. Without this, leaving the battle tab and coming back remounts
+  // GoldenRewardToast/BossRewardToast (still holding the last reward) and replays the whole
+  // reveal-then-fade from scratch. Clearing it once its fade has actually finished (toast
+  // durations: 2200ms / 2600ms) avoids that.
+  useEffect(() => {
+    if (!goldenReward) return;
+    const timer = setTimeout(() => setGoldenReward(null), 2300);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [goldenReward?.id]);
+  useEffect(() => {
+    if (!bossReward) return;
+    const timer = setTimeout(() => setBossReward(null), 2700);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bossReward?.id]);
+
   // Spawns the boss and snapshots its deadline — a fixed per-stage value (see
   // getBossTimeLimitMs) — but the clock itself waits for the player to tap the entrance
   // banner (beginBossFight), so the boss can be sized up first.
