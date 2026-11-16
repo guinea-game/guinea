@@ -193,7 +193,8 @@
         {
           "userTrackingPermission": "맞춤 광고를 보여드리기 위해 사용 데이터를 활용해요. 허용하지 않아도 게임 이용에는 지장이 없어요."
         }
-      ]
+      ],
+      "./plugins/withLevelPlayGmsDeps.js"
     ]
   }
 }
