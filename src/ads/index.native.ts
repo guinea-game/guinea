@@ -72,15 +72,6 @@ function describeError(error: LevelPlayAdError | LevelPlayInitError | null | und
   return text.slice(0, 60);
 }
 
-// The native SDK can report init as done (onInitSuccess fired) slightly before it's actually
-// ready to accept loadAd() calls, rejecting the very first one with this message. A few short
-// retries clears it without the caller ever noticing.
-const INIT_RACE_MESSAGE = "must be called after init success";
-const MAX_INIT_RACE_RETRIES = 3;
-function isInitRaceError(error: LevelPlayAdError | null | undefined) {
-  return (error?.errorMessage || "").includes(INIT_RACE_MESSAGE);
-}
-
 function finishShowing() {
   showing = false;
   setBgmSuspended(false);
@@ -94,7 +85,6 @@ const interstitialAd = new LevelPlayInterstitialAd(INTERSTITIAL_UNIT_ID);
 
 // ---- Rewarded ----
 let rewardedLoading = false;
-let rewardedInitRaceRetries = 0;
 let pendingRewardedWait: ((ready: boolean) => void) | null = null;
 let pendingRewardedShow: ((result: AdResult) => void) | null = null;
 let rewardEarned = false;
@@ -127,7 +117,6 @@ async function waitForRewardedReady(timeoutMs: number): Promise<boolean> {
 // Only ever loaded in the background: if one isn't ready at the moment it's due, that moment is
 // simply skipped (the player is never made to wait for an ad they didn't ask for).
 let interstitialLoading = false;
-let interstitialInitRaceRetries = 0;
 let pendingInterstitialShow: ((shown: boolean) => void) | null = null;
 
 function loadInterstitial() {
@@ -141,17 +130,11 @@ export function initAds() {
     rewardedAd.setListener({
       onAdLoaded: () => {
         rewardedLoading = false;
-        rewardedInitRaceRetries = 0;
         lastAdError = null;
         pendingRewardedWait?.(true);
       },
       onAdLoadFailed: (error) => {
         rewardedLoading = false;
-        if (isInitRaceError(error) && rewardedInitRaceRetries < MAX_INIT_RACE_RETRIES) {
-          rewardedInitRaceRetries += 1;
-          setTimeout(loadRewarded, 500 * rewardedInitRaceRetries);
-          return;
-        }
         lastAdError = describeError(error);
         pendingRewardedWait?.(false);
       },
@@ -180,14 +163,9 @@ export function initAds() {
     interstitialAd.setListener({
       onAdLoaded: () => {
         interstitialLoading = false;
-        interstitialInitRaceRetries = 0;
       },
-      onAdLoadFailed: (error) => {
+      onAdLoadFailed: () => {
         interstitialLoading = false;
-        if (isInitRaceError(error) && interstitialInitRaceRetries < MAX_INIT_RACE_RETRIES) {
-          interstitialInitRaceRetries += 1;
-          setTimeout(loadInterstitial, 500 * interstitialInitRaceRetries);
-        }
       },
       onAdDisplayed: () => {},
       onAdClosed: () => {
