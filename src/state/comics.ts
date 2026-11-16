@@ -22,7 +22,7 @@ export type ComicBubble = {
 // `aspect`: the panel art's height / width (panels from one page can differ slightly).
 export type ComicPanel = { image: number; aspect: number; bubbles: ComicBubble[]; sfx?: SfxKey; shake?: boolean };
 
-export type ComicId = "opening" | "explorer" | "cookbook" | "teto" | "assassin" | "egen" | "samurai" | "harbor" | "dive" | "kite" | "snowpass" | "jungle" | "cavevillage" | "cloudpalace" | "farmchicken" | "jungleoasis" | "marketsilk" | "oasisdesert" | "slimeroad" | "swampfarm" | "snowvillage" | "tigerride" | "foxpath" | "chiliport" | "shrinesteps" | "tanukimap" | "castleonsen" | "nightthief" | "dragonroad" | "dragongate" | "whaleride" | "alpinetrain" | "sledbakery" | "ginitown" | "townasleep" | "pumpkinforest" | "beeChase" | "giniReturn" | "griffinFlight" | "ending" | "bazaarBound" | "teaTrail" | "saffronGarden" | "apprenticeGini" | "apprenticeWeak" | "apprenticeGuard" | "boxerEvolution" | "cowboyEvolution";
+export type ComicId = "opening" | "explorer" | "cookbook" | "teto" | "assassin" | "egen" | "samurai" | "harbor" | "dive" | "kite" | "snowpass" | "jungle" | "cavevillage" | "cloudpalace" | "farmchicken" | "jungleoasis" | "marketsilk" | "oasisdesert" | "slimeroad" | "swampfarm" | "snowvillage" | "tigerride" | "foxpath" | "chiliport" | "shrinesteps" | "tanukimap" | "castleonsen" | "nightthief" | "dragonroad" | "dragongate" | "whaleride" | "alpinetrain" | "sledbakery" | "ginitown" | "townasleep" | "pumpkinforest" | "beeChase" | "giniReturn" | "griffinFlight" | "ending" | "bazaarBound" | "teaTrail" | "saffronGarden" | "apprenticeGini" | "apprenticeWeak" | "apprenticeGuard" | "boxerEvolution" | "apprenticeMisfire" | "apprenticeQuickdraw" | "cowboyEvolution";
 
 // Loop-gated story beats: each fires once, in GameScreen's comic chain, the first time
 // `loopsCompleted` equals `afterLoop` and (if given) `stageNumber` has passed `afterStage` —
@@ -33,10 +33,12 @@ export type ComicId = "opening" | "explorer" | "cookbook" | "teto" | "assassin" 
 // Add a row for the next loop's beat here instead of wiring up another one-off effect.
 export type LoopComic = { comic: ComicId; afterLoop: number; afterStage?: number };
 export const LOOP_COMICS: LoopComic[] = [
-  { comic: "apprenticeWeak", afterLoop: 1, afterStage: 5 }, // 평범한 마을 (stage 6): first real fight, goes badly
-  { comic: "apprenticeGuard", afterLoop: 1, afterStage: 22 }, // 수군 포구 (stage 23): the rescue
-  { comic: "boxerEvolution", afterLoop: 2 }, // second loop's last boss: evolves into 복서기니
-  { comic: "cowboyEvolution", afterLoop: 3 }, // third loop's last boss: another 견습기니 evolves into 카우보이기니
+  { comic: "apprenticeWeak", afterLoop: 1, afterStage: 5 }, // during 2회차, 평범한 마을 (stage 6): first real fight, goes badly
+  { comic: "apprenticeGuard", afterLoop: 1, afterStage: 22 }, // during 2회차, 수군 포구 (stage 23): the rescue
+  { comic: "boxerEvolution", afterLoop: 2 }, // 2회차's last boss: evolves into 복서기니
+  { comic: "apprenticeMisfire", afterLoop: 2, afterStage: 5 }, // during 3회차, 평범한 마을 (stage 6): a different 견습기니's first try at fighting from range, badly
+  { comic: "apprenticeQuickdraw", afterLoop: 2, afterStage: 22 }, // during 3회차, 수군 포구 (stage 23): the same one's first real hit
+  { comic: "cowboyEvolution", afterLoop: 3 }, // 3회차's last boss: that 견습기니 evolves into 카우보이기니
 ];
 
 export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = {
@@ -1762,6 +1764,85 @@ export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = 
         bubbles: [
           { text: "...너 하나도\n안 약하잖아.", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.7 },
           { text: "에헤헤...\n나도 도움이 됐지?", right: 0.02, top: 0.68, maxWidth: 0.4, tail: "top", tailAt: 0.3 },
+        ],
+      },
+    ],
+  },
+  // Fires once: during 3회차, the 평범한 마을 boss (LOOP_COMICS, afterLoop:2/stage 5) clear —
+  // a different 견습기니 from the one who became 복서기니 (that one already graduated last
+  // loop) tags along this loop and tries fighting from a distance for the first time. Sets up
+  // apprenticeQuickdraw's stage-23 turn and cowboyEvolution's payoff later this same loop.
+  apprenticeMisfire: {
+    title: "엇나간 첫 발",
+    panels: [
+      {
+        image: comics.apprenticeMisfire1,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "쥐들이 많아!\n조심해!", right: 0.0, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.3, shout: true },
+          { text: "이번엔...\n나도 뭔가 해보고 싶어!", left: 0.0, top: 0.55, maxWidth: 0.34, tail: "bottom", tailAt: 0.6 },
+        ],
+      },
+      {
+        image: comics.apprenticeMisfire2,
+        aspect: 504 / 760,
+        sfx: "hit",
+        shake: true,
+        bubbles: [{ text: "어...?\n어디로 간 거야?!", left: 0.02, top: 0.02, maxWidth: 0.36, tail: "bottom", tailAt: 0.5, shout: true }],
+      },
+      {
+        image: comics.apprenticeMisfire3,
+        aspect: 504 / 760,
+        sfx: "hit",
+        shake: true,
+        bubbles: [{ text: "아야앗!!", left: 0.0, top: 0.02, maxWidth: 0.26, tail: "bottom", tailAt: 0.6, shout: true }],
+      },
+      {
+        image: comics.apprenticeMisfire4,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "나는...\n그냥 방해만 되나 봐.", left: 0.0, top: 0.02, maxWidth: 0.38, tail: "bottom", tailAt: 0.6 },
+          { text: "다음엔 더 잘 될 거야.\n천천히 해봐.", right: 0.0, top: 0.68, maxWidth: 0.4, tail: "top", tailAt: 0.3 },
+        ],
+      },
+    ],
+  },
+  // Fires once: during 3회차, the 수군 포구 boss (LOOP_COMICS, afterLoop:2/stage 23) clear —
+  // the same 견습기니 from apprenticeMisfire, still tagging along quietly; the pirate
+  // captain's tentacle comes in from 모험기니's blind side and this time the shot actually
+  // lands — its first real hit, right before it trains into 카우보이기니 (cowboyEvolution).
+  apprenticeQuickdraw: {
+    title: "포구의 명사수",
+    panels: [
+      {
+        image: comics.apprenticeQuickdraw1,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "문어 선장이다!\n이번에도 내가 처리할게!", right: 0.02, top: 0.03, maxWidth: 0.44, tail: "bottom", tailAt: 0.4 },
+          { text: "저 뒤에...\n촉수가?!", left: 0.0, top: 0.42, maxWidth: 0.3, tail: "bottom", tailAt: 0.6, shout: true },
+        ],
+      },
+      {
+        image: comics.apprenticeQuickdraw2,
+        aspect: 504 / 760,
+        sfx: "hit",
+        shake: true,
+        bubbles: [{ text: "지금이야...!", left: 0.02, top: 0.03, maxWidth: 0.3, tail: "bottom", tailAt: 0.7, shout: true }],
+      },
+      {
+        image: comics.apprenticeQuickdraw3,
+        aspect: 504 / 760,
+        sfx: "crit",
+        shake: true,
+        bubbles: [{ text: "명중—!!", left: 0.02, top: 0.02, maxWidth: 0.3, tail: "bottom", tailAt: 0.75, shout: true }],
+      },
+      {
+        image: comics.apprenticeQuickdraw4,
+        aspect: 504 / 760,
+        sfx: "levelup",
+        bubbles: [
+          { text: "...활 솜씨가\n보통이 아니었잖아?", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.7 },
+          { text: "에헴,\n나도 쓸모 있다고!", right: 0.02, top: 0.68, maxWidth: 0.4, tail: "top", tailAt: 0.3 },
         ],
       },
     ],
