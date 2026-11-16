@@ -10,6 +10,7 @@ import { t } from "../i18n";
 export function BattleActionsPanel({
   isAutoBattle,
   autoLocked = false,
+  reloading = false,
   speedBoostActive,
   speedBoostRemainingMs,
   onWatchAd,
@@ -18,6 +19,9 @@ export function BattleActionsPanel({
   isAutoBattle: boolean;
   // A companion that can't fight by hand (사무라이기니) pins auto-battle on.
   autoLocked?: boolean;
+  // 카우보이기니's cylinder is empty — the next swing is waiting out the reload instead
+  // of the usual gap (see useAutoBattle's shotsBeforeReload/reloadMs).
+  reloading?: boolean;
   speedBoostActive: boolean;
   speedBoostRemainingMs: number;
   onWatchAd: () => void;
@@ -33,12 +37,22 @@ export function BattleActionsPanel({
       {/* Both buttons share one fixed width (ACTION_WIDTH), sized for the longest label
           either can show, and the same caption-over-label layout — so the row never shifts
           as the status text changes. */}
-      <GameButton variant={isAutoBattle ? "green" : "beige"} style={styles.action} textStyle={styles.actionLabel}>
+      <GameButton variant={reloading ? "red" : isAutoBattle ? "green" : "beige"} style={styles.action} textStyle={styles.actionLabel}>
         <View style={styles.autoContent}>
-          <Image source={isAutoBattle ? icons.energy : uiImages.swords} style={styles.autoIcon} />
+          <Image source={reloading ? uiImages.swords : isAutoBattle ? icons.energy : uiImages.swords} style={styles.autoIcon} />
           <View style={styles.stack}>
-            <Text style={[styles.actionSmall, isAutoBattle && styles.actionSmallOnGreen]}>{isAutoBattle ? t("자동 전투", "Auto Battle") : t("난타 중", "Flurry Active")}</Text>
-            <Text style={[styles.actionLabel, isAutoBattle && styles.actionLabelOnGreen]}>{autoLocked ? t("고정", "Locked") : isAutoBattle ? t("진행 중", "Running") : t("직접 공격", "Manual Attack")}</Text>
+            <Text style={[styles.actionSmall, isAutoBattle && !reloading && styles.actionSmallOnGreen]}>
+              {reloading ? t("재장전 중", "Reloading", "リロード中", "装填中") : isAutoBattle ? t("자동 전투", "Auto Battle") : t("난타 중", "Flurry Active")}
+            </Text>
+            <Text style={[styles.actionLabel, isAutoBattle && !reloading && styles.actionLabelOnGreen]}>
+              {reloading
+                ? t("잠시만요!", "Hang on!")
+                : autoLocked
+                  ? t("고정", "Locked")
+                  : isAutoBattle
+                    ? t("진행 중", "Running")
+                    : t("직접 공격", "Manual Attack")}
+            </Text>
           </View>
         </View>
       </GameButton>

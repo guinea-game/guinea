@@ -224,6 +224,7 @@ export const OUTFIT_NAMES: Record<Outfit, string> = {
   chefGini: "셰프기니",
   boxerGini: "복서기니",
   witchGini: "마녀기니",
+  cowboyGini: "카우보이기니",
 };
 
 // "세트: 바다 한 상", "궁합: 테토기니" — the set a dish belongs to and its partner companion.
@@ -255,14 +256,27 @@ export const OUTFIT_BUFFS: Partial<Record<Outfit, BuffEffect>> = {
   // Huge attack, but every hit risks whiffing entirely — see OUTFIT_MISS_CHANCE.
   tetoGini: { attack: 100 },
   // Weaker per hit, but strikes twice per swing — see OUTFIT_HIT_COUNT.
-  assassinGini: { attack: -30 },
+  assassinGini: { attack: -45 },
   // Draws slowly — the price of OUTFIT_FIRST_STRIKE's one huge opening cut.
-  samuraiGini: { attackSpeed: -25 },
+  samuraiGini: { attackSpeed: -35 },
   // The kitchen companion: widens the cooking minigame's target zone a lot and lifts
   // great-success odds, at a cost in the fight — the only companion that trades battle
   // power for cooking.
   chefGini: { cookSpeed: 50, greatSuccess: 20, attack: -15 },
   witchGini: { criticalDamage: 20 },
+  // ×1.3 damage. The drawback isn't a stat here — it's OUTFIT_SHOTS_BEFORE_RELOAD below:
+  // every 6th shot, the gun has to reload.
+  cowboyGini: { attack: 30 },
+};
+
+// 카우보이기니: every OUTFIT_SHOTS_BEFORE_RELOAD-th shot (auto-battle only — see
+// useAutoBattle's shotsBeforeReload) empties the cylinder; the next swing is delayed by
+// OUTFIT_RELOAD_MS instead of the usual gap while it reloads.
+export const OUTFIT_SHOTS_BEFORE_RELOAD: Partial<Record<Outfit, number>> = {
+  cowboyGini: 6,
+};
+export const OUTFIT_RELOAD_MS: Partial<Record<Outfit, number>> = {
+  cowboyGini: 2000,
 };
 
 // Every ingredient a monster can drop always drops while this companion is out —
@@ -274,7 +288,7 @@ export const OUTFIT_SURE_DROPS: Partial<Record<Outfit, boolean>> = {
 // The first strike on each enemy is worth this many normal hits and never crits —
 // 사무라이기니's iaido draw. Auto-battle only while it's equipped.
 export const OUTFIT_FIRST_STRIKE: Partial<Record<Outfit, number>> = {
-  samuraiGini: 7,
+  samuraiGini: 5,
 };
 
 // Percent chance an attack whiffs completely (0 damage, no kill, no on-hit effects) while

@@ -27,6 +27,7 @@ export const COMPANION_SHARD_STAGE: Record<Outfit, number> = {
   samuraiGini: 23, // 벚꽃 상어
   chefGini: 32, // 바게트 기사
   witchGini: 34, // 마녀 기니
+  cowboyGini: 12, // 탈수 직전 낙타 (desert — the closest thing to a Wild West boss)
 };
 
 export function getShardCompanion(stageNumber: number) {

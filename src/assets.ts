@@ -58,6 +58,12 @@ export const spriteSheets = {
       critical: require("../assets/sprites/witch-gini-critical-strip.webp"),
       win: require("../assets/sprites/witch-gini-win-strip.webp"),
     },
+    cowboyGini: {
+      idle: require("../assets/sprites/cowboy-gini-idle-strip.webp"),
+      attack: require("../assets/sprites/cowboy-gini-attack-strip.webp"),
+      critical: require("../assets/sprites/cowboy-gini-critical-strip.webp"),
+      win: require("../assets/sprites/cowboy-gini-win-strip.webp"),
+    },
   },
   slime: {
     idle: require("../assets/sprites/slime-idle-strip.webp"),
@@ -1205,6 +1211,10 @@ export const comics = {
   boxerEvolution2: require("../assets/comics/boxer-evolution-2.webp"),
   boxerEvolution3: require("../assets/comics/boxer-evolution-3.webp"),
   boxerEvolution4: require("../assets/comics/boxer-evolution-4.webp"),
+  cowboyEvolution1: require("../assets/comics/cowboy-evolution-1.webp"),
+  cowboyEvolution2: require("../assets/comics/cowboy-evolution-2.webp"),
+  cowboyEvolution3: require("../assets/comics/cowboy-evolution-3.webp"),
+  cowboyEvolution4: require("../assets/comics/cowboy-evolution-4.webp"),
   apprenticeWeak1: require("../assets/comics/apprentice-weak-1.webp"),
   apprenticeWeak2: require("../assets/comics/apprentice-weak-2.webp"),
   apprenticeWeak3: require("../assets/comics/apprentice-weak-3.webp"),

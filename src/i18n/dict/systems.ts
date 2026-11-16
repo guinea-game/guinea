@@ -14,6 +14,7 @@ export const SYSTEMS_DICT: Record<string, string> = {
   "수상한 집의 마법을 연구하던 기니. 모든 공격이 마법이라, 제자리에서 불꽃·얼음·독·번개·빛·유령불 등 여러 마법을 쏘아 싸운다.":
     "A guinea pig who studied magic in the Suspicious House. Every attack is magic — it fights from where it stands, casting fire, ice, poison, lightning, light, and ghost-fire spells.",
   "글러브를 벗는 법이 없는 열혈 복서. 2회차를 마칠 때쯤 단련 끝에 합류한다.": "A hot-blooded boxer who never takes off the gloves. Joins after training through to the end of the second loop.",
+  "총을 뽑아 든 서부의 총잡이 기니. 3회차를 마치면 합류한다.": "A Wild West gunslinger, six-shooter drawn. Joins once the third loop is complete.",
 
   // buffs.ts OUTFIT_NAMES
   "모험기니": "Adventurer Gini",
@@ -24,6 +25,7 @@ export const SYSTEMS_DICT: Record<string, string> = {
   "사무라이기니": "Samurai Gini",
   "셰프기니": "Chef Gini",
   "복서기니": "Boxer Gini",
+  "카우보이기니": "Cowboy Gini",
   "마녀기니": "Witch Gini",
 
   // buffs.ts DISH_SETS names

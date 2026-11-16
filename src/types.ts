@@ -6,7 +6,7 @@ export type BattlePhase = "idle" | "attacking" | "hit" | "defeated" | "entering"
 export type PlayerAnimation = "idle" | "attack" | "critical" | "win";
 export type EnemyAnimation = "idle" | "hit" | "die";
 export type EnemyKind = "slime" | "mushroom" | "carrot" | "chicken" | "potato" | "mouse" | "cauldron" | "mudskipper" | "bluefish" | "salamander" | "monkey" | "carp" | "cactus" | "fox" | "lizard" | "mantou" | "pig" | "magpie" | "snowRabbit" | "drunkCat" | "flowerSnake" | "riceSack" | "mackerel" | "blossomCrab" | "shrineFox" | "armorBeetle" | "onsenMonkey" | "ninjaFrog" | "lanternAngler" | "clamMaid" | "gondolaDuck" | "bellCalf" | "croissantKid" | "sleepyGini" | "sleepwalkerGini" | "candyBasketSlime" | "bee" | "angryCandyBasketSlime" | "thiefCrow" | "spiceElephant" | "teaYak" | "saffronParrot";
-export type Outfit = "default" | "explorerHamster" | "tetoGini" | "assassinGini" | "egenGini" | "samuraiGini" | "chefGini" | "boxerGini" | "witchGini";
+export type Outfit = "default" | "explorerHamster" | "tetoGini" | "assassinGini" | "egenGini" | "samuraiGini" | "chefGini" | "boxerGini" | "witchGini" | "cowboyGini";
 export type SkillId = "beam" | "steal" | "focus" | "execute" | "shout" | "diligent" | "glutton" | "barrage" | "teleport" | "carrotThrow" | "chiliThrow" | "meteor";
 export type UpgradeMode = 1 | 10 | 100 | "next" | "max";
 
@@ -60,6 +60,9 @@ export interface GameState {
   // When the shop's ad-for-25-gems button is ready again (epoch ms); same shape as
   // speedBoostUntil, saved so the cooldown survives a restart.
   adGemsReadyAt?: number;
+  // Boss entrance's ad-for-attack-buff (BOSS_AD_BUFF_ATTACK_PERCENT for BOSS_AD_BUFF_DURATION_MS),
+  // same epoch-ms shape as speedBoostUntil; missing on saves from before this feature.
+  bossBuffUntil?: number;
   // The shop's rewarded ads watched today (SHOP_ADS_PER_DAY of each kind a day).
   shopAds?: { day: string; gems: number; gold: number };
   // Shown on the header profile; missing on older saves (falls back to DEFAULT_NICKNAME).

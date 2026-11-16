@@ -4,6 +4,7 @@ import { Text } from "./GameText";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming, Easing } from "react-native-reanimated";
 import { colors, fonts } from "../theme";
+import { AdBadge } from "./AdBadge";
 import { t } from "../i18n";
 
 const EXIT_MS = 200;
@@ -12,7 +13,23 @@ const EXIT_MS = 200;
 // boss instead of stage-clear gold. Stays up — battle paused, boss timer not started — until
 // tapped; the scene is dimmed on the player's side but left lighter on the right so the
 // boss itself shows through. Mount fresh via `key` at the call site.
-export function BossEntranceBanner({ bossName, tagline, onStart }: { bossName: string; tagline: string; onStart: () => void }) {
+export function BossEntranceBanner({
+  bossName,
+  tagline,
+  onStart,
+  onWatchAd,
+  buffActive = false,
+  buffPercent = 0,
+}: {
+  bossName: string;
+  tagline: string;
+  onStart: () => void;
+  // Offers a one-time pre-fight attack buff for an ad; omitted once already active (buffActive).
+  onWatchAd?: () => void;
+  buffActive?: boolean;
+  // The buff's attack-% bonus, for the button's own label (useGameState's BOSS_AD_BUFF_ATTACK_PERCENT).
+  buffPercent?: number;
+}) {
   const reveal = useSharedValue(0);
   const ringA = useSharedValue(0);
   const ringB = useSharedValue(0);
@@ -72,17 +89,35 @@ export function BossEntranceBanner({ bossName, tagline, onStart }: { bossName: s
           end={{ x: 1, y: 0.5 }}
           style={StyleSheet.absoluteFill}
         />
-        <View style={styles.content} pointerEvents="none">
+        <View style={styles.content} pointerEvents="box-none">
           <Animated.View style={[styles.ring, styles.ringDashed, ringAStyle]} />
           <Animated.View style={[styles.ring, styles.ringSolid, ringBStyle]} />
-          <Animated.View style={[styles.title, punchStyle]}>
+          <Animated.View style={[styles.title, punchStyle]} pointerEvents="none">
             <Text style={styles.badge}>BOSS</Text>
             <Text style={styles.name}>{t(bossName)}</Text>
             <Text style={styles.sub}>{t(tagline)}</Text>
           </Animated.View>
-          <Animated.View style={[styles.prompt, promptStyle]}>
+          <Animated.View style={[styles.prompt, promptStyle]} pointerEvents="none">
             <Text style={styles.promptText}>{t("터치해서 도전!", "Tap to Fight!")}</Text>
           </Animated.View>
+          {buffActive ? (
+            <View style={styles.buffChip} pointerEvents="none">
+              <Text style={styles.buffChipText}>{t("공격력 버프 적용 중!", "Attack buff active!")}</Text>
+            </View>
+          ) : (
+            onWatchAd && (
+              <Pressable
+                style={styles.adButton}
+                onPress={(event) => {
+                  event.stopPropagation();
+                  onWatchAd();
+                }}
+              >
+                <Text style={styles.adButtonText}>{t(`광고 보고 공격력 +${buffPercent}%`, `Watch Ad: +${buffPercent}% Attack`)}</Text>
+                <AdBadge inline />
+              </Pressable>
+            )
+          )}
         </View>
       </Pressable>
     </Animated.View>
@@ -135,4 +170,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   promptText: { color: colors.cream, fontSize: 14, fontWeight: "900", fontFamily: fonts.bold },
+  adButton: {
+    marginTop: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: colors.green,
+    borderWidth: 2,
+    borderColor: colors.line,
+    borderRadius: 999,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+  },
+  adButtonText: { color: colors.cream, fontSize: 13, fontWeight: "900", fontFamily: fonts.bold },
+  buffChip: {
+    marginTop: 10,
+    backgroundColor: colors.green,
+    borderWidth: 2,
+    borderColor: colors.line,
+    borderRadius: 999,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+  },
+  buffChipText: { color: colors.cream, fontSize: 13, fontWeight: "900", fontFamily: fonts.bold },
 });

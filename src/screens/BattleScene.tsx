@@ -361,6 +361,9 @@ export function BattleScene({
   bossEntranceKey,
   bossFirstMeet = false,
   onBeginBoss,
+  onWatchBossBuffAd,
+  bossBuffActive = false,
+  bossBuffPercent = 0,
   levelUpAnnouncement,
   now,
   bossTimerStartedAt,
@@ -451,6 +454,10 @@ export function BattleScene({
   // A boss never beaten before: the entrance close-up pushes in further, with a thump.
   bossFirstMeet?: boolean;
   onBeginBoss: () => void;
+  // The boss entrance banner's ad-for-attack-buff offer — omitted entirely to hide the button.
+  onWatchBossBuffAd?: () => void;
+  bossBuffActive?: boolean;
+  bossBuffPercent?: number;
   levelUpAnnouncement: number | null;
   // Live clock + the current boss fight's deadline (see useGameState's bossTimerStartedAt)
   // — only meaningful while `boss` is true; null/0 otherwise.
@@ -754,7 +761,17 @@ export function BattleScene({
             </View>
           )}
           {stageAdvance && <StageAdvanceBanner key={stageAdvance} stageLabel={stageAdvance} onContinue={onContinueStage} />}
-          {bossEntranceKey && <BossEntranceBanner key={bossEntranceKey} bossName={BOSS_NAME[enemyKind]} tagline={BOSS_TAGLINE[enemyKind]} onStart={onBeginBoss} />}
+          {bossEntranceKey && (
+            <BossEntranceBanner
+              key={bossEntranceKey}
+              bossName={BOSS_NAME[enemyKind]}
+              tagline={BOSS_TAGLINE[enemyKind]}
+              onStart={onBeginBoss}
+              onWatchAd={onWatchBossBuffAd}
+              buffActive={bossBuffActive}
+              buffPercent={bossBuffPercent}
+            />
+          )}
           {bossFledKey > 0 && <BossFleeBanner key={bossFledKey} />}
           {goldenReward && <GoldenRewardToast key={goldenReward.id} gold={goldenReward.gold} gems={goldenReward.gems} />}
           {bossReward && <BossRewardToast key={bossReward.id} stars={bossReward.stars} gems={bossReward.gems} companion={bossReward.companion} />}

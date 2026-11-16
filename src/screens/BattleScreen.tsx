@@ -6,7 +6,7 @@ import { SkillSlot } from "../components/SkillSlot";
 import { RewardedAdModal } from "../components/RewardedAdModal";
 import { BattleScene } from "./BattleScene";
 import { StatUpgradePanel } from "./StatUpgradePanel";
-import { BOSS_RETRY_TIME_RATIO, type UseGameState } from "../state/useGameState";
+import { BOSS_AD_BUFF_ATTACK_PERCENT, BOSS_RETRY_TIME_RATIO, type UseGameState } from "../state/useGameState";
 import { getBossTimeLimitMs } from "../state/gameMath";
 import { getEnemyKind, getStageLabel } from "../state/stages";
 import { getBagCapacity, slotsUsed } from "../state/bag";
@@ -52,6 +52,7 @@ export function BattleScreen({ game }: { game: UseGameState }) {
   // A locked food slot that was tapped: confirm the gem price (slots open in order).
   const [unlockingSlot, setUnlockingSlot] = useState<number | null>(null);
   const [adModalOpen, setAdModalOpen] = useState(false);
+  const [bossBuffAdModalOpen, setBossBuffAdModalOpen] = useState(false);
 
   // The entrance banner shows once the boss sprite is actually up (displayBoss — not at the
   // 25th-kill moment, that's still mid mob-death-clip) and stays until tapped.
@@ -139,6 +140,9 @@ export function BattleScreen({ game }: { game: UseGameState }) {
         bossEntranceKey={bossEntranceKey}
         bossFirstMeet={!game.clearedStages.includes(state.stageNumber)}
         onBeginBoss={game.beginBossFight}
+        onWatchBossBuffAd={game.bossBuffRemainingMs > 0 ? undefined : () => setBossBuffAdModalOpen(true)}
+        bossBuffActive={game.bossBuffRemainingMs > 0}
+        bossBuffPercent={BOSS_AD_BUFF_ATTACK_PERCENT}
         levelUpAnnouncement={game.levelUpAnnouncement}
         now={game.now}
         bossTimerStartedAt={game.bossTimerStartedAt}
@@ -210,6 +214,20 @@ export function BattleScreen({ game }: { game: UseGameState }) {
             setAdModalOpen(false);
           }}
           onCancel={() => setAdModalOpen(false)}
+        />
+      )}
+      {bossBuffAdModalOpen && (
+        <RewardedAdModal
+          message={t(
+            `광고를 보면 이번 보스전 동안 공격력이 ${BOSS_AD_BUFF_ATTACK_PERCENT}% 올라가요.`,
+            `Watch an ad for +${BOSS_AD_BUFF_ATTACK_PERCENT}% attack for this boss fight.`,
+          )}
+          claimLabel={t(`공격력 +${BOSS_AD_BUFF_ATTACK_PERCENT}% 받기`, `Claim +${BOSS_AD_BUFF_ATTACK_PERCENT}% Attack`)}
+          onClaim={() => {
+            game.watchAdForBossBuff();
+            setBossBuffAdModalOpen(false);
+          }}
+          onCancel={() => setBossBuffAdModalOpen(false)}
         />
       )}
       {game.bossRetryAvailable && (

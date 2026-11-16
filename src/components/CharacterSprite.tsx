@@ -102,6 +102,12 @@ const CONFIG: Record<Outfit, Record<PlayerAnimation, { frameCount: number; frame
     critical: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1 },
     win: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1 },
   },
+  cowboyGini: {
+    idle: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1 },
+    attack: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1 },
+    critical: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1 },
+    win: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1 },
+  },
 };
 
 export function CharacterSprite({

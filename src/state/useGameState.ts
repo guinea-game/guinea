@@ -31,7 +31,7 @@ import { getOutfitGemPrice, getOutfitsGrantedByLoop, getOutfitsUnlockedByStage, 
 import { fitItems, getBagCapacity, getBagExpandCost, BAG_MAX_SLOTS, slotsUsed } from "./bag";
 import { BOSS_NAME, getClearedBosses, BOSS_PHASE_TWO_HP_MULTIPLIER, getDifficultyStage, getEffectiveDifficultyStage, getEnemyKind, getEnemyMaxHp, getEnemyRewardHp, getStageLabel, LAST_STAGE_NUMBER, isMiniBossDue, isGoldenMiniBoss, getMiniBossSalt, GOLDEN_GEMS, GOLDEN_GOLD_MULTIPLIER, STRAY_MOB_CHANCE, MINI_BOSS_COUNT, MINI_BOSS_EXP_MULTIPLIER, MINI_BOSS_HP_MULTIPLIER, STAGE_KILL_TARGET } from "./stages";
 import { rollDrops, type DropModifiers } from "./drops";
-import { BUFF_SLOT_PRICES, BUFFS, GRADE_DURATION_MS, GRADE_GOLD_MULTIPLIER, INSTANT_DISHES, OUTFIT_FIRST_STRIKE, OUTFIT_FORCED_MANUAL, OUTFIT_NAMES, OUTFIT_BUFFS, OUTFIT_COOLDOWN_REDUCTION_SEC, OUTFIT_FOOD_DURATION_BONUS_SEC, OUTFIT_HIT_COUNT, OUTFIT_MISS_CHANCE, OUTFIT_SKILL_POWER, OUTFIT_SURE_DROPS, emptyBuffSlots, getBuffTotals, peekGrade, pushGrade, shiftGrade, type CookGrade } from "./buffs";
+import { BUFF_SLOT_PRICES, BUFFS, GRADE_DURATION_MS, GRADE_GOLD_MULTIPLIER, INSTANT_DISHES, OUTFIT_FIRST_STRIKE, OUTFIT_FORCED_MANUAL, OUTFIT_NAMES, OUTFIT_BUFFS, OUTFIT_COOLDOWN_REDUCTION_SEC, OUTFIT_FOOD_DURATION_BONUS_SEC, OUTFIT_HIT_COUNT, OUTFIT_MISS_CHANCE, OUTFIT_RELOAD_MS, OUTFIT_SHOTS_BEFORE_RELOAD, OUTFIT_SKILL_POWER, OUTFIT_SURE_DROPS, emptyBuffSlots, getBuffTotals, peekGrade, pushGrade, shiftGrade, type CookGrade } from "./buffs";
 import { GROCERY, applyDiscount, getSellPrice, getShortfall } from "./grocery";
 import { canCook, consumeIngredients, getKnownRecipes, isRecipeForSale, RECIPES } from "./recipes";
 import { getCookingPots, getPotsUnlocked, getPotUnlockCost, MAX_POTS } from "./cooking";
@@ -55,6 +55,9 @@ export type DropEvent = { id: number; name: string; delay: number };
 const SPEED_BOOST_DURATION_MS = 5 * 60_000; // 5 minutes
 // The shop's "광고 보고 보석 받기" button.
 export const AD_GEMS_REWARD = 25;
+// The boss entrance banner's "광고 보고 공격력 버프" option.
+export const BOSS_AD_BUFF_ATTACK_PERCENT = 50;
+const BOSS_AD_BUFF_DURATION_MS = 3 * 60_000; // 3 minutes
 // The shop's other ad pays gold worth this many of the current stage's mobs.
 export const AD_GOLD_MOBS = 100;
 // Each of the shop's two ads (gems, gold) can be watched this many times a day.
@@ -201,8 +204,16 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   const buffSlots = state.buffSlots ?? emptyBuffSlots();
   const foodBuffs = getBuffTotals(buffSlots, now, state.equippedOutfit);
   const outfitBuff = OUTFIT_BUFFS[state.equippedOutfit];
+  // Boss entrance's ad-for-attack-buff — same wall-clock-epoch shape as speedBoostUntil below,
+  // so it keeps counting down while the app is closed.
+  const bossBuffRemainingMs = state.bossBuffUntil ? Math.max(0, state.bossBuffUntil - now) : 0;
   const buffs = {
-    attack: foodBuffs.attack + (outfitBuff?.attack ?? 0) + getCompanionLevel(state, state.equippedOutfit) * COMPANION_ATTACK_PER_LEVEL + getCookbookAttackBonus(state.cookedRecipes),
+    attack:
+      foodBuffs.attack +
+      (outfitBuff?.attack ?? 0) +
+      getCompanionLevel(state, state.equippedOutfit) * COMPANION_ATTACK_PER_LEVEL +
+      getCookbookAttackBonus(state.cookedRecipes) +
+      (bossBuffRemainingMs > 0 ? BOSS_AD_BUFF_ATTACK_PERCENT : 0),
     criticalChance: foodBuffs.criticalChance + (outfitBuff?.criticalChance ?? 0),
     criticalDamage: foodBuffs.criticalDamage + (outfitBuff?.criticalDamage ?? 0),
     gold: foodBuffs.gold + (outfitBuff?.gold ?? 0) + getCodexGoldBonus(state.droppedItems),
@@ -215,12 +226,18 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   // wall-clock time like the food buffs, so it keeps counting down while the app is closed.
   const speedBoostRemainingMs = state.speedBoostUntil ? Math.max(0, state.speedBoostUntil - now) : 0;
   const speedMultiplier = speedBoostRemainingMs > 0 ? 2 : 1;
-  // The ad boost, attack-speed food and a companion's own pace (사무라이기니 -25%) stack.
+  // The ad boost, attack-speed food and a companion's own pace (사무라이기니 -35%) stack.
   const battleSpeed = speedMultiplier * (1 + foodBuffs.attackSpeed / 100) * (1 + (OUTFIT_BUFFS[state.equippedOutfit]?.attackSpeed ?? 0) / 100);
   const watchAdForSpeedBoost = () => {
     if (speedBoostRemainingMs > 0) return;
     const startedAt = Date.now();
     setState((previous) => ({ ...previous, speedBoostUntil: startedAt + SPEED_BOOST_DURATION_MS }));
+    setNow(startedAt);
+  };
+  const watchAdForBossBuff = () => {
+    if (bossBuffRemainingMs > 0) return;
+    const startedAt = Date.now();
+    setState((previous) => ({ ...previous, bossBuffUntil: startedAt + BOSS_AD_BUFF_DURATION_MS }));
     setNow(startedAt);
   };
 
@@ -247,7 +264,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
       if (save) {
         // Guards against a save written before an outfit was retired (e.g. "forest") —
         // falls back to default rather than crashing when looking up its sprite sheet.
-        const validOutfits = ["default", "explorerHamster", "tetoGini", "assassinGini", "egenGini", "samuraiGini", "chefGini", "boxerGini", "witchGini"];
+        const validOutfits = ["default", "explorerHamster", "tetoGini", "assassinGini", "egenGini", "samuraiGini", "chefGini", "boxerGini", "witchGini", "cowboyGini"];
         const equippedOutfit = validOutfits.includes(save.state.equippedOutfit)
           ? save.state.equippedOutfit
           : "default";
@@ -788,6 +805,8 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     skillPower: OUTFIT_SKILL_POWER[state.equippedOutfit] ?? 1,
     firstStrikeMultiplier: OUTFIT_FIRST_STRIKE[state.equippedOutfit] ?? 0,
     forcedManual: OUTFIT_FORCED_MANUAL[state.equippedOutfit] ?? false,
+    shotsBeforeReload: OUTFIT_SHOTS_BEFORE_RELOAD[state.equippedOutfit] ?? 0,
+    reloadMs: OUTFIT_RELOAD_MS[state.equippedOutfit] ?? 0,
     extraHitChance: foodBuffs.extraHit,
     executeBonus: foodBuffs.execute,
     enemyMaxHp,
@@ -1662,6 +1681,8 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     battleSpeed,
     speedBoostRemainingMs,
     watchAdForSpeedBoost,
+    bossBuffRemainingMs,
+    watchAdForBossBuff,
     shopAdsLeft: { gems: Math.max(0, SHOP_ADS_PER_DAY - shopAdsUsed("gems")), gold: Math.max(0, SHOP_ADS_PER_DAY - shopAdsUsed("gold")) },
     adGoldReward: Math.max(1, Math.round(currentMobGold() * AD_GOLD_MOBS)),
     watchShopAd: (kind: "gems" | "gold") => {

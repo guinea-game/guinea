@@ -7,13 +7,14 @@ export const OUTFIT_UNLOCK_STAGE: Record<Outfit, number> = {
   default: 0,
   explorerHamster: 5, // 골드 +10%
   tetoGini: 10, // 공격력 +100%, 40% 헛스윙 (평균 약 1.2배)
-  assassinGini: 14, // 공격력 -30%, 2연타 (평균 약 1.4배)
+  assassinGini: 14, // 공격력 -45%, 2연타 (평균 약 1.1배)
   egenGini: 21, // 스킬 쿨타임 -1분
-  samuraiGini: 24, // 적마다 첫 공격 = 일반 공격 ×7 (치명타 없음), 공격 속도 -25%, 수동 공격 불가
+  samuraiGini: 24, // 적마다 첫 공격 = 일반 공격 ×5 (치명타 없음), 공격 속도 -35%, 수동 공격 불가
   chefGini: 33, // 요리 시간 -50%, 요리 대성공 +20%, 재료 드랍 100%, 공격력 -15%
-  // Never reached by stage — bought with gems (OUTFIT_GEM_PRICE) or granted at loop 2 (OUTFIT_LOOP_GRANT).
+  // Never reached by stage — bought with gems (OUTFIT_GEM_PRICE) or granted at loop 2/3 (OUTFIT_LOOP_GRANT).
   boxerGini: Infinity,
   witchGini: 36, // 기니 대도시(35스테이지) 보스 첫 처치 보상
+  cowboyGini: Infinity,
 };
 
 // Companions bought with gems instead of joining at a stage (checked before
@@ -29,6 +30,9 @@ export const OUTFIT_GEM_PRICE: Partial<Record<Outfit, number>> = {
 // handler, which writes it into purchasedOutfits right as loopsCompleted ticks to this.
 export const OUTFIT_LOOP_GRANT: Partial<Record<Outfit, number>> = {
   boxerGini: 2,
+  // 카우보이기니: free the moment loopsCompleted first reaches 3 (3회차 클리어), same
+  // mechanism as boxerGini above — no story beat behind it, just the loop milestone.
+  cowboyGini: 3,
 };
 
 // Any stage companion can also be brought along early, before reaching its stage, for this.

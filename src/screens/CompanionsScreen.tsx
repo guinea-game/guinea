@@ -21,6 +21,7 @@ import {
   OUTFIT_NO_OFFLINE,
   OUTFIT_SURE_DROPS,
   OUTFIT_SKILL_POWER,
+  OUTFIT_SHOTS_BEFORE_RELOAD,
   DISH_PARTNERS,
   PARTNER_MULTIPLIER,
   describeEffect,
@@ -83,10 +84,30 @@ function companionDetail(outfit: Outfit) {
       ),
     );
   const skillPower = OUTFIT_SKILL_POWER[outfit];
-  if (skillPower) parts.push(t(`스킬 효과 ×${skillPower} (기니빔 보스 피해 최대 80%)`, `Skill power ×${skillPower} (Guinea Beam up to 80% boss damage)`));
-  if (OUTFIT_FORCED_MANUAL[outfit]) parts.push(t("항상 수동 전투 (탭해서 공격)", "Always manual combat (tap to attack)"));
-  if (OUTFIT_NO_OFFLINE[outfit]) parts.push(t("휴식(오프라인) 중에는 사냥 안 함", "Doesn't hunt while resting (offline)"));
-  return parts.length > 0 ? parts.join(" · ") : t("동료 없이 다닐 때", "Traveling without a companion");
+  if (skillPower)
+    parts.push(
+      t(
+        `스킬 효과 ×${skillPower} (기니빔 보스 피해 최대 80%)`,
+        `Skill power ×${skillPower} (Guinea Beam up to 80% boss damage)`,
+        `スキル効果×${skillPower}（ギニービームのボスダメージ最大80%）`,
+        `技能效果×${skillPower}（吉妮光束对首领伤害最高80%）`,
+      ),
+    );
+  if (OUTFIT_FORCED_MANUAL[outfit])
+    parts.push(t("항상 수동 전투 (탭해서 공격)", "Always manual combat (tap to attack)", "常に手動戦闘（タップで攻撃）", "始终手动战斗（点击攻击）"));
+  if (OUTFIT_NO_OFFLINE[outfit])
+    parts.push(t("휴식(오프라인) 중에는 사냥 안 함", "Doesn't hunt while resting (offline)", "休憩中（オフライン）は狩りをしない", "休息（离线）期间不进行狩猎"));
+  const shotsBeforeReload = OUTFIT_SHOTS_BEFORE_RELOAD[outfit];
+  if (shotsBeforeReload)
+    parts.push(
+      t(
+        `${shotsBeforeReload}발마다 재장전`,
+        `Reloads every ${shotsBeforeReload} shots`,
+        `${shotsBeforeReload}発ごとに再装填`,
+        `每${shotsBeforeReload}发需要装填`,
+      ),
+    );
+  return parts.length > 0 ? parts.join(" · ") : t("동료 없이 다닐 때", "Traveling without a companion", "一人で旅する時", "独自旅行时");
 }
 
 // The same quirks as companionDetail, each with an icon — the companion cards lead with the
@@ -130,11 +151,20 @@ function companionEffects(outfit: Outfit): { icon: number; text: string }[] {
       text: t(`쿨타임 -${cooldownReduction / 60}분`, `Cooldown -${cooldownReduction / 60}min`, `クールタイム -${cooldownReduction / 60}分`, `冷却 -${cooldownReduction / 60}分钟`),
     });
   const skillPower = OUTFIT_SKILL_POWER[outfit];
-  if (skillPower) parts.push({ icon: skillImages.beam, text: t(`스킬 효과 ×${skillPower}`, `Skill power ×${skillPower}`) });
-  if (OUTFIT_FORCED_MANUAL[outfit]) parts.push({ icon: skillImages.barrage, text: t("항상 수동 전투", "Always manual combat") });
-  if (OUTFIT_NO_OFFLINE[outfit]) parts.push({ icon: icons.home, text: t("휴식 중 사냥 안 함", "Doesn't hunt while resting") });
-  if (outfit === "witchGini") parts.push({ icon: icons.potionBlue, text: t("모든 공격이 마법", "Every attack is magic") });
-  return parts.length > 0 ? parts : [{ icon: icons.heart, text: t("동료 없이", "No companion") }];
+  if (skillPower)
+    parts.push({ icon: skillImages.beam, text: t(`스킬 효과 ×${skillPower}`, `Skill power ×${skillPower}`, `スキル効果×${skillPower}`, `技能效果×${skillPower}`) });
+  if (OUTFIT_FORCED_MANUAL[outfit])
+    parts.push({ icon: skillImages.barrage, text: t("항상 수동 전투", "Always manual combat", "常に手動戦闘", "始终手动战斗") });
+  if (OUTFIT_NO_OFFLINE[outfit])
+    parts.push({ icon: icons.home, text: t("휴식 중 사냥 안 함", "Doesn't hunt while resting", "休憩中は狩りをしない", "休息期间不狩猎") });
+  if (outfit === "witchGini") parts.push({ icon: icons.potionBlue, text: t("모든 공격이 마법", "Every attack is magic", "すべての攻撃が魔法", "所有攻击皆为魔法") });
+  const shotsBeforeReload = OUTFIT_SHOTS_BEFORE_RELOAD[outfit];
+  if (shotsBeforeReload)
+    parts.push({
+      icon: icons.energy,
+      text: t(`${shotsBeforeReload}발마다 재장전`, `Reloads every ${shotsBeforeReload} shots`, `${shotsBeforeReload}発ごとに再装填`, `每${shotsBeforeReload}发需要装填`),
+    });
+  return parts.length > 0 ? parts : [{ icon: icons.heart, text: t("동료 없이", "No companion", "一人で", "独自一人") }];
 }
 
 // A big icon with a small caption beside it.
@@ -200,6 +230,13 @@ export const COMPANIONS: { outfit: Outfit; name: string; blurb: string; detail: 
     name: "복서기니",
     blurb: "글러브를 벗는 법이 없는 열혈 복서. 2회차를 마칠 때쯤 단련 끝에 합류한다.",
     detail: companionDetail("boxerGini"),
+  },
+  // Loop 3's free grant (OUTFIT_LOOP_GRANT), same mechanism as 복서기니 above.
+  {
+    outfit: "cowboyGini",
+    name: "카우보이기니",
+    blurb: "총을 뽑아 든 서부의 총잡이 기니. 3회차를 마치면 합류한다.",
+    detail: companionDetail("cowboyGini"),
   },
 ];
 

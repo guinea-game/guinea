@@ -22,7 +22,7 @@ export type ComicBubble = {
 // `aspect`: the panel art's height / width (panels from one page can differ slightly).
 export type ComicPanel = { image: number; aspect: number; bubbles: ComicBubble[]; sfx?: SfxKey; shake?: boolean };
 
-export type ComicId = "opening" | "explorer" | "cookbook" | "teto" | "assassin" | "egen" | "samurai" | "harbor" | "dive" | "kite" | "snowpass" | "jungle" | "cavevillage" | "cloudpalace" | "farmchicken" | "jungleoasis" | "marketsilk" | "oasisdesert" | "slimeroad" | "swampfarm" | "snowvillage" | "tigerride" | "foxpath" | "chiliport" | "shrinesteps" | "tanukimap" | "castleonsen" | "nightthief" | "dragonroad" | "dragongate" | "whaleride" | "alpinetrain" | "sledbakery" | "ginitown" | "townasleep" | "pumpkinforest" | "beeChase" | "giniReturn" | "griffinFlight" | "ending" | "bazaarBound" | "teaTrail" | "saffronGarden" | "apprenticeGini" | "apprenticeWeak" | "apprenticeGuard" | "boxerEvolution";
+export type ComicId = "opening" | "explorer" | "cookbook" | "teto" | "assassin" | "egen" | "samurai" | "harbor" | "dive" | "kite" | "snowpass" | "jungle" | "cavevillage" | "cloudpalace" | "farmchicken" | "jungleoasis" | "marketsilk" | "oasisdesert" | "slimeroad" | "swampfarm" | "snowvillage" | "tigerride" | "foxpath" | "chiliport" | "shrinesteps" | "tanukimap" | "castleonsen" | "nightthief" | "dragonroad" | "dragongate" | "whaleride" | "alpinetrain" | "sledbakery" | "ginitown" | "townasleep" | "pumpkinforest" | "beeChase" | "giniReturn" | "griffinFlight" | "ending" | "bazaarBound" | "teaTrail" | "saffronGarden" | "apprenticeGini" | "apprenticeWeak" | "apprenticeGuard" | "boxerEvolution" | "cowboyEvolution";
 
 // Loop-gated story beats: each fires once, in GameScreen's comic chain, the first time
 // `loopsCompleted` equals `afterLoop` and (if given) `stageNumber` has passed `afterStage` —
@@ -36,6 +36,7 @@ export const LOOP_COMICS: LoopComic[] = [
   { comic: "apprenticeWeak", afterLoop: 1, afterStage: 5 }, // 평범한 마을 (stage 6): first real fight, goes badly
   { comic: "apprenticeGuard", afterLoop: 1, afterStage: 22 }, // 수군 포구 (stage 23): the rescue
   { comic: "boxerEvolution", afterLoop: 2 }, // second loop's last boss: evolves into 복서기니
+  { comic: "cowboyEvolution", afterLoop: 3 }, // third loop's last boss: another 견습기니 evolves into 카우보이기니
 ];
 
 export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = {
@@ -1804,6 +1805,47 @@ export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = 
         bubbles: [
           { text: "우와...\n진짜 복서기니가 됐구나!", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.7 },
           { text: "이제부턴\n내 주먹도 믿어봐!", right: 0.02, top: 0.68, maxWidth: 0.4, tail: "top", tailAt: 0.3, shout: true },
+        ],
+      },
+    ],
+  },
+  // Fires once: the moment loopsCompleted ticks past 3 — i.e. the third loop's very last boss
+  // falls (see GameScreen's comic chain, same no-hardcoded-stage pattern as boxerEvolution).
+  // Another 견습기니 (not the one who became 복서기니) has been eyeing the old shooting range
+  // this whole loop — same "quietly adopts a new companion as who 견습기니 trains into" device
+  // as boxerEvolution, just a different apprentice and a different discipline.
+  cowboyEvolution: {
+    title: "카우보이기니의 탄생",
+    panels: [
+      {
+        image: comics.cowboyEvolution1,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "해냈다!\n이번 바퀴도 다 돌았어!", left: 0.02, top: 0.02, maxWidth: 0.42, tail: "bottom", tailAt: 0.7, shout: true },
+          { text: "나는... 저 과녁으로\n총을 써보고 싶어.", right: 0.0, top: 0.5, maxWidth: 0.4, tail: "bottom", tailAt: 0.4 },
+        ],
+      },
+      {
+        image: comics.cowboyEvolution2,
+        aspect: 504 / 760,
+        sfx: "hit",
+        shake: true,
+        bubbles: [{ text: "휙—!\n한 번 더!", left: 0.02, top: 0.02, maxWidth: 0.34, tail: "bottom", tailAt: 0.6, shout: true }],
+      },
+      {
+        image: comics.cowboyEvolution3,
+        aspect: 504 / 760,
+        sfx: "levelup",
+        shake: true,
+        bubbles: [{ text: "이 빛은 뭐야?!", left: 0.02, top: 0.02, maxWidth: 0.34, tail: "bottom", tailAt: 0.8, shout: true }],
+      },
+      {
+        image: comics.cowboyEvolution4,
+        aspect: 504 / 760,
+        sfx: "bossEnter",
+        bubbles: [
+          { text: "우와...\n이번엔 카우보이기니가 됐네!", left: 0.02, top: 0.02, maxWidth: 0.42, tail: "bottom", tailAt: 0.7 },
+          { text: "이제부턴\n내 총도 믿어봐!", right: 0.02, top: 0.68, maxWidth: 0.4, tail: "top", tailAt: 0.3, shout: true },
         ],
       },
     ],

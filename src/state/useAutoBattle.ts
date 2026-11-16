@@ -76,6 +76,8 @@ export function useAutoBattle({
   reviveHpRatio,
   instantKill = false,
   apprenticeActive = false,
+  shotsBeforeReload = 0,
+  reloadMs = 0,
 }: {
   attack: number;
   criticalDamage: number;
@@ -133,6 +135,11 @@ export function useAutoBattle({
   // 견습기니 has joined (state.loopsCompleted >= 1) — its own attacks run on their own clock
   // regardless of the player's equipped skill or auto/manual state.
   apprenticeActive?: boolean;
+  // 카우보이기니: every swing in auto-battle empties the cylinder a little more; once
+  // shotsFiredRef (below) reaches this many, the next swing waits `reloadMs` instead of
+  // the usual gap while it reloads. 0 = off (every other outfit).
+  shotsBeforeReload?: number;
+  reloadMs?: number;
 }) {
   const [enemyHp, setEnemyHp] = useState(enemyMaxHp);
   const [phase, setPhase] = useState<BattlePhase>("idle");
@@ -221,6 +228,14 @@ export function useAutoBattle({
   const autoResumeRef = useRef<(() => void) | null>(null);
   const eventIdRef = useRef(0);
   const eventTimersRef = useRef<Timer[]>([]);
+  const shotsBeforeReloadRef = useRef(shotsBeforeReload);
+  const reloadMsRef = useRef(reloadMs);
+  // Shots fired since the last reload — persists across kills/enemies (it's the gun's
+  // cylinder, not a per-fight thing), reset to 0 the moment a reload completes. Only ever
+  // advances in the auto-battle loop (manual taps, e.g. during a skill's tap window, don't
+  // burn ammo).
+  const shotsFiredRef = useRef(0);
+  const [reloading, setReloading] = useState(false);
 
   // Every landed hit gets its own floating "-damage" popup, independent of whatever the
   // attack sprite animation is doing — so a burst of taps shows a burst of numbers instead
@@ -281,6 +296,11 @@ export function useAutoBattle({
     equippedSkillRef.current = equippedSkill;
     instantKillRef.current = instantKill;
     phaseRef.current = phase;
+    // Switching away from the outfit that has this mechanic (or losing it entirely)
+    // clears any part-spent cylinder rather than carrying it into whatever's equipped next.
+    if (shotsBeforeReload !== shotsBeforeReloadRef.current) shotsFiredRef.current = 0;
+    shotsBeforeReloadRef.current = shotsBeforeReload;
+    reloadMsRef.current = reloadMs;
   });
 
   // Brings in the next enemy after a short entrance, then hands control back to auto.
@@ -403,6 +423,10 @@ export function useAutoBattle({
       later(() => {
         // The enemy's mid death/respawn — enterEnemy resumes the loop once it's back.
         if (phaseRef.current === "defeated" || phaseRef.current === "entering") return;
+        // Idempotent (React bails out of a no-op state set) — cheaper than reading the
+        // `reloading` state itself here, which this effect doesn't depend on.
+        setReloading(false);
+        if (shotsBeforeReloadRef.current > 0) shotsFiredRef.current += 1;
         const { isCritical, damage, missed, firstStrike } = rollAttack();
         const strikes = rollStrikes();
         setLastCritical(isCritical);
@@ -440,7 +464,13 @@ export function useAutoBattle({
           later(() => {
             phaseRef.current = "idle";
             setPhase("idle");
-            queueAttack(600);
+            if (shotsBeforeReloadRef.current > 0 && shotsFiredRef.current >= shotsBeforeReloadRef.current) {
+              shotsFiredRef.current = 0;
+              setReloading(true);
+              queueAttack(reloadMsRef.current);
+            } else {
+              queueAttack(600);
+            }
           }, 320);
         }, 260);
       }, delay);
@@ -763,5 +793,6 @@ export function useAutoBattle({
     apprenticeAttackId,
     apprenticeAttackKind,
     apprenticeAttackHitMs,
+    reloading,
   };
 }
