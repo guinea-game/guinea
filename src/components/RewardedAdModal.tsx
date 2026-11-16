@@ -6,7 +6,7 @@ import { kit, icons } from "../assets";
 import { NineSlice } from "./NineSlice";
 import { GameButton } from "./GameButton";
 import { AdBadge } from "./AdBadge";
-import { getLastAdError, showRewardedAd } from "../ads";
+import { getLastAdError, showRewardedAd, subscribeAdShowing } from "../ads";
 import { t } from "../i18n";
 
 type Phase = "prompt" | "loading" | "fallback";
@@ -36,6 +36,13 @@ export function RewardedAdModal({
   secondary?: { label: string; onPress: () => void };
 }) {
   const [phase, setPhase] = useState<Phase>(autoStart ? "loading" : "prompt");
+  // The real native ad presents its own full-screen view the instant showRewardedAd() calls
+  // showAd() — if our own RN Modal is still up at that exact moment, the two native
+  // presentations fight over the window and the SDK's own "is this screen visible" check can
+  // time out (seen as the ad error "Screen is not visible... timeout"). Stepping our Modal
+  // aside while the native ad is actually up avoids that clash.
+  const [nativeAdShowing, setNativeAdShowing] = useState(false);
+  useEffect(() => subscribeAdShowing(setNativeAdShowing), []);
   const mounted = useRef(true);
   const callbacks = useRef({ onClaim, onCancel });
   useEffect(() => {
@@ -74,7 +81,7 @@ export function RewardedAdModal({
   const dismiss = phase === "fallback" ? dismissNoReward : phase === "prompt" ? onCancel : undefined;
 
   return (
-    <Modal visible animationType="fade" transparent onRequestClose={() => dismiss?.()}>
+    <Modal visible={!nativeAdShowing} animationType="fade" transparent onRequestClose={() => dismiss?.()}>
       <Pressable style={styles.backdrop} onPress={() => dismiss?.()}>
         <Pressable style={styles.panel} onPress={(event) => event.stopPropagation()}>
           <NineSlice slice={kit.panelLarge} />
