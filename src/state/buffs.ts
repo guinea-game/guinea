@@ -140,7 +140,7 @@ export const GRADE_DURATION_MS: Record<CookGrade, number> = { great: 10 * MINUTE
 export const GRADE_GOLD_MULTIPLIER: Record<CookGrade, number> = { great: 1.5, good: 1, fail: 0.5 };
 export const GRADE_LABEL: Record<CookGrade, string> = { great: "대성공", good: "보통", fail: "망함" };
 
-// A FIFO queue per recipe of its uneaten units' grades — pushed once per unit in collectDish
+// A FIFO queue per recipe of its uneaten units' grades — pushed once per unit in finishCooking
 // (twice on a 대성공-quantity roll), shifted once per unit eaten in eatDish/eatSnack. This
 // lives apart from `inventory` on purpose: inventory only ever stacks dishes by name/quantity
 // (see types.ts), so there's nowhere on an inventory item itself to remember which specific

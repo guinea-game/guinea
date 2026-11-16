@@ -34,7 +34,6 @@ import { rollDrops, type DropModifiers } from "./drops";
 import { BUFF_SLOT_PRICES, BUFFS, GRADE_DURATION_MS, GRADE_GOLD_MULTIPLIER, INSTANT_DISHES, OUTFIT_FIRST_STRIKE, OUTFIT_FORCED_MANUAL, OUTFIT_NAMES, OUTFIT_BUFFS, OUTFIT_COOLDOWN_REDUCTION_SEC, OUTFIT_FOOD_DURATION_BONUS_SEC, OUTFIT_HIT_COUNT, OUTFIT_MISS_CHANCE, OUTFIT_RELOAD_MS, OUTFIT_SHOTS_BEFORE_RELOAD, OUTFIT_SKILL_POWER, OUTFIT_SURE_DROPS, emptyBuffSlots, getBuffTotals, peekGrade, pushGrade, shiftGrade, type CookGrade } from "./buffs";
 import { GROCERY, applyDiscount, getSellPrice, getShortfall } from "./grocery";
 import { canCook, consumeIngredients, getKnownRecipes, isRecipeForSale, RECIPES } from "./recipes";
-import { getCookingPots, getPotsUnlocked, getPotUnlockCost, MAX_POTS } from "./cooking";
 import { playSfx } from "../sound";
 import { playHaptic } from "../haptics";
 import { simulateOfflineProgress, type OfflineSummary, MAX_OFFLINE_MS } from "./offline";
@@ -1224,20 +1223,16 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     setState((previous) => ({ ...previous, bagFullCount: (previous.bagFullCount ?? 0) + 1 }));
   }
 
-  // Cooking finishes at once, with the timing minigame as the finishing step: `cook` /
-  // `buyMissingAndCook` spend the ingredients (and grocery gold) and put the dish straight
-  // into the first free pot already done; tapping the pot opens the 3-stop minigame, and
-  // `collectDish` takes the dish out at the grade it scored. A 망함 grade empties the pot
-  // with nothing to show for it.
+  // Cooking goes straight into the timing minigame — no pot to leave waiting. `cook` /
+  // `buyMissingAndCook` spend the ingredients (and grocery gold) up front and hand back "ok",
+  // at which point the caller opens CookingMinigame with that recipe held in its own local
+  // state; `finishCooking` takes the dish at the grade the minigame scored. A 망함 grade
+  // yields nothing (the ingredients were already spent when cooking started).
 
-  // Puts a dish into the first free pot, done immediately — the ingredients go in now. Null
-  // when it can't start (not known, ingredients short, no free pot).
-  function startCookingIn(previous: GameState, recipe: (typeof RECIPES)[number], startedAt: number): GameState | null {
+  // Spends a recipe's ingredients immediately. Null when it can't start (not known,
+  // ingredients short) — ingredientSave may spare one of each ingredient.
+  function spendIngredients(previous: GameState, recipe: (typeof RECIPES)[number]): GameState | null {
     if (!getKnownRecipes(previous.knownRecipes).includes(recipe.id) || !canCook(previous.inventory, recipe)) return null;
-    const pots = getCookingPots(previous.cookingPots);
-    const potIndex = pots.findIndex((pot, index) => index < getPotsUnlocked(previous.potsUnlocked) && !pot);
-    if (potIndex < 0) return null;
-    // ingredientSave may spare one of each ingredient.
     const used = {
       ...recipe,
       ingredients: recipe.ingredients.map((ingredient) => ({
@@ -1245,36 +1240,24 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
         quantity: ingredient.quantity - (Math.random() * 100 < foodBuffs.ingredientSave ? 1 : 0),
       })),
     };
-    return {
-      ...previous,
-      inventory: consumeIngredients(previous.inventory, used),
-      cookingPots: pots.map((pot, index) => (index === potIndex ? { recipeId: recipe.id, startedAt, readyAt: startedAt } : pot)),
-    };
+    return { ...previous, inventory: consumeIngredients(previous.inventory, used) };
   }
 
-  const hasFreePot = (current: GameState) =>
-    getCookingPots(current.cookingPots).some((pot, index) => index < getPotsUnlocked(current.potsUnlocked) && !pot);
-
-  const cook = (recipeId: string): "ok" | "noPot" | "unavailable" => {
+  const cook = (recipeId: string): "ok" | "unavailable" => {
     const recipe = RECIPES.find((item) => item.id === recipeId);
     if (!recipe || !getKnownRecipes(state.knownRecipes).includes(recipeId) || !canCook(state.inventory, recipe)) return "unavailable";
-    if (!hasFreePot(state)) return "noPot";
-    const startedAt = Date.now();
-    setState((previous) => startCookingIn(previous, recipe, startedAt) ?? previous);
+    setState((previous) => spendIngredients(previous, recipe) ?? previous);
     return "ok";
   };
 
   // "재료 사서 요리": pays the grocery for whatever the bag is short of (getShortfall) and
-  // puts the dish on in one go. The bought ingredients go straight into the pot, so it needs
-  // no bag room. Nothing is spent unless the dish actually starts.
-  const buyMissingAndCook = (recipeId: string): "ok" | "gold" | "noPot" | "unavailable" => {
+  // starts the dish in the same stroke. Nothing is spent unless the dish actually starts.
+  const buyMissingAndCook = (recipeId: string): "ok" | "gold" | "unavailable" => {
     const recipe = RECIPES.find((item) => item.id === recipeId);
     if (!recipe || !getKnownRecipes(state.knownRecipes).includes(recipeId)) return "unavailable";
     const shortfall = getShortfall(state.inventory, recipe.ingredients, foodBuffs.groceryDiscount, priceStage);
     if (!shortfall) return "unavailable"; // nothing missing — the plain cook button covers this
     if (state.gold < shortfall.cost) return "gold";
-    if (!hasFreePot(state)) return "noPot";
-    const startedAt = Date.now();
     setState((previous) => {
       const missing = getShortfall(previous.inventory, recipe.ingredients, foodBuffs.groceryDiscount, priceStage);
       if (!missing || previous.gold < missing.cost) return previous;
@@ -1284,19 +1267,18 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
         inventory: addItems(previous.inventory, missing.items),
         discoveredItems: discover(previous.discoveredItems, missing.items.map((item) => item.name)),
       };
-      return startCookingIn(stocked, recipe, startedAt) ?? previous;
+      return spendIngredients(stocked, recipe) ?? previous;
     });
     return "ok";
   };
 
-  // Takes a finished dish out of its pot at the minigame's `grade`. 망함 empties the pot with
-  // no dish (the ingredients went in when it started). Anything else needs bag room — a free
-  // slot, or space left in its last stack — and lands with its grade in `dishQuality` (a FIFO
-  // queue per recipe, see buffs.ts), plus the separate greatSuccess roll for a second one.
-  const collectDish = (potIndex: number, grade: CookGrade): "ok" | "great" | "failed" | "full" | "notReady" => {
-    const pot = getCookingPots(state.cookingPots)[potIndex];
-    const recipe = pot && RECIPES.find((item) => item.id === pot.recipeId);
-    if (!pot || !recipe || pot.readyAt > Date.now()) return "notReady";
+  // Takes the dish at the minigame's `grade`. 망함 yields nothing (the ingredients were
+  // already spent when cooking started). Anything else needs bag room — a free slot, or
+  // space left in its last stack — and lands with its grade in `dishQuality` (a FIFO queue
+  // per recipe, see buffs.ts), plus the separate greatSuccess roll for a second one.
+  const finishCooking = (recipeId: string, grade: CookGrade): "ok" | "great" | "failed" | "full" => {
+    const recipe = RECIPES.find((item) => item.id === recipeId);
+    if (!recipe) return "failed";
     const failed = grade === "fail";
     if (!failed && fitItems(state.inventory, [{ name: recipe.name, quantity: 1 }], getBagCapacity(state.bagExpansions)).overflow.length > 0) return "full";
     const great =
@@ -1304,38 +1286,22 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
       Math.random() * 100 < foodBuffs.greatSuccess &&
       fitItems(state.inventory, [{ name: recipe.name, quantity: 2 }], getBagCapacity(state.bagExpansions)).overflow.length === 0;
     const count = great ? 2 : 1;
-    setState((previous) => {
-      const pots = getCookingPots(previous.cookingPots);
-      if (pots[potIndex]?.startedAt !== pot.startedAt) return previous;
-      const emptied = pots.map((item, index) => (index === potIndex ? null : item));
-      if (failed) return { ...previous, cookingPots: emptied };
-      const dish = previous.inventory.find((item) => item.name === recipe.name);
-      const cookedRecipes = previous.cookedRecipes?.includes(recipe.id) ? previous.cookedRecipes : [...(previous.cookedRecipes ?? []), recipe.id];
-      return {
-        ...previous,
-        inventory: dish
-          ? previous.inventory.map((item) => (item === dish ? { ...item, quantity: item.quantity + count } : item))
-          : [...previous.inventory, { name: recipe.name, quantity: count, type: "dish" }],
-        cookingPots: emptied,
-        dishQuality: pushGrade(previous.dishQuality, recipe.id, grade, count),
-        cookedRecipes,
-        dishesCooked: (previous.dishesCooked ?? 0) + count,
-      };
-    });
+    if (!failed) {
+      setState((previous) => {
+        const dish = previous.inventory.find((item) => item.name === recipe.name);
+        const cookedRecipes = previous.cookedRecipes?.includes(recipe.id) ? previous.cookedRecipes : [...(previous.cookedRecipes ?? []), recipe.id];
+        return {
+          ...previous,
+          inventory: dish
+            ? previous.inventory.map((item) => (item === dish ? { ...item, quantity: item.quantity + count } : item))
+            : [...previous.inventory, { name: recipe.name, quantity: count, type: "dish" }],
+          dishQuality: pushGrade(previous.dishQuality, recipe.id, grade, count),
+          cookedRecipes,
+          dishesCooked: (previous.dishesCooked ?? 0) + count,
+        };
+      });
+    }
     return failed ? "failed" : great ? "great" : "ok";
-  };
-
-  // Spends gems to open another pot; returns whether it went through.
-  const unlockPot = () => {
-    const unlocked = getPotsUnlocked(state.potsUnlocked);
-    if (unlocked >= MAX_POTS || state.gems < getPotUnlockCost(unlocked)) return false;
-    setState((previous) => {
-      const current = getPotsUnlocked(previous.potsUnlocked);
-      const price = getPotUnlockCost(current);
-      if (current >= MAX_POTS || previous.gems < price) return previous;
-      return { ...previous, gems: previous.gems - price, potsUnlocked: current + 1 };
-    });
-    return true;
   };
 
   // Reports why a purchase failed (or "ok"), so the shop can react either way.
@@ -1666,8 +1632,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     },
     cook,
     foodBuffs,
-    collectDish,
-    unlockPot,
+    finishCooking,
     buyIngredient,
     sellIngredient,
     buyMissingAndCook,

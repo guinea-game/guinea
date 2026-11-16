@@ -70,14 +70,14 @@ function countTrailingPerfects(rounds: RoundResult[]): number {
   return count;
 }
 
-// The finishing step of a pot that's done simmering (CookingPots): 3 timed stops of a
-// sweeping indicator, whose grade decides what comes out. The ingredients already went in
-// when the pot started, so "나중에" below just closes this — the pot stays ready to retry.
+// Cooking's finishing step, opened the instant a dish starts (no pot to wait in anymore):
+// 3 timed stops of a sweeping indicator, whose grade decides what comes out. The ingredients
+// already went in when this opened, so backing out now ("그만두기") forfeits them — same
+// result as a 망함 grade, just chosen instead of rolled.
 export function CookingMinigame({
   recipe,
   cookSpeedPercent,
   guideActive = false,
-  onCancel,
   onFinish,
 }: {
   recipe: Recipe;
@@ -86,13 +86,12 @@ export function CookingMinigame({
   // This modal renders above TutorialOverlay's spotlight layer, so — the same reason
   // DishPicker's own `guideRecipeId` draws its own arrow — it has to do this itself.
   guideActive?: boolean;
-  onCancel: () => void;
   onFinish: (grade: CookGrade) => void;
 }) {
   const [round, setRound] = useState(0);
   const [results, setResults] = useState<RoundResult[]>([]);
   // Set only on a 망함 grade — held up on its own for a beat (no CookCompleteBurst follows a
-  // failed cook, since collectDish grants nothing) before onFinish actually closes this.
+  // failed cook, since finishCooking grants nothing) before onFinish actually closes this.
   const [failed, setFailed] = useState(false);
   // A 망함 can be retried by watching an ad, up to FAIL_RETRIES times per cook; `attempt`
   // keys the rounds so a retry remounts them fresh.
@@ -140,8 +139,10 @@ export function CookingMinigame({
     setFailed(false);
   };
 
+  const giveUp = () => onFinish("fail");
+
   return (
-    <Modal visible animationType="fade" transparent onRequestClose={onCancel}>
+    <Modal visible animationType="fade" transparent onRequestClose={giveUp}>
       <View style={styles.backdrop}>
         <View style={styles.panel}>
           <NineSlice slice={kit.panelLarge} />
@@ -202,8 +203,8 @@ export function CookingMinigame({
           )}
 
           {!failed && (
-            <Pressable onPress={onCancel} style={styles.cancel} accessibilityRole="button" accessibilityLabel={t("나중에 마무리하기", "Finish later")}>
-              <Text style={styles.cancelText}>{t("나중에", "Later")}</Text>
+            <Pressable onPress={giveUp} style={styles.cancel} accessibilityRole="button" accessibilityLabel={t("요리 그만두기", "Give up cooking")}>
+              <Text style={styles.cancelText}>{t("그만두기", "Give Up")}</Text>
             </Pressable>
           )}
         </View>

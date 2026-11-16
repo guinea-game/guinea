@@ -38,7 +38,6 @@ import { COMIC_ON_FIRST_CLEAR, LOOP_COMICS, type ComicId } from "./state/comics"
 import { ComicsScreen } from "./screens/ComicsScreen";
 import { measureTarget } from "./components/tutorialTargets";
 import type { CookGrade } from "./state/buffs";
-import { getCookingPots, getPotsUnlocked } from "./state/cooking";
 import { canCook, getKnownRecipes, RECIPES, ITEM_IMAGES } from "./state/recipes";
 import { isOutfitUnlocked } from "./state/unlocks";
 import { BGM_GROUP, getDifficultyStage, getEnemyKind, getPeakAreaStage } from "./state/stages";
@@ -202,14 +201,11 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
   const markComicSeen = (id: ComicId) =>
     setState((previous) => ({ ...previous, seenComics: [...new Set([...(previous.seenComics ?? []), id])] }));
   const collectCount = useRef(0);
-  const cookingPots = getCookingPots(state.cookingPots);
-  // A done pot's cooking minigame resolved with `grade` (see CookingMinigame/KitchenScreen) —
-  // takes the dish out at that grade and plays the "완성!" burst (nothing on a 망함).
-  const onCollect = (potIndex: number, grade: CookGrade) => {
-    const recipeId = cookingPots[potIndex]?.recipeId;
-    if (!recipeId) return;
+  // The cooking minigame resolved with `grade` (see CookingMinigame/KitchenScreen) — takes
+  // the dish out at that grade and plays the "완성!" burst (nothing on a 망함).
+  const onCollect = (recipeId: string, grade: CookGrade) => {
     const isNew = !(state.cookedRecipes ?? []).includes(recipeId);
-    const result = game.collectDish(potIndex, grade);
+    const result = game.finishCooking(recipeId, grade);
     if (result === "ok" || result === "great") {
       collectCount.current += 1;
       setCollected({ key: collectCount.current, recipeId, great: result === "great", grade, isNew });
@@ -342,16 +338,12 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             inventory={state.inventory}
             knownRecipes={state.knownRecipes}
             cookSpeedPercent={game.foodBuffs.cookSpeed}
-            pots={cookingPots}
-            potsUnlocked={getPotsUnlocked(state.potsUnlocked)}
-            gems={state.gems}
             gold={state.gold}
             groceryDiscount={game.foodBuffs.groceryDiscount}
             priceStage={priceStage}
             onCook={game.cook}
             onBuyAndCook={game.buyMissingAndCook}
             onCollect={onCollect}
-            onUnlockPot={game.unlockPot}
             guideRecipeId={state.tutorialDone && !state.recipeTutorialDone ? "green-jelly" : undefined}
             cookedRecipes={state.cookedRecipes}
             onOpenCookbook={() => onSelectTab("cookbook")}
@@ -600,7 +592,6 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             knowsFirstRecipe={getKnownRecipes(state.knownRecipes).includes("green-jelly")}
             canCookFirst={canCook(state.inventory, RECIPES.find((recipe) => recipe.id === "green-jelly")!)}
             dishesCooked={state.dishesCooked ?? 0}
-            firstDishPot={cookingPots.findIndex((pot) => pot?.recipeId === "green-jelly")}
             dishesEaten={state.dishesEaten ?? 0}
             freeSlotIndex={Math.max(0, game.buffSlots.findIndex((slot, index) => index < (state.buffSlotsUnlocked ?? 1) && (!slot || slot.expiresAt <= game.now)))}
             onGoTo={onSelectTab}
