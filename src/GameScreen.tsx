@@ -435,6 +435,7 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
           onAddLevels={() => game.cheatAddLevels(50)}
           onUnlockAllStages={game.cheatUnlockAllStages}
           onAddGems={() => game.cheatAddGems(10000)}
+          onUnlockAllOutfits={game.cheatUnlockAllOutfits}
           onOpenShop={() => onSelectTab("shop")}
           onOpenStats={() => onSelectTab("stats")}
           onReplayTutorial={() => setState((previous) => ({ ...previous, selectedTab: "battle", tutorialDone: false }))}

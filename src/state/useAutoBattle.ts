@@ -48,6 +48,9 @@ function clearTimers(ref: { current: Timer[] }) {
   ref.current = [];
 }
 
+// 카우보이기니's fan-the-hammer: gap between the shots of one burst (before battle speed).
+const FAN_SHOT_GAP_MS = 110;
+
 export function useAutoBattle({
   attack,
   criticalDamage,
@@ -236,6 +239,17 @@ export function useAutoBattle({
   // burn ammo).
   const shotsFiredRef = useRef(0);
   const [reloading, setReloading] = useState(false);
+  const reloadingRef = useRef(false);
+  // The current reload (Date.now() ms it ends, and how long it lasts in all) for the bar over
+  // the nameplate; endsAt 0 while not reloading. Scaled by the battle speed when it starts.
+  const [reloadInfo, setReloadInfo] = useState({ endsAt: 0, totalMs: 0 });
+  // Bumped on every gunshot (auto swing or a fanned shot) so the scene can fire a muzzle flash.
+  const [shotId, setShotId] = useState(0);
+  // Bumped to cancel the auto loop's pending swing chain (a fan-the-hammer takes over the gun);
+  // `later` callbacks scheduled under an older generation never fire.
+  const loopGenRef = useRef(0);
+  // Set while auto-battle runs: empties the cylinder in one burst (카우보이기니's tap).
+  const fanRef = useRef<(() => void) | null>(null);
 
   // Every landed hit gets its own floating "-damage" popup, independent of whatever the
   // attack sprite animation is doing — so a burst of taps shows a burst of numbers instead
@@ -412,21 +426,42 @@ export function useAutoBattle({
     const timers: Timer[] = [];
     const later = (callback: () => void, delay: number) => {
       const epoch = enemyEpochRef.current;
+      const gen = loopGenRef.current;
       const timer = setTimeout(
-        () => active && epoch === enemyEpochRef.current && callback(),
+        () => active && epoch === enemyEpochRef.current && gen === loopGenRef.current && callback(),
         delay / speedMultiplierRef.current,
       );
       timers.push(timer);
+    };
+
+    // The cylinder's empty: wait out the reload (its own pose and bar), then fire again.
+    const startReload = () => {
+      shotsFiredRef.current = 0;
+      reloadingRef.current = true;
+      setReloading(true);
+      const totalMs = reloadMsRef.current / speedMultiplierRef.current;
+      setReloadInfo({ endsAt: Date.now() + totalMs, totalMs });
+      queueAttack(reloadMsRef.current);
     };
 
     const queueAttack = (delay: number) => {
       later(() => {
         // The enemy's mid death/respawn — enterEnemy resumes the loop once it's back.
         if (phaseRef.current === "defeated" || phaseRef.current === "entering") return;
+        // A fan-the-hammer that ended on a kill left the cylinder empty — reload first.
+        if (shotsBeforeReloadRef.current > 0 && shotsFiredRef.current >= shotsBeforeReloadRef.current) {
+          startReload();
+          return;
+        }
         // Idempotent (React bails out of a no-op state set) — cheaper than reading the
         // `reloading` state itself here, which this effect doesn't depend on.
+        reloadingRef.current = false;
         setReloading(false);
-        if (shotsBeforeReloadRef.current > 0) shotsFiredRef.current += 1;
+        setReloadInfo((info) => (info.endsAt === 0 ? info : { endsAt: 0, totalMs: 0 }));
+        if (shotsBeforeReloadRef.current > 0) {
+          shotsFiredRef.current += 1;
+          setShotId((value) => value + 1);
+        }
         const { isCritical, damage, missed, firstStrike } = rollAttack();
         const strikes = rollStrikes();
         setLastCritical(isCritical);
@@ -465,9 +500,7 @@ export function useAutoBattle({
             phaseRef.current = "idle";
             setPhase("idle");
             if (shotsBeforeReloadRef.current > 0 && shotsFiredRef.current >= shotsBeforeReloadRef.current) {
-              shotsFiredRef.current = 0;
-              setReloading(true);
-              queueAttack(reloadMsRef.current);
+              startReload();
             } else {
               queueAttack(600);
             }
@@ -476,12 +509,45 @@ export function useAutoBattle({
       }, delay);
     };
 
+    // 카우보이기니's tap: fan the hammer — every round left in the cylinder, back to back, then
+    // straight into the reload. Cuts off whatever auto swing was pending. A kill mid-burst ends
+    // it (the rest of the timers belong to the dead enemy's epoch); the next enemy's first auto
+    // swing then sees the empty cylinder and reloads.
+    fanRef.current = () => {
+      const max = shotsBeforeReloadRef.current;
+      if (max <= 0 || reloadingRef.current) return;
+      if (phaseRef.current === "defeated" || phaseRef.current === "entering") return;
+      const left = max - shotsFiredRef.current;
+      if (left <= 0) return;
+      loopGenRef.current += 1;
+      for (let i = 0; i < left; i++) {
+        later(() => {
+          shotsFiredRef.current += 1;
+          setShotId((value) => value + 1);
+          const { isCritical, damage, missed } = rollAttack();
+          setLastCritical(isCritical);
+          phaseRef.current = "attacking";
+          setPhase("attacking");
+          if (missed) pushMissEvent();
+          else if (dealDamage(damage, isCritical)) return;
+          if (i === left - 1) {
+            later(() => {
+              phaseRef.current = "idle";
+              setPhase("idle");
+              startReload();
+            }, 260);
+          }
+        }, i * FAN_SHOT_GAP_MS);
+      }
+    };
+
     autoResumeRef.current = () => queueAttack(550);
     if (phaseRef.current !== "defeated" && phaseRef.current !== "entering") queueAttack(550);
     return () => {
       active = false;
       timers.forEach((timer) => clearTimeout(timer));
       autoResumeRef.current = null;
+      fanRef.current = null;
       // Switching auto off mid-swing drops the pose so manual taps aren't blocked; a
       // death/respawn in progress is left to finish on its own timers.
       if (phaseRef.current === "attacking" || phaseRef.current === "hit") {
@@ -492,7 +558,13 @@ export function useAutoBattle({
   }, [isAutoBattle, paused, dealDamage, pushMissEvent, rollAttack, rollStrikes]);
 
   const manualAttack = useCallback(() => {
-    if (paused || isAutoBattle) return;
+    if (paused) return;
+    // While auto-battle runs, a tap only does something for a reloading gun (카우보이기니):
+    // it fans the hammer.
+    if (isAutoBattle) {
+      fanRef.current?.();
+      return;
+    }
     // A boss stun only stops auto-battle, leaving taps as the way to fight through it — but
     // a companion who only ever fights by tap (복서기니) would shrug it off entirely, so for
     // them the stun stops the taps too.
@@ -794,5 +866,7 @@ export function useAutoBattle({
     apprenticeAttackKind,
     apprenticeAttackHitMs,
     reloading,
+    reloadInfo,
+    shotId,
   };
 }

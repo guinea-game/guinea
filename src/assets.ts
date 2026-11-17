@@ -715,6 +715,10 @@ export const effects = {
   // 80x124, 90 frames — `node tools/pixelfx-export.mjs fire/spirit-flame --out chili-burn
   // --opts '{"palette":[...]}'`.
   chiliBurn: require("../assets/effects/chili-burn-strip.webp"),
+  // 72x72 (padded from 72x56), 21 frames, 667ms once — 카우보이기니's per-shot flash + smoke.
+  // `node tools/pixelfx-export.mjs projectiles/muzzle-revolver --square` (a short-lived variant of
+  // projectiles/muzzle-pistol with no casing, added to the vendored pixelfx checkout).
+  muzzleRevolver: require("../assets/effects/muzzle-revolver-strip.webp"),
 };
 
 export const icons = {

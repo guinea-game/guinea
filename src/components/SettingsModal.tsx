@@ -24,6 +24,7 @@ export function SettingsModal({
   onAddLevels,
   onUnlockAllStages,
   onAddGems,
+  onUnlockAllOutfits,
   onReplayTutorial,
   onOpenComics,
   onUnlockAllComics,
@@ -38,6 +39,7 @@ export function SettingsModal({
   onAddLevels: () => void;
   onUnlockAllStages: () => void;
   onAddGems: () => void;
+  onUnlockAllOutfits: () => void;
   onReplayTutorial: () => void;
   // Opens the comic album (추억 앨범).
   onOpenComics: () => void;
@@ -243,6 +245,16 @@ export function SettingsModal({
                 style={styles.button}
               >
                 {t("보석 +10000", "+10000 Gems")}
+              </GameButton>
+              <GameButton
+                variant="green"
+                onPress={() => {
+                  onUnlockAllOutfits();
+                  onClose();
+                }}
+                style={styles.button}
+              >
+                {t("동료 다 해금", "Unlock All Companions")}
               </GameButton>
               <GameButton
                 variant="green"

@@ -185,6 +185,11 @@ const AMBIENCE: Record<EnemyKind, MotePreset> = {
   llamaCook: "magic",
 };
 
+// 카우보이기니's muzzle flash display size (the pixelfx strip is 72px).
+const MUZZLE_SIZE = 60;
+// Length of the bright head of 카우보이기니's bullet tracer.
+const TRACER_STREAK = 34;
+
 const BACKGROUND: Record<EnemyKind, number> = {
   slime: images.battleBackground,
   mushroom: images.battleBackgroundMushroom,
@@ -344,6 +349,8 @@ export function BattleScene({
   phase,
   enemyId,
   lastGoldReward,
+  reloadInfo = { endsAt: 0, totalMs: 0 },
+  shotId = 0,
   stageAdvance,
   onContinueStage,
   battleSpeed = 1,
@@ -420,6 +427,11 @@ export function BattleScene({
   phase: BattlePhase;
   enemyId: number;
   lastGoldReward: number;
+  // 카우보이기니's reload (see useAutoBattle's reloadInfo): drawn as a yellow bar over the
+  // nameplate, with the hat-tip "win" pose while it runs.
+  reloadInfo?: { endsAt: number; totalMs: number };
+  // Bumped per gunshot, for the muzzle flash.
+  shotId?: number;
   stageAdvance: string | null;
   // Tapping the stage-clear banner moves on (battle waits until then).
   onContinueStage?: () => void;
@@ -561,8 +573,11 @@ export function BattleScene({
   // The speech component is keyed to the displayed enemy so its line and animation start
   // with that sprite, and it lives inside the fighters group so it follows the same motion.
   const executing = phase === "defeated" && executedKill;
+  const reloadingGun = outfit === "cowboyGini" && reloadInfo.endsAt > 0 && phase === "idle";
   const playerAnimation: PlayerAnimation =
-    teleporting
+    reloadingGun
+      ? "win"
+      : teleporting
       ? "win"
       : executing || beaming
         ? "critical"
@@ -815,6 +830,8 @@ export function BattleScene({
               teleportX={teleportX}
               stealAuraId={steal.active ? steal.id : 0}
               focusAuraId={focus.active ? focus.id : 0}
+              reloadInfo={reloadInfo}
+              shotId={shotId}
             />
             {levelUpAnnouncement !== null && <LevelUpBurst key={levelUpAnnouncement} level={levelUpAnnouncement} />}
 
@@ -1101,6 +1118,31 @@ function BagButton({ onPress, dropEvents, full }: { onPress: () => void; dropEve
   );
 }
 
+// 카우보이기니's bullet: a short orange streak that zips from the barrel to the enemy and fades.
+function BulletTracer({ length }: { length: number }) {
+  const travel = useSharedValue(0);
+  const fade = useSharedValue(1);
+  useEffect(() => {
+    travel.value = withTiming(1, { duration: 90, easing: Easing.linear });
+    fade.value = withDelay(70, withTiming(0, { duration: 80 }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const streak = useAnimatedStyle(() => ({
+    opacity: fade.value,
+    transform: [{ translateX: travel.value * (length - TRACER_STREAK) }],
+  }));
+  const trail = useAnimatedStyle(() => ({
+    opacity: fade.value * 0.45,
+    width: travel.value * (length - TRACER_STREAK) + TRACER_STREAK,
+  }));
+  return (
+    <View style={styles.tracer} pointerEvents="none">
+      <Animated.View style={[styles.tracerTrail, trail]} />
+      <Animated.View style={[styles.tracerStreak, streak]} />
+    </View>
+  );
+}
+
 function PlayerFighter({
   animation,
   outfit,
@@ -1111,6 +1153,8 @@ function PlayerFighter({
   teleportX,
   stealAuraId,
   focusAuraId,
+  reloadInfo,
+  shotId,
 }: {
   animation: PlayerAnimation;
   outfit: Outfit;
@@ -1124,10 +1168,14 @@ function PlayerFighter({
   // Non-zero (the cast's id) while that buff skill's aura should show.
   stealAuraId: number;
   focusAuraId: number;
+  reloadInfo: { endsAt: number; totalMs: number };
+  shotId: number;
 }) {
   const isAttacking = animation === "attack" || animation === "critical";
   // Spellcasters fire from where they stand: a small kick back per cast, never a lunge.
   const caster = outfit === "witchGini";
+  // Same for 카우보이기니's revolver: it shoots from where it stands, crits included.
+  const ranged = caster || outfit === "cowboyGini";
   const shake = useSharedValue(0);
   const lunge = useSharedValue(0);
   const teleport = useSharedValue(0);
@@ -1176,7 +1224,7 @@ function PlayerFighter({
     if (isAttacking) {
       shake.value = withSequence(withTiming(1, { duration: 130, easing: Easing.inOut(Easing.quad) }), withTiming(0, { duration: 130, easing: Easing.inOut(Easing.quad) }));
     }
-    if (animation === "critical" && !caster) {
+    if (animation === "critical" && !ranged) {
       lunge.value = withSequence(withTiming(1, { duration: 260, easing: Easing.inOut(Easing.quad) }), withTiming(0, { duration: 260, easing: Easing.inOut(Easing.quad) }));
     } else {
       lunge.value = 0;
@@ -1184,11 +1232,38 @@ function PlayerFighter({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animation, skillPoseKey]);
 
+  // 카우보이기니: a pixel muzzle flash at the barrel on every shot, timed to the sprite's firing
+  // frame (the 3rd of the 230ms attack strip). A fresh key per shot restarts the one-shot strip.
+  const gunslinger = outfit === "cowboyGini";
+  const [muzzleId, setMuzzleId] = useState(0);
+  // Not cleared per shot: a fanned burst fires faster than the flash delay, and every shot
+  // should still get its flash.
+  const muzzleTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => {
+    if (!gunslinger || shotId === 0) return;
+    muzzleTimers.current.push(setTimeout(() => setMuzzleId((value) => value + 1), 110));
+  }, [gunslinger, shotId]);
+  useEffect(() => () => muzzleTimers.current.forEach((timer) => clearTimeout(timer)), []);
+  // Reload bar over the nameplate, ticking every 100ms only while a reload is running.
+  const reloadEndsAt = reloadInfo.endsAt;
+  const [now, setNow] = useState(() => Date.now());
+  const reloadLeftMs = gunslinger ? Math.min(reloadEndsAt - now, reloadInfo.totalMs) : 0;
+  const reloadProgress = reloadInfo.totalMs > 0 ? 1 - Math.max(0, reloadLeftMs) / reloadInfo.totalMs : 0;
+  useEffect(() => {
+    if (!gunslinger || reloadEndsAt <= Date.now()) return;
+    const first = setTimeout(() => setNow(Date.now()), 0);
+    const timer = setInterval(() => setNow(Date.now()), 100);
+    return () => {
+      clearTimeout(first);
+      clearInterval(timer);
+    };
+  }, [gunslinger, reloadEndsAt]);
+
   const style = useAnimatedStyle(() => ({
     opacity: visible.value,
     transform: [
-      { translateX: shake.value * (caster ? -6 : 24) + lunge.value * 112 + teleport.value - recoil.value * 12 },
-      { rotate: `${shake.value * (caster ? -2 : 4)}deg` },
+      { translateX: shake.value * (ranged ? -6 : 24) + lunge.value * 112 + teleport.value - recoil.value * 12 },
+      { rotate: `${shake.value * (ranged ? -2 : 4)}deg` },
       { scale: 1 + lunge.value * 0.05 },
     ],
   }));
@@ -1197,18 +1272,31 @@ function PlayerFighter({
     <Animated.View style={[styles.characterWrap, style]}>
       {stealAuraId > 0 && <StealAura key={`steal-${stealAuraId}`} durationMs={STEAL_DURATION} />}
       {focusAuraId > 0 && <FocusAura key={`focus-${focusAuraId}`} durationMs={FOCUS_DURATION} />}
+      {reloadLeftMs > 0 && (
+        <View style={styles.reloadTrack} pointerEvents="none">
+          <View style={[styles.reloadFill, { width: `${Math.round(reloadProgress * 100)}%` }]} />
+        </View>
+      )}
       {/* Same see-through plate and outlined name as the enemy's. */}
       <View style={[styles.unitLabel, styles.unitLabelClear]}>
         <StrokedText style={styles.unitLabelText} strokeColor={colors.line} strokeWidth={1.5}>
           {OUTFIT_NAMES[outfit]}
         </StrokedText>
       </View>
-      <CharacterSprite
-        outfit={outfit}
-        animation={animation}
-        repeat={animation === "win" && boss ? 3 : 1}
-        restartKey={skillPoseKey ? `${outfit}-${skillPoseKey}` : `${outfit}-${animation}`}
-      />
+      <View>
+        <CharacterSprite
+          outfit={outfit}
+          animation={animation}
+          repeat={reloadLeftMs > 0 && animation === "win" ? Math.max(1, Math.round(reloadInfo.totalMs / 480)) : animation === "win" && boss ? 3 : 1}
+          restartKey={skillPoseKey ? `${outfit}-${skillPoseKey}` : gunslinger && isAttacking ? `${outfit}-${animation}-${shotId}` : `${outfit}-${animation}`}
+        />
+        {gunslinger && muzzleId > 0 && <BulletTracer key={`tracer-${muzzleId}`} length={Math.max(40, teleportX - 10)} />}
+        {gunslinger && muzzleId > 0 && (
+          <View key={muzzleId} style={styles.muzzleFlash} pointerEvents="none">
+            <SpriteStrip source={effects.muzzleRevolver} frameSize={72} frameCount={21} displaySize={MUZZLE_SIZE} durationMs={667} mode="once" />
+          </View>
+        )}
+      </View>
     </Animated.View>
   );
 }
@@ -1760,6 +1848,16 @@ const styles = StyleSheet.create({
   goldenToastValue: { color: "#fff4bd", fontSize: 18, fontWeight: "900", fontFamily: fonts.bold, marginRight: 6 },
   enemyNameplateMini: { backgroundColor: "#6a120ccc", borderWidth: 1.5, borderColor: "#ffb020" },
   unitLabelClear: { backgroundColor: "#2b1d1259" },
+  // Sits right on top of the nameplate (absolute, so the sprite doesn't shift while it shows).
+  // Starts at the barrel tip (same point as muzzleFlash) and runs right toward the enemy.
+  tracer: { position: "absolute", left: 100, top: 48, height: 3, width: 1, overflow: "visible", zIndex: 3 },
+  tracerTrail: { position: "absolute", left: 0, top: 1, height: 1, borderRadius: 1, backgroundColor: "#ffb347" },
+  tracerStreak: { position: "absolute", left: 0, top: 0, width: TRACER_STREAK, height: 3, borderRadius: 2, backgroundColor: "#ff8a2a", shadowColor: "#ffc23d", shadowOpacity: 0.9, shadowRadius: 4, shadowOffset: { width: 0, height: 0 } },
+  reloadTrack: { position: "absolute", top: -9, alignSelf: "center", width: 54, height: 6, borderRadius: 3, borderWidth: 1, borderColor: colors.line, backgroundColor: "#2b1d12b3", overflow: "hidden", zIndex: 6 },
+  reloadFill: { height: "100%", backgroundColor: "#f5c542" },
+  // Barrel tip in the 108px sprite box is about (98, 49); the strip's muzzle point is ~(23, 32) of
+  // its 72px frame, so at MUZZLE_SIZE the strip's top-left goes here.
+  muzzleFlash: { position: "absolute", left: 98 - 23 * (MUZZLE_SIZE / 72), top: 49 - 32 * (MUZZLE_SIZE / 72), zIndex: 3 },
   unitLabelText: { color: colors.cream, fontSize: 8, fontWeight: "800", fontFamily: fonts.bold },
   // See-through, so a tall boss behind it (head, horns) still shows.
   enemyNameplate: { width: 104, paddingHorizontal: 6, paddingTop: 4, paddingBottom: 5, gap: 3, alignItems: "center", backgroundColor: "#2b1d1259" },

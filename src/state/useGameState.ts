@@ -1223,6 +1223,11 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     setState((previous) => ({ ...previous, gems: previous.gems + amount }));
   };
 
+  // Dev cheat: every companion owned, including the gem-only and loop-reward ones.
+  const cheatUnlockAllOutfits = () => {
+    setState((previous) => ({ ...previous, purchasedOutfits: Object.keys(OUTFIT_NAMES) as Outfit[] }));
+  };
+
   // Pops the "bag is full" dialog when an action needed a fresh bag slot and there wasn't
   // one. Drops come every kill during auto-battle, so those raise it only once per time the
   // bag fills up — not again until it has had room in between.
@@ -1629,6 +1634,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     cheatAddLevels,
     cheatUnlockAllStages,
     cheatAddGems,
+    cheatUnlockAllOutfits,
     equipSkill,
     skillSwapReadyAt,
     resetSave,

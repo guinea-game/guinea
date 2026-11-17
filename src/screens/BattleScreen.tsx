@@ -76,6 +76,8 @@ export function BattleScreen({ game }: { game: UseGameState }) {
         foeKind={game.displayStrayKind ?? regularEnemyKind}
         phase={battle.phase}
         enemyId={battle.enemyId}
+        reloadInfo={battle.reloadInfo}
+        shotId={battle.shotId}
         lastGoldReward={battle.lastGoldReward}
         stageAdvance={game.stageAnnouncement}
         onContinueStage={game.continueStage}
@@ -97,7 +99,7 @@ export function BattleScreen({ game }: { game: UseGameState }) {
         apprenticeAttackId={battle.apprenticeAttackId}
         apprenticeAttackKind={battle.apprenticeAttackKind}
         apprenticeAttackHitMs={battle.apprenticeAttackHitMs}
-        manualEnabled={!battle.isAutoBattle}
+        manualEnabled={!battle.isAutoBattle || state.equippedOutfit === "cowboyGini"}
         onManualAttack={battle.manualAttack}
         onOpenMap={() => game.setState((previous) => ({ ...previous, selectedTab: "milestone" }))}
         onOpenKitchen={() => game.setState((previous) => ({ ...previous, selectedTab: "kitchen" }))}
