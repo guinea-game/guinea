@@ -22,7 +22,7 @@ export type ComicBubble = {
 // `aspect`: the panel art's height / width (panels from one page can differ slightly).
 export type ComicPanel = { image: number; aspect: number; bubbles: ComicBubble[]; sfx?: SfxKey; shake?: boolean };
 
-export type ComicId = "opening" | "explorer" | "cookbook" | "teto" | "assassin" | "egen" | "samurai" | "harbor" | "dive" | "kite" | "snowpass" | "jungle" | "cavevillage" | "cloudpalace" | "farmchicken" | "jungleoasis" | "marketsilk" | "oasisdesert" | "slimeroad" | "swampfarm" | "snowvillage" | "tigerride" | "foxpath" | "chiliport" | "shrinesteps" | "tanukimap" | "castleonsen" | "nightthief" | "dragonroad" | "dragongate" | "whaleride" | "alpinetrain" | "sledbakery" | "ginitown" | "townasleep" | "pumpkinforest" | "beeChase" | "giniReturn" | "griffinFlight" | "ending" | "bazaarBound" | "teaTrail" | "saffronGarden" | "apprenticeGini" | "apprenticeWeak" | "apprenticeGuard" | "boxerEvolution" | "apprenticeMisfire" | "apprenticeQuickdraw" | "cowboyEvolution";
+export type ComicId = "opening" | "explorer" | "cookbook" | "teto" | "assassin" | "egen" | "samurai" | "harbor" | "dive" | "kite" | "snowpass" | "jungle" | "cavevillage" | "cloudpalace" | "farmchicken" | "jungleoasis" | "marketsilk" | "oasisdesert" | "slimeroad" | "swampfarm" | "snowvillage" | "tigerride" | "foxpath" | "chiliport" | "shrinesteps" | "tanukimap" | "castleonsen" | "nightthief" | "dragonroad" | "dragongate" | "whaleride" | "alpinetrain" | "sledbakery" | "ginitown" | "townasleep" | "pumpkinforest" | "beeChase" | "giniReturn" | "griffinFlight" | "ending" | "bazaarBound" | "teaTrail" | "saffronGarden" | "floatingMarket" | "baliTerraces" | "hawaiiBeach" | "texasCanyon" | "tacoFiesta" | "cacaoJungle" | "andesVineyard" | "skyCity" | "apprenticeGini" | "apprenticeWeak" | "apprenticeGuard" | "boxerEvolution" | "apprenticeMisfire" | "apprenticeQuickdraw" | "cowboyEvolution";
 
 // Loop-gated story beats: each fires once, in GameScreen's comic chain, the first time
 // `loopsCompleted` equals `afterLoop` and (if given) `stageNumber` has passed `afterStage` —
@@ -1123,7 +1123,7 @@ export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = 
         aspect: 510 / 768,
         sfx: "hit",
         bubbles: [
-          { text: "졌다...\n책은 돌려주지.", left: 0.02, top: 0.1, maxWidth: 0.3, tail: "bottom", tailAt: 0.3 },
+          { text: "졌다...\n책은 돌려주지.", right: 0.02, top: 0.04, maxWidth: 0.3, tail: "bottom", tailAt: 0.6 },
         ],
       },
       {
@@ -1474,8 +1474,8 @@ export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = 
         image: comics.griffinFlight2,
         aspect: 435 / 800,
         bubbles: [
-          { text: "음식을 숨겨 둔 용을 안다.\n꽉 잡아라!", left: 0.02, top: 0.66, maxWidth: 0.36, tail: "top", tailAt: 0.7 },
-          { text: "우와, 하늘을 난다~!", right: 0.02, top: 0.04, maxWidth: 0.28, tail: "left", tailAt: 0.5 },
+          { text: "음식을 숨겨 둔 용을 안다.\n꽉 잡아라!", right: 0.02, top: 0.6, maxWidth: 0.4, tail: "top", tailAt: 0.3 },
+          { text: "우와, 하늘을 난다~!", left: 0.02, top: 0.04, maxWidth: 0.28, tail: "right", tailAt: 0.5 },
         ],
       },
       {
@@ -1679,6 +1679,310 @@ export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = 
         bubbles: [
           { text: "황실 사프란은\n한 올도 못 내준다!", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.9 },
           { text: "비리야니에\n딱 한 줌만!", left: 0.0, top: 0.36, maxWidth: 0.3, tail: "bottom", tailAt: 0.5, shout: true },
+        ],
+      },
+    ],
+  },
+  // 41 (타지마할 정원): 공작 황제를 쓰러뜨려 사프란을 얻고, 요리책 다음 요리 똠얌꿍에 레몬그라스와 라임이 필요하다는 걸 알고(1) → 배로 바다를 건너(2) → 태국 수상시장에 도착해(3) → 레몬그라스를 독차지한 악어 선장과 맞선다(4).
+  floatingMarket: {
+    title: "레몬그라스 향 수상시장",
+    panels: [
+      {
+        image: comics.floatingMarket1,
+        aspect: 504 / 760,
+        sfx: "levelup",
+        bubbles: [
+          { text: "사프란 확보!\n비리야니 완성!", left: 0.02, top: 0.02, maxWidth: 0.42, tail: "bottom", tailAt: 0.4, shout: true },
+          { text: "다음은 똠얌꿍...\n레몬그라스랑 라임!", right: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.3 },
+        ],
+      },
+      {
+        image: comics.floatingMarket2,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "바다 건너 남쪽으로,\n출발~!", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.7 },
+        ],
+      },
+      {
+        image: comics.floatingMarket3,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "우와... 시장이\n물 위에 떠 있어!", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.4 },
+        ],
+      },
+      {
+        image: comics.floatingMarket4,
+        aspect: 504 / 760,
+        sfx: "bossEnter",
+        bubbles: [
+          { text: "레몬그라스는\n이 선장님 거다!", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.9 },
+          { text: "똠얌꿍 만들\n만큼만 줘!", left: 0.0, top: 0.22, maxWidth: 0.3, tail: "bottom", tailAt: 0.5, shout: true },
+        ],
+      },
+    ],
+  },
+  // 42 (태국 수상시장): 악어 선장을 쓰러뜨려 레몬그라스와 라임을 얻고 똠얌꿍을 완성, 요리책 다음 요리 나시고렝에 삼발과 팜슈가가 필요하다는 걸 알고(1) → 섬들을 건너(2) → 발리 계단식 논에 도착해(3) → 공양 바구니를 지키는 바롱 수호신과 맞선다(4).
+  baliTerraces: {
+    title: "초록 계단 논의 수호신",
+    panels: [
+      {
+        image: comics.baliTerraces1,
+        aspect: 504 / 760,
+        sfx: "levelup",
+        bubbles: [
+          { text: "똠얌꿍 완성!\n새콤 화끈해!", left: 0.02, top: 0.02, maxWidth: 0.42, tail: "bottom", tailAt: 0.4, shout: true },
+          { text: "다음은 나시고렝...\n삼발이랑 팜슈가!", right: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.3 },
+        ],
+      },
+      {
+        image: comics.baliTerraces2,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "섬을 건너고\n또 건너서~!", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.7 },
+        ],
+      },
+      {
+        image: comics.baliTerraces3,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "우와... 논이\n초록 계단 같아!", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.4 },
+        ],
+      },
+      {
+        image: comics.baliTerraces4,
+        aspect: 504 / 760,
+        sfx: "bossEnter",
+        bubbles: [
+          { text: "공양 바구니에\n손대는 자 누구냐!", left: 0.02, top: 0.02, maxWidth: 0.42, tail: "bottom", tailAt: 0.9 },
+          { text: "나시고렝 만들\n만큼만 나눠 줘!", left: 0.0, top: 0.25, maxWidth: 0.4, tail: "bottom", tailAt: 0.5, shout: true },
+        ],
+      },
+    ],
+  },
+  // 43 (발리 계단식 논): 바롱 수호신을 쓰러뜨려 삼발과 팜슈가를 얻고 나시고렝을 완성, 요리책 다음 요리 포케 볼에 파인애플과 마카다미아가 필요하다는 걸 알고(1) → 큰 바다를 건너(2) → 하와이 화산 해변에 도착해(3) → 마카다미아를 끌어안은 티키 석상 골렘과 맞선다(4).
+  hawaiiBeach: {
+    title: "알로하, 용암 섬",
+    panels: [
+      {
+        image: comics.hawaiiBeach1,
+        aspect: 504 / 760,
+        sfx: "levelup",
+        bubbles: [
+          { text: "나시고렝 완성!\n달콤 매콤해!", left: 0.02, top: 0.02, maxWidth: 0.42, tail: "bottom", tailAt: 0.4, shout: true },
+          { text: "다음은 포케 볼...\n파인애플이랑 마카다미아!", right: 0.02, top: 0.02, maxWidth: 0.44, tail: "bottom", tailAt: 0.3 },
+        ],
+      },
+      {
+        image: comics.hawaiiBeach2,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "큰 바다를 건너\n화산섬으로~!", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.7 },
+        ],
+      },
+      {
+        image: comics.hawaiiBeach3,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "알로하~!\n모래가 까매!", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.4 },
+        ],
+      },
+      {
+        image: comics.hawaiiBeach4,
+        aspect: 504 / 760,
+        sfx: "bossEnter",
+        bubbles: [
+          { text: "마카다미아는\n한 알도 못 준다!", left: 0.02, top: 0.02, maxWidth: 0.42, tail: "bottom", tailAt: 0.9 },
+          { text: "포케 볼에\n한 줌만 줘!", left: 0.0, top: 0.25, maxWidth: 0.4, tail: "bottom", tailAt: 0.5, shout: true },
+        ],
+      },
+    ],
+  },
+  // 44 (하와이 화산 해변): 티키 골렘을 쓰러뜨려 마카다미아와 파인애플을 얻고 포케 볼을 완성, 요리책 다음 요리 피칸 바비큐 립에 바비큐 소스와 피칸이 필요하다는 걸 알고(1) → 대륙으로 건너가 기차로 서부를 달려(2) → 텍사스 협곡 목장에 도착해(3) → 비밀 소스를 지키는 곰 보안관과 맞선다(4).
+  texasCanyon: {
+    title: "협곡의 비밀 소스",
+    panels: [
+      {
+        image: comics.texasCanyon1,
+        aspect: 504 / 760,
+        sfx: "levelup",
+        bubbles: [
+          { text: "포케 볼 완성!\n상큼 고소해!", left: 0.02, top: 0.02, maxWidth: 0.42, tail: "bottom", tailAt: 0.4, shout: true },
+          { text: "다음은 바비큐 립...\n소스랑 피칸!", right: 0.02, top: 0.02, maxWidth: 0.42, tail: "bottom", tailAt: 0.3 },
+        ],
+      },
+      {
+        image: comics.texasCanyon2,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "칙칙폭폭~\n서쪽으로 간다!", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.7 },
+        ],
+      },
+      {
+        image: comics.texasCanyon3,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "우와... 바위가\n온통 빨개!", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.4 },
+        ],
+      },
+      {
+        image: comics.texasCanyon4,
+        aspect: 504 / 760,
+        sfx: "bossEnter",
+        bubbles: [
+          { text: "비밀 소스를 노리는\n녀석이 너냐!", left: 0.02, top: 0.02, maxWidth: 0.42, tail: "bottom", tailAt: 0.9 },
+          { text: "립 한 판 만들\n만큼만 줘!", left: 0.0, top: 0.25, maxWidth: 0.4, tail: "bottom", tailAt: 0.5, shout: true },
+        ],
+      },
+    ],
+  },
+  // 45 (텍사스 바비큐 협곡): 곰 보안관을 쓰러뜨려 바비큐 소스와 피칸을 얻고 바비큐 립을 완성, 요리책 다음 요리 타코에 토르티야와 아보카도가 필요하다는 걸 알고(1) → 국경을 넘어 남쪽으로(2) → 멕시코 축제 광장에 도착해(3) → 토르티야를 쌓아 둔 아르마딜로 악단장와 맞선다(4).
+  tacoFiesta: {
+    title: "토르티야 한 곡에 한 장",
+    panels: [
+      {
+        image: comics.tacoFiesta1,
+        aspect: 504 / 760,
+        sfx: "levelup",
+        bubbles: [
+          { text: "바비큐 립 완성!\n불맛 최고!", left: 0.02, top: 0.02, maxWidth: 0.42, tail: "bottom", tailAt: 0.4, shout: true },
+          { text: "다음은 타코...\n토르티야랑 아보카도!", right: 0.02, top: 0.02, maxWidth: 0.44, tail: "bottom", tailAt: 0.3 },
+        ],
+      },
+      {
+        image: comics.tacoFiesta2,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "남쪽으로~\n축제 냄새가 나!", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.7 },
+        ],
+      },
+      {
+        image: comics.tacoFiesta3,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "우와... 온 광장이\n축제야!", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.4 },
+        ],
+      },
+      {
+        image: comics.tacoFiesta4,
+        aspect: 504 / 760,
+        sfx: "bossEnter",
+        bubbles: [
+          { text: "토르티야는\n노래 한 곡에 한 장!", left: 0.02, top: 0.02, maxWidth: 0.42, tail: "bottom", tailAt: 0.9 },
+          { text: "노래보다\n타코가 급해!", left: 0.0, top: 0.25, maxWidth: 0.4, tail: "bottom", tailAt: 0.5, shout: true },
+        ],
+      },
+    ],
+  },
+  // 46 (멕시코 타코 축제): 아르마딜로 악단장을 쓰러뜨려 토르티야와 아보카도를 얻고 타코를 완성, 요리책 다음 요리 초코 바나나에 카카오가 필요하다는 걸 알고(1) → 강을 따라 밀림 깊숙이(2) → 카카오 정글에 도착해(3) → 카카오를 독차지한 재규어 쇼콜라티에와 맞선다(4).
+  cacaoJungle: {
+    title: "밀림의 쇼콜라티에",
+    panels: [
+      {
+        image: comics.cacaoJungle1,
+        aspect: 504 / 760,
+        sfx: "levelup",
+        bubbles: [
+          { text: "타코 완성!\n축제 맛이야!", left: 0.02, top: 0.02, maxWidth: 0.42, tail: "bottom", tailAt: 0.4, shout: true },
+          { text: "다음은 초코 바나나...\n카카오가 필요해!", right: 0.02, top: 0.02, maxWidth: 0.44, tail: "bottom", tailAt: 0.3 },
+        ],
+      },
+      {
+        image: comics.cacaoJungle2,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "강을 따라\n밀림 속으로~!", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.7 },
+        ],
+      },
+      {
+        image: comics.cacaoJungle3,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "우와... 나무에\n열매가 주렁주렁!", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.4 },
+        ],
+      },
+      {
+        image: comics.cacaoJungle4,
+        aspect: 504 / 760,
+        sfx: "bossEnter",
+        bubbles: [
+          { text: "카카오는\n내 작업장의 보물이다!", left: 0.02, top: 0.02, maxWidth: 0.44, tail: "bottom", tailAt: 0.9 },
+          { text: "초코 바나나 하나\n만들 만큼만!", left: 0.0, top: 0.25, maxWidth: 0.4, tail: "bottom", tailAt: 0.5, shout: true },
+        ],
+      },
+    ],
+  },
+  // 47 (아마존 카카오 정글): 재규어 쇼콜라티에를 쓰러뜨려 카카오를 얻고 초코 바나나를 완성, 요리책 다음 요리 엠파나다에 거봉과 샤인머스캣이 필요하다는 걸 알고(1) → 안데스 산맥을 넘어(2) → 칠레 포도밭에 도착해(3) → 포도를 독차지한 퓨마와 맞선다(4).
+  andesVineyard: {
+    title: "안데스 포도밭의 수확제",
+    panels: [
+      {
+        image: comics.andesVineyard1,
+        aspect: 504 / 760,
+        sfx: "levelup",
+        bubbles: [
+          { text: "초코 바나나 완성!\n달콤 진해!", left: 0.02, top: 0.02, maxWidth: 0.42, tail: "bottom", tailAt: 0.4, shout: true },
+          { text: "다음은 엠파나다...\n거봉이랑 샤인머스캣!", right: 0.02, top: 0.02, maxWidth: 0.44, tail: "bottom", tailAt: 0.3 },
+        ],
+      },
+      {
+        image: comics.andesVineyard2,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "안데스 산맥을\n넘어서~!", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.7 },
+        ],
+      },
+      {
+        image: comics.andesVineyard3,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "우와... 언덕이\n전부 포도야!", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.4 },
+        ],
+      },
+      {
+        image: comics.andesVineyard4,
+        aspect: 504 / 760,
+        sfx: "bossEnter",
+        bubbles: [
+          { text: "좋은 포도는\n전부 내 통으로!", left: 0.02, top: 0.02, maxWidth: 0.42, tail: "bottom", tailAt: 0.9 },
+          { text: "엠파나다에\n몇 알만 줘!", left: 0.0, top: 0.25, maxWidth: 0.4, tail: "bottom", tailAt: 0.5, shout: true },
+        ],
+      },
+    ],
+  },
+  // 48 (칠레 안데스 포도밭): 퓨마를 쓰러뜨려 포도를 얻고 엠파나다를 완성, 요리책 마지막 장에 '태양의 황금 감자'가 나오고(1) → 구름 위 잉카 계단을 올라(2) → 공중도시에서 군침 흘리는 라마들을 만나고(3) → 기니들을 마지막 재료로 착각한 콘도르 셰프와 맞선다(4). 수위는 '재료로 오해받는' 코믹한 위기감까지만.
+  skyCity: {
+    title: "마지막 재료는... 우리?!",
+    panels: [
+      {
+        image: comics.skyCity1,
+        aspect: 504 / 760,
+        sfx: "levelup",
+        bubbles: [
+          { text: "엠파나다 완성!\n이제 마지막 장이야!", left: 0.02, top: 0.02, maxWidth: 0.5, tail: "bottom", tailAt: 0.4, shout: true },
+          { text: "마지막 재료는...\n태양의 황금 감자!", right: 0.02, top: 0.02, maxWidth: 0.42, tail: "bottom", tailAt: 0.3 },
+        ],
+      },
+      {
+        image: comics.skyCity2,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "구름 위까지\n계단이 이어져...!", left: 0.02, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.7 },
+        ],
+      },
+      {
+        image: comics.skyCity3,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "...근데 쟤네\n왜 우릴 저렇게 봐?", left: 0.02, top: 0.02, maxWidth: 0.42, tail: "bottom", tailAt: 0.4 },
+        ],
+      },
+      {
+        image: comics.skyCity4,
+        aspect: 504 / 760,
+        sfx: "bossEnter",
+        bubbles: [
+          { text: "마지막 재료가\n제 발로 왔구나!", left: 0.02, top: 0.02, maxWidth: 0.42, tail: "bottom", tailAt: 0.9 },
+          { text: "우린 재료가 아니라\n요리사야!!", left: 0.0, top: 0.25, maxWidth: 0.44, tail: "bottom", tailAt: 0.5, shout: true },
         ],
       },
     ],
@@ -1983,7 +2287,23 @@ export const COMIC_ON_FIRST_CLEAR: Partial<Record<number, ComicId>> = {
   // 40 (히말라야 차밭): the yeti falls and hands over the tea, the cookbook's biryani page calls for
   // saffron, the river trip down, the Mughal garden, the peacock emperor (COMICS.saffronGarden).
   40: "saffronGarden",
-  // "ending" plays on whichever stage is CURRENTLY the true last one (41, 타지마할 정원, today) —
+  // 41 (타지마할 정원): 공작 황제를 쓰러뜨려 사프란을 얻고, 요리책 다음 요리 똠얌꿍에 레몬그라스와 라임이 필요하다는 걸 알고(1) → 배로 바다를 건너(2) → 태국 수상시장에 도착해(3) → 레몬그라스를 독차지한 악어 선장과 맞선다(4).
+  41: "floatingMarket",
+  // 42 (태국 수상시장): 악어 선장을 쓰러뜨려 레몬그라스와 라임을 얻고 똠얌꿍을 완성, 요리책 다음 요리 나시고렝에 삼발과 팜슈가가 필요하다는 걸 알고(1) → 섬들을 건너(2) → 발리 계단식 논에 도착해(3) → 공양 바구니를 지키는 바롱 수호신과 맞선다(4).
+  42: "baliTerraces",
+  // 43 (발리 계단식 논): 바롱 수호신을 쓰러뜨려 삼발과 팜슈가를 얻고 나시고렝을 완성, 요리책 다음 요리 포케 볼에 파인애플과 마카다미아가 필요하다는 걸 알고(1) → 큰 바다를 건너(2) → 하와이 화산 해변에 도착해(3) → 마카다미아를 끌어안은 티키 석상 골렘과 맞선다(4).
+  43: "hawaiiBeach",
+  // 44 (하와이 화산 해변): 티키 골렘을 쓰러뜨려 마카다미아와 파인애플을 얻고 포케 볼을 완성, 요리책 다음 요리 피칸 바비큐 립에 바비큐 소스와 피칸이 필요하다는 걸 알고(1) → 대륙으로 건너가 기차로 서부를 달려(2) → 텍사스 협곡 목장에 도착해(3) → 비밀 소스를 지키는 곰 보안관과 맞선다(4).
+  44: "texasCanyon",
+  // 45 (텍사스 바비큐 협곡): 곰 보안관을 쓰러뜨려 바비큐 소스와 피칸을 얻고 바비큐 립을 완성, 요리책 다음 요리 타코에 토르티야와 아보카도가 필요하다는 걸 알고(1) → 국경을 넘어 남쪽으로(2) → 멕시코 축제 광장에 도착해(3) → 토르티야를 쌓아 둔 아르마딜로 악단장와 맞선다(4).
+  45: "tacoFiesta",
+  // 46 (멕시코 타코 축제): 아르마딜로 악단장을 쓰러뜨려 토르티야와 아보카도를 얻고 타코를 완성, 요리책 다음 요리 초코 바나나에 카카오가 필요하다는 걸 알고(1) → 강을 따라 밀림 깊숙이(2) → 카카오 정글에 도착해(3) → 카카오를 독차지한 재규어 쇼콜라티에와 맞선다(4).
+  46: "cacaoJungle",
+  // 47 (아마존 카카오 정글): 재규어 쇼콜라티에를 쓰러뜨려 카카오를 얻고 초코 바나나를 완성, 요리책 다음 요리 엠파나다에 거봉과 샤인머스캣이 필요하다는 걸 알고(1) → 안데스 산맥을 넘어(2) → 칠레 포도밭에 도착해(3) → 포도를 독차지한 퓨마와 맞선다(4).
+  47: "andesVineyard",
+  // 48 (칠레 안데스 포도밭): 퓨마를 쓰러뜨려 포도를 얻고 엠파나다를 완성, 요리책 마지막 장에 '태양의 황금 감자'가 나오고(1) → 구름 위 잉카 계단을 올라(2) → 공중도시에서 군침 흘리는 라마들을 만나고(3) → 기니들을 마지막 재료로 착각한 콘도르 셰프와 맞선다(4). 수위는 '재료로 오해받는' 코믹한 위기감까지만.
+  48: "skyCity",
+  // "ending" plays on whichever stage is CURRENTLY the true last one (49, 태양의 공중도시, today) —
   // keyed dynamically so it always follows the real frontier, not pinned to this number. The
   // next time a stage ships past this one, write that stage's own bridge comic (same shape as
   // bazaarBound above: wherever 39's fight leaves off, through to arriving at and clashing

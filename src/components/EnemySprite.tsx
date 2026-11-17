@@ -14,7 +14,7 @@ import type { EnemyAnimation, EnemyKind } from "../types";
 // carrot (stage 3's regular mob), chicken (stage 4's regular mob), potato (stage 5's
 // regular mob), bossMushroom, bossCarrotGiant, bossChicken, and bossPotato are 4-frame
 // sheets for every animation.
-const CONFIG: Record<EnemyKind | "bossSlime" | "bossMushroom" | "bossCarrotGiant" | "bossChicken" | "bossPotato" | "bossFatCat" | "bossFridge" | "bossKingCrab" | "bossShark" | "bossLavaSlime" | "bossCarnivorousPlant" | "bossStreamDragon" | "bossDehydratedCamel" | "bossRattlesnake" | "bossHauntedGoat" | "bossBambooPanda" | "bossTurtleSpirit" | "bossTigerSpirit" | "bossIceGolem" | "bossTavernKeeper" | "bossNineTailedFox" | "bossChiliSack" | "bossPirateOctopus" | "bossBlossomShark" | "bossTanukiMerchant" | "bossGoldenShachi" | "bossCapybaraInnkeeper" | "bossScrollRat" | "bossSeahorseGeneral" | "bossDragonKing" | "bossOvenGolem" | "bossRescueDog" | "bossBaguetteKnight" | "bossElderGini" | "bossWitchGini" | "bossPumpkinGolem" | "bossQueenBee" | "bossGriffin" | "bossHungryRedDragon" | "bossCurryTiger" | "bossChaiYeti" | "bossPeacockEmperor", Record<EnemyAnimation, { frameCount: number; frameSize?: number; durationMs: number; mode: "loop" | "once"; offsetY?: number }>> = {
+const CONFIG: Record<EnemyKind | "bossSlime" | "bossMushroom" | "bossCarrotGiant" | "bossChicken" | "bossPotato" | "bossFatCat" | "bossFridge" | "bossKingCrab" | "bossShark" | "bossLavaSlime" | "bossCarnivorousPlant" | "bossStreamDragon" | "bossDehydratedCamel" | "bossRattlesnake" | "bossHauntedGoat" | "bossBambooPanda" | "bossTurtleSpirit" | "bossTigerSpirit" | "bossIceGolem" | "bossTavernKeeper" | "bossNineTailedFox" | "bossChiliSack" | "bossPirateOctopus" | "bossBlossomShark" | "bossTanukiMerchant" | "bossGoldenShachi" | "bossCapybaraInnkeeper" | "bossScrollRat" | "bossSeahorseGeneral" | "bossDragonKing" | "bossOvenGolem" | "bossRescueDog" | "bossBaguetteKnight" | "bossElderGini" | "bossWitchGini" | "bossPumpkinGolem" | "bossQueenBee" | "bossGriffin" | "bossHungryRedDragon" | "bossCurryTiger" | "bossChaiYeti" | "bossPeacockEmperor" | "bossTomYumCroc" | "bossBarong" | "bossTikiGolem" | "bossBbqBear" | "bossMariachiArmadillo" | "bossJaguarChocolatier" | "bossGrapePuma" | "bossSunCondor", Record<EnemyAnimation, { frameCount: number; frameSize?: number; durationMs: number; mode: "loop" | "once"; offsetY?: number }>> = {
   slime: {
     idle: { frameCount: 5, durationMs: 650, mode: "loop" },
     hit: { frameCount: 5, durationMs: 310, mode: "once" },
@@ -448,9 +448,89 @@ const CONFIG: Record<EnemyKind | "bossSlime" | "bossMushroom" | "bossCarrotGiant
     hit: { frameCount: 4, durationMs: 310, mode: "once" },
     die: { frameCount: 4, durationMs: 480, mode: "once" },
   },
+  coconutCrab: {
+    idle: { frameCount: 4, durationMs: 650, mode: "loop" },
+    hit: { frameCount: 4, durationMs: 310, mode: "once" },
+    die: { frameCount: 4, durationMs: 480, mode: "once" },
+  },
+  bossTomYumCroc: {
+    idle: { frameCount: 4, durationMs: 650, mode: "loop" },
+    hit: { frameCount: 4, durationMs: 310, mode: "once" },
+    die: { frameCount: 4, durationMs: 480, mode: "once" },
+  },
+  paddyDuck: {
+    idle: { frameCount: 4, durationMs: 650, mode: "loop" },
+    hit: { frameCount: 4, durationMs: 310, mode: "once" },
+    die: { frameCount: 4, durationMs: 480, mode: "once" },
+  },
+  bossBarong: {
+    idle: { frameCount: 4, durationMs: 650, mode: "loop" },
+    hit: { frameCount: 4, durationMs: 310, mode: "once" },
+    die: { frameCount: 4, durationMs: 480, mode: "once" },
+  },
+  hulaPineapple: {
+    idle: { frameCount: 4, durationMs: 650, mode: "loop" },
+    hit: { frameCount: 4, durationMs: 310, mode: "once" },
+    die: { frameCount: 4, durationMs: 480, mode: "once" },
+  },
+  bossTikiGolem: {
+    idle: { frameCount: 4, durationMs: 650, mode: "loop" },
+    hit: { frameCount: 4, durationMs: 310, mode: "once" },
+    die: { frameCount: 4, durationMs: 480, mode: "once" },
+  },
+  prairieDog: {
+    idle: { frameCount: 4, durationMs: 650, mode: "loop" },
+    hit: { frameCount: 4, durationMs: 310, mode: "once" },
+    die: { frameCount: 4, durationMs: 480, mode: "once" },
+  },
+  bossBbqBear: {
+    idle: { frameCount: 4, durationMs: 650, mode: "loop" },
+    hit: { frameCount: 4, durationMs: 310, mode: "once" },
+    die: { frameCount: 4, durationMs: 480, mode: "once" },
+  },
+  pinataDonkey: {
+    idle: { frameCount: 4, durationMs: 650, mode: "loop" },
+    hit: { frameCount: 4, durationMs: 310, mode: "once" },
+    die: { frameCount: 4, durationMs: 480, mode: "once" },
+  },
+  bossMariachiArmadillo: {
+    idle: { frameCount: 4, durationMs: 650, mode: "loop" },
+    hit: { frameCount: 4, durationMs: 310, mode: "once" },
+    die: { frameCount: 4, durationMs: 480, mode: "once" },
+  },
+  cacaoSloth: {
+    idle: { frameCount: 4, durationMs: 650, mode: "loop" },
+    hit: { frameCount: 4, durationMs: 310, mode: "once" },
+    die: { frameCount: 4, durationMs: 480, mode: "once" },
+  },
+  bossJaguarChocolatier: {
+    idle: { frameCount: 4, durationMs: 650, mode: "loop" },
+    hit: { frameCount: 4, durationMs: 310, mode: "once" },
+    die: { frameCount: 4, durationMs: 480, mode: "once" },
+  },
+  grapeSnail: {
+    idle: { frameCount: 4, durationMs: 650, mode: "loop" },
+    hit: { frameCount: 4, durationMs: 310, mode: "once" },
+    die: { frameCount: 4, durationMs: 480, mode: "once" },
+  },
+  bossGrapePuma: {
+    idle: { frameCount: 4, durationMs: 650, mode: "loop" },
+    hit: { frameCount: 4, durationMs: 310, mode: "once" },
+    die: { frameCount: 4, durationMs: 480, mode: "once" },
+  },
+  llamaCook: {
+    idle: { frameCount: 4, durationMs: 650, mode: "loop" },
+    hit: { frameCount: 4, durationMs: 310, mode: "once" },
+    die: { frameCount: 4, durationMs: 480, mode: "once" },
+  },
+  bossSunCondor: {
+    idle: { frameCount: 4, durationMs: 650, mode: "loop" },
+    hit: { frameCount: 4, durationMs: 310, mode: "once" },
+    die: { frameCount: 4, durationMs: 480, mode: "once" },
+  },
 };
 
-const BOSS_SHEET_FOR: Record<EnemyKind, "bossSlime" | "bossMushroom" | "bossCarrotGiant" | "bossChicken" | "bossPotato" | "bossFatCat" | "bossFridge" | "bossKingCrab" | "bossShark" | "bossLavaSlime" | "bossCarnivorousPlant" | "bossStreamDragon" | "bossDehydratedCamel" | "bossRattlesnake" | "bossHauntedGoat" | "bossBambooPanda" | "bossTurtleSpirit" | "bossTigerSpirit" | "bossIceGolem" | "bossTavernKeeper" | "bossNineTailedFox" | "bossChiliSack" | "bossPirateOctopus" | "bossBlossomShark" | "bossTanukiMerchant" | "bossGoldenShachi" | "bossCapybaraInnkeeper" | "bossScrollRat" | "bossSeahorseGeneral" | "bossDragonKing" | "bossOvenGolem" | "bossRescueDog" | "bossBaguetteKnight" | "bossElderGini" | "bossWitchGini" | "bossPumpkinGolem" | "bossQueenBee" | "bossGriffin" | "bossHungryRedDragon" | "bossCurryTiger" | "bossChaiYeti" | "bossPeacockEmperor"> = {
+const BOSS_SHEET_FOR: Record<EnemyKind, "bossSlime" | "bossMushroom" | "bossCarrotGiant" | "bossChicken" | "bossPotato" | "bossFatCat" | "bossFridge" | "bossKingCrab" | "bossShark" | "bossLavaSlime" | "bossCarnivorousPlant" | "bossStreamDragon" | "bossDehydratedCamel" | "bossRattlesnake" | "bossHauntedGoat" | "bossBambooPanda" | "bossTurtleSpirit" | "bossTigerSpirit" | "bossIceGolem" | "bossTavernKeeper" | "bossNineTailedFox" | "bossChiliSack" | "bossPirateOctopus" | "bossBlossomShark" | "bossTanukiMerchant" | "bossGoldenShachi" | "bossCapybaraInnkeeper" | "bossScrollRat" | "bossSeahorseGeneral" | "bossDragonKing" | "bossOvenGolem" | "bossRescueDog" | "bossBaguetteKnight" | "bossElderGini" | "bossWitchGini" | "bossPumpkinGolem" | "bossQueenBee" | "bossGriffin" | "bossHungryRedDragon" | "bossCurryTiger" | "bossChaiYeti" | "bossPeacockEmperor" | "bossTomYumCroc" | "bossBarong" | "bossTikiGolem" | "bossBbqBear" | "bossMariachiArmadillo" | "bossJaguarChocolatier" | "bossGrapePuma" | "bossSunCondor"> = {
   slime: "bossSlime",
   mushroom: "bossMushroom",
   carrot: "bossCarrotGiant",
@@ -493,6 +573,14 @@ const BOSS_SHEET_FOR: Record<EnemyKind, "bossSlime" | "bossMushroom" | "bossCarr
   spiceElephant: "bossCurryTiger",
   teaYak: "bossChaiYeti",
   saffronParrot: "bossPeacockEmperor",
+  coconutCrab: "bossTomYumCroc",
+  paddyDuck: "bossBarong",
+  hulaPineapple: "bossTikiGolem",
+  prairieDog: "bossBbqBear",
+  pinataDonkey: "bossMariachiArmadillo",
+  cacaoSloth: "bossJaguarChocolatier",
+  grapeSnail: "bossGrapePuma",
+  llamaCook: "bossSunCondor",
 };
 
 export function EnemySprite({

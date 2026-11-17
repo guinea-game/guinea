@@ -60,6 +60,14 @@ export const BGM_GROUP: Record<EnemyKind, BgmGroupId> = {
   // 히말라야 차밭: 바자르에서 이어지는 산길이라 인도 BGM을 함께 쓴다.
   teaYak: "india",
   saffronParrot: "india",
+  coconutCrab: "tropical",
+  paddyDuck: "tropical",
+  hulaPineapple: "tropical",
+  prairieDog: "desert",
+  pinataDonkey: "desert",
+  cacaoSloth: "tropical",
+  grapeSnail: "desert",
+  llamaCook: "fantasy",
 };
 
 export const ENEMY_NAME: Record<EnemyKind, string> = {
@@ -105,6 +113,14 @@ export const ENEMY_NAME: Record<EnemyKind, string> = {
   spiceElephant: "향신료 꼬마코끼리",
   teaYak: "찻잎 꼬마야크",
   saffronParrot: "사프란 앵무새",
+  coconutCrab: "코코넛 게",
+  paddyDuck: "논두렁 오리",
+  hulaPineapple: "훌라 파인애플",
+  prairieDog: "협곡 프레리도그",
+  pinataDonkey: "피냐타 당나귀",
+  cacaoSloth: "카카오 나무늘보",
+  grapeSnail: "포도송이 달팽이",
+  llamaCook: "라마 요리사",
 };
 
 export const BOSS_NAME: Record<EnemyKind, string> = {
@@ -150,6 +166,14 @@ export const BOSS_NAME: Record<EnemyKind, string> = {
   spiceElephant: "커리 호랑이 셰프",
   teaYak: "짜이 설인",
   saffronParrot: "공작 황제",
+  coconutCrab: "똠얌 악어 선장",
+  paddyDuck: "바롱 사자 수호신",
+  hulaPineapple: "티키 석상 골렘",
+  prairieDog: "바비큐 곰 보안관",
+  pinataDonkey: "아르마딜로 악단장",
+  cacaoSloth: "재규어 쇼콜라티에",
+  grapeSnail: "포도 밟기 퓨마",
+  llamaCook: "태양신 콘도르 셰프",
 };
 
 // The one-liner under the boss's name on its entrance banner (BossEntranceBanner) — the
@@ -197,6 +221,14 @@ export const BOSS_TAGLINE: Record<EnemyKind, string> = {
   spiceElephant: "웍을 휘두르는 호랑이라니, 매운맛 좀 보자!",
   teaYak: "찻물 맞기 전에 끝내자, 저거 엄청 뜨거워!",
   saffronParrot: "꼬리 펼치기 전에 쳐! 눈부셔서 못 봐!",
+  coconutCrab: "국자 휘두르기 전에 끝내자, 국물 튄다!",
+  paddyDuck: "탈춤에 홀리지 마! 박자 맞춰 때려!",
+  hulaPineapple: "몸속에 용암이 끓어! 식기 전에 부숴!",
+  prairieDog: "보안관 배지가 번쩍! 집게에 잡히지 마!",
+  pinataDonkey: "기타 소리에 맞춰 굴러온다! 등껍질 조심!",
+  cacaoSloth: "초콜릿 거품기다! 녹아내리기 전에 쳐!",
+  grapeSnail: "포도즙이 튄다! 미끄러지지 마!",
+  llamaCook: "냄비에 들어가기 전에 이겨야 해!",
 };
 
 // Indexed by stageNumber. Only these stages have a theme, mob, and boss implemented —
@@ -246,6 +278,14 @@ export const STAGES: { area: string; enemyKind: EnemyKind; story: string }[] = [
   { area: "인도 향신료 바자르", enemyKind: "spiceElephant", story: "용에게서 숨겨 둔 재료를 되찾은 기니들이 요리책 커리에 들어갈 향신료를 찾아 닿은 시끌벅적한 바자르. 터번 두른 꼬마코끼리들이 향신료 자루를 코로 슬쩍하고 다닌다." },
   { area: "히말라야 차밭", enemyKind: "teaYak", story: "만년설 봉우리 아래 계단식 차밭이 펼쳐진 산마을, 룽다 깃발이 펄럭이는 사이로 찻잎 바구니를 멘 꼬마야크들이 찻잎을 따다 말고 낮잠을 잔다." },
   { area: "타지마할 정원", enemyKind: "saffronParrot", story: "새벽 안개 속 하얀 대리석 궁전 앞, 분수 물길 따라 보랏빛 사프란 꽃이 핀 무굴 정원. 터번 쓴 앵무새들이 붉은 꽃실을 물어다 황제의 창고로 나른다." },
+  { area: "태국 수상시장", enemyKind: "coconutCrab", story: "운하 위로 긴 꼬리배가 빼곡히 떠 있는 아침 수상시장. 코코넛 껍질을 등에 진 게들이 레몬그라스를 물고 배 사이를 옆걸음으로 건너다닌다." },
+  { area: "발리 계단식 논", enemyKind: "paddyDuck", story: "화산 기슭을 따라 초록 계단처럼 층층이 내려가는 논. 삿갓을 쓴 오리 떼가 논두렁을 줄지어 걸으며 떨어진 벼 이삭과 팜슈가를 주워 모은다." },
+  { area: "하와이 화산 해변", enemyKind: "hulaPineapple", story: "검은 모래 위로 노을이 지는 화산섬 해변. 꽃목걸이를 건 파인애플들이 훌라를 추고, 용암 빛이 새어 나오는 나무 석상이 마카다미아 바구니를 지킨다." },
+  { area: "텍사스 바비큐 협곡", enemyKind: "prairieDog", story: "붉은 바위 절벽 사이로 훈연 냄새가 피어오르는 목장 협곡. 카우보이 모자를 쓴 프레리도그들이 피칸 나무 아래 굴을 파고, 곰 보안관이 바비큐 화로를 지킨다." },
+  { area: "멕시코 타코 축제", enemyKind: "pinataDonkey", story: "알록달록한 종이 깃발이 하늘을 덮은 축제 광장. 피냐타 당나귀들이 사탕을 흘리며 뛰어다니고, 마리아치 악단장이 토르티야를 끼고 노래한다." },
+  { area: "아마존 카카오 정글", enemyKind: "cacaoSloth", story: "거대한 나무 줄기마다 카카오 열매가 주렁주렁 매달린 깊은 밀림. 나무늘보들이 열매를 끌어안고 졸고, 재규어 쇼콜라티에가 초콜릿 냄비를 젓는다." },
+  { area: "칠레 안데스 포도밭", enemyKind: "grapeSnail", story: "눈 덮인 안데스 봉우리 아래 포도 넝쿨이 언덕을 덮은 수확철 포도밭. 포도송이 껍데기를 진 달팽이들이 이랑 사이를 기어가고, 퓨마가 통 속에서 포도를 밟는다." },
+  { area: "태양의 공중도시", enemyKind: "llamaCook", story: "구름 바다 위에 솟은 잉카의 돌 도시. 돌벽마다 동그란 기니피그 조각이 새겨져 있고, 앞치마를 두른 라마들이 손님을 볼 때마다 군침을 흘린다." },
 ];
 
 export const LAST_STAGE_NUMBER = STAGES.length - 1;

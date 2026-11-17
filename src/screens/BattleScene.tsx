@@ -107,6 +107,14 @@ const BOSS_SIZE: Record<EnemyKind, number> = {
   spiceElephant: 160,
   teaYak: 168,
   saffronParrot: 176,
+  coconutCrab: 176,
+  paddyDuck: 180,
+  hulaPineapple: 180,
+  prairieDog: 180,
+  pinataDonkey: 176,
+  cacaoSloth: 176,
+  grapeSnail: 176,
+  llamaCook: 184,
 };
 
 // Regular mobs render at a flat 108px by default; override here for the rare mob whose
@@ -167,6 +175,14 @@ const AMBIENCE: Record<EnemyKind, MotePreset> = {
   spiceElephant: "dust",
   teaYak: "leaves",
   saffronParrot: "petals",
+  coconutCrab: "petals",
+  paddyDuck: "petals",
+  hulaPineapple: "embers",
+  prairieDog: "dust",
+  pinataDonkey: "petals",
+  cacaoSloth: "fireflies",
+  grapeSnail: "leaves",
+  llamaCook: "magic",
 };
 
 const BACKGROUND: Record<EnemyKind, number> = {
@@ -212,6 +228,14 @@ const BACKGROUND: Record<EnemyKind, number> = {
   spiceElephant: images.battleBackgroundSpiceBazaar,
   teaYak: images.battleBackgroundHimalayaTea,
   saffronParrot: images.battleBackgroundMughalGarden,
+  coconutCrab: images.battleBackgroundFloatingMarket,
+  paddyDuck: images.battleBackgroundBaliTerraces,
+  hulaPineapple: images.battleBackgroundHawaiiBeach,
+  prairieDog: images.battleBackgroundTexasCanyon,
+  pinataDonkey: images.battleBackgroundTacoFiesta,
+  cacaoSloth: images.battleBackgroundCacaoJungle,
+  grapeSnail: images.battleBackgroundAndesVineyard,
+  llamaCook: images.battleBackgroundSkyCity,
 };
 
 // Scene geometry the drop animation needs, measured from the sky's bottom-right corner.

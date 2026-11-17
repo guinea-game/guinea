@@ -113,6 +113,17 @@ const STOCK: { name: string; category: GroceryCategory; shopPrice?: number }[] =
   { name: "야크 우유", category: "special" },
   { name: "사프란", category: "special" },
   { name: "바스마티 쌀", category: "grain" },
+  { name: "레몬그라스", category: "vegetable" },
+  { name: "라임", category: "fruit" },
+  { name: "팜슈가", category: "special" },
+  { name: "삼발", category: "special" },
+  { name: "파인애플", category: "fruit" },
+  { name: "바비큐 소스", category: "special" },
+  { name: "아보카도", category: "fruit" },
+  { name: "토르티야", category: "grain" },
+  { name: "카카오", category: "special" },
+  { name: "퀴노아", category: "grain" },
+  { name: "태양의 황금 감자", category: "special" },
 ];
 
 // Buying costs this much more than the gold you'd earn farming the item yourself, so the

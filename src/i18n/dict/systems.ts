@@ -170,4 +170,20 @@ export const SYSTEMS_DICT: Record<string, string> = {
   "매일 받는 출석 보상과 더 풍성해진 오프라인 보상": "Daily attendance rewards, and richer offline rewards",
   "기니의 발자취 · 게임 가이드 · 세이브 백업 추가": "Added Gini's Footprints, the Game Guide, and Save Backup",
   "시작 화면과 판타지 지역의 새 음악": "New music for the title screen and the fantasy region",
+  // 43 태국 수상시장
+  "펄펄 끓는 똠얌 국물": "Boiling Tom Yum Broth",
+  // 44 발리 계단식 논
+  "홀리는 탈춤": "Bewitching Mask Dance",
+  // 45 하와이 화산 해변
+  "용암 발 구르기": "Lava Stomp",
+  // 46 텍사스 바비큐 협곡
+  "자욱한 훈연": "Thick Barbecue Smoke",
+  // 47 멕시코 타코 축제
+  "흥겨운 세레나데": "Merry Serenade",
+  // 48 아마존 카카오 정글
+  "끈적한 초콜릿 폭포": "Sticky Chocolate Falls",
+  // 49 칠레 안데스 포도밭
+  "포도즙 물보라": "Grape Juice Splash",
+  // 50 태양의 공중도시
+  "냄비 속으로!": "Into the Pot!",
 };

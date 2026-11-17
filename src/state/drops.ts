@@ -567,6 +567,94 @@ const DROPS: Record<EnemyKind, { mob: DropEntry[]; boss: DropEntry[] }> = {
       { name: "사프란", chance: 0.5 },
     ],
   },
+  // 태국 수상시장: 게들이 줍고 다니는 레몬그라스와 코코넛; 악어 선장은 라임까지.
+  coconutCrab: {
+    mob: [
+      { name: "레몬그라스", chance: 0.3 },
+      { name: "코코넛", chance: 0.15 },
+    ],
+    boss: [
+      { name: "라임", chance: 1, quantity: 2 },
+      { name: "레몬그라스", chance: 0.5 },
+    ],
+  },
+  // 발리 계단식 논: 오리들이 주워 모은 팜슈가와 쌀; 바롱 수호신은 공양 바구니의 삼발까지.
+  paddyDuck: {
+    mob: [
+      { name: "팜슈가", chance: 0.3 },
+      { name: "쌀", chance: 0.15 },
+    ],
+    boss: [
+      { name: "삼발", chance: 1, quantity: 2 },
+      { name: "팜슈가", chance: 0.5 },
+    ],
+  },
+  // 하와이 화산 해변: 훌라 파인애플이 떨어뜨리는 파인애플; 티키 골렘은 끌어안던 마카다미아까지.
+  hulaPineapple: {
+    mob: [
+      { name: "파인애플", chance: 0.3 },
+      { name: "마카다미아", chance: 0.1 },
+    ],
+    boss: [
+      { name: "마카다미아", chance: 1, quantity: 2 },
+      { name: "파인애플", chance: 0.5 },
+    ],
+  },
+  // 텍사스 바비큐 협곡: 프레리도그가 숨겨 둔 피칸과 갈빗살; 곰 보안관은 비밀 바비큐 소스까지.
+  prairieDog: {
+    mob: [
+      { name: "피칸", chance: 0.3 },
+      { name: "뼈 갈빗살", chance: 0.15 },
+    ],
+    boss: [
+      { name: "바비큐 소스", chance: 1, quantity: 2 },
+      { name: "피칸", chance: 0.5 },
+    ],
+  },
+  // 멕시코 타코 축제: 피냐타 당나귀가 싣고 다니는 아보카도와 옥수수; 아르마딜로 악단장는 토르티야 탑까지.
+  pinataDonkey: {
+    mob: [
+      { name: "아보카도", chance: 0.3 },
+      { name: "옥수수", chance: 0.15 },
+    ],
+    boss: [
+      { name: "토르티야", chance: 1, quantity: 2 },
+      { name: "아보카도", chance: 0.5 },
+    ],
+  },
+  // 아마존 카카오 정글: 나무늘보가 베고 자던 카카오와 바나나; 재규어 쇼콜라티에는 쌓아 둔 카카오까지.
+  cacaoSloth: {
+    mob: [
+      { name: "카카오", chance: 0.3 },
+      { name: "바나나", chance: 0.15 },
+    ],
+    boss: [
+      { name: "카카오", chance: 1, quantity: 2 },
+      { name: "아몬드", chance: 0.5 },
+    ],
+  },
+  // 칠레 안데스 포도밭: 달팽이 등의 거봉; 포도 밟기 퓨마는 제일 좋은 샤인머스캣까지.
+  grapeSnail: {
+    mob: [
+      { name: "거봉", chance: 0.3 },
+      { name: "양파", chance: 0.15 },
+    ],
+    boss: [
+      { name: "샤인머스캣", chance: 1, quantity: 2 },
+      { name: "거봉", chance: 0.5 },
+    ],
+  },
+  // 태양의 공중도시: 라마 요리사가 나르는 퀴노아; 태양신 콘도르는 요리책 마지막 재료인 태양의 황금 감자를 내놓는다.
+  llamaCook: {
+    mob: [
+      { name: "퀴노아", chance: 0.3 },
+      { name: "감자", chance: 0.15 },
+    ],
+    boss: [
+      { name: "태양의 황금 감자", chance: 1, quantity: 2 },
+      { name: "퀴노아", chance: 0.5 },
+    ],
+  },
 };
 
 // Every place an ingredient drops: which monster, mob or boss table, and the entry.

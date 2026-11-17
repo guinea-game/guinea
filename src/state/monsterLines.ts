@@ -46,6 +46,14 @@ export const MOB_LINES: Record<EnemyKind, string[]> = {
   spiceElephant: ["향신료 냄새 좋다~", "이 자루 내가 먼저 봤어!"],
   teaYak: ["찻잎 다 땄다... 이제 낮잠~", "음메? 이거 잡초였어?"],
   saffronParrot: ["사프란? 내 거 아닌데?", "짹! 황제님께 이를 거야!"],
+  coconutCrab: ["옆으로 옆으로~ 라임 내 거!", "코코넛 집이 또 꼈어..."],
+  paddyDuck: ["꽥! 줄 서! 줄 서!", "앞에서 멈추면 어떡해..."],
+  hulaPineapple: ["알로하~ 꽃목걸이 받아!", "엉덩이 흔들흔들~"],
+  prairieDog: ["이 피칸, 어디 숨겼더라?", "이햐~ 꼬마 카우보이 나가신다!"],
+  pinataDonkey: ["올레~ 사탕 받아라!", "부딪히면 다 쏟아진다고!"],
+  cacaoSloth: ["으음... 오 분만 더...", "카카오... 베개... 쿨..."],
+  grapeSnail: ["포도 하나만 더... 영차...", "등이 무거워... 낮잠 잘래..."],
+  llamaCook: ["오늘 특식 재료다~!", "쓰읍... 동글동글 맛있겠다..."],
 };
 
 export const BOSS_LINES: Record<EnemyKind, string[]> = {
@@ -91,4 +99,12 @@ export const BOSS_LINES: Record<EnemyKind, string[]> = {
   spiceElephant: ["내 커리가 제일 매워!", "불맛 좀 볼 텐가?"],
   teaYak: ["짜이 한 잔 하고 가게!", "찻물은 높이 따라야 제맛이지!"],
   saffronParrot: ["황실 사프란은 한 올도 못 내준다!", "짐의 꼬리를 우러러보라!"],
+  coconutCrab: ["내 똠얌이 시장 최고다!", "레몬그라스는 다 내 거라고!"],
+  paddyDuck: ["공양 바구니는 내 몫이다!", "내 춤을 보면 넋이 나갈걸!"],
+  hulaPineapple: ["마카다미아는 한 알도 못 준다!", "쿵! 쿵! 섬이 흔들린다!"],
+  prairieDog: ["비밀 소스는 내 목장의 법이다!", "협곡에선 내가 보안관이야!"],
+  pinataDonkey: ["내 노래를 끝까지 들어라!", "토르티야는 한 곡에 한 장이다!"],
+  cacaoSloth: ["카카오는 내 작업장의 보물이다!", "진한 맛을 보여 주지!"],
+  grapeSnail: ["좋은 포도는 전부 내 통으로!", "밟는 박자를 흐트러뜨리지 마라!"],
+  llamaCook: ["마지막 재료가 제 발로 왔구나!", "천 년을 끓인 솥이다, 들어와라!"],
 };

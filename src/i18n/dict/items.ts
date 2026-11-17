@@ -201,4 +201,39 @@ export const ITEMS_DICT: Record<string, string> = {
   "톡톡 터지는 연어알을 밥 위에 가득.": "A rice bowl heaped with roe that pops with every bite.",
   "기니의 한 상": "Gini's Whole Table",
   "오늘만큼은 배고프지 않다.": "Just for today, nobody goes hungry.",
+  // 43 태국 수상시장
+  "레몬그라스": "Lemongrass",
+  "라임": "Lime",
+  "똠얌꿍": "Tom Yum Goong",
+  "레몬그라스와 라임으로 새콤하게, 고추로 화끈하게 끓인 수상시장의 새우 수프.": "The floating market's shrimp soup — sour with lemongrass and lime, fiery with chili.",
+  // 44 발리 계단식 논
+  "팜슈가": "Palm Sugar",
+  "삼발": "Sambal",
+  "나시고렝": "Nasi Goreng",
+  "팜슈가로 달콤하게, 삼발로 매콤하게 볶아 계란 프라이를 얹은 발리식 볶음밥.": "Balinese fried rice — sweet with palm sugar, spicy with sambal, topped with a fried egg.",
+  // 45 하와이 화산 해변
+  "파인애플": "Pineapple",
+  "포케 볼": "Poke Bowl",
+  "두툼한 참치살에 파인애플과 고소한 마카다미아를 올린 하와이 해변의 밥 한 그릇.": "A Hawaiian beach rice bowl topped with thick cuts of tuna, pineapple and nutty macadamia.",
+  // 46 텍사스 바비큐 협곡
+  "바비큐 소스": "BBQ Sauce",
+  "피칸 바비큐 립": "Pecan BBQ Ribs",
+  "비밀 바비큐 소스를 발라 천천히 훈연하고, 구운 피칸을 듬뿍 뿌린 협곡 목장의 갈비.": "Canyon-ranch ribs brushed with the secret barbecue sauce, slow-smoked and showered with toasted pecans.",
+  // 47 멕시코 타코 축제
+  "아보카도": "Avocado",
+  "토르티야": "Tortilla",
+  "축제 타코": "Fiesta Tacos",
+  "갓 구운 옥수수 토르티야에 구운 고기와 아보카도, 라임 즙을 듬뿍 올린 축제 광장의 타코.": "Festival-plaza tacos: fresh corn tortillas piled with grilled meat, avocado and a big squeeze of lime.",
+  // 48 아마존 카카오 정글
+  "카카오": "Cacao",
+  "초코 바나나": "Choco Banana",
+  "갓 녹인 밀림 카카오 초콜릿에 바나나를 퐁당 담갔다가 아몬드를 솔솔 뿌린 디저트.": "Bananas dunked in freshly melted jungle-cacao chocolate and sprinkled with almonds.",
+  // 49 칠레 안데스 포도밭
+  "포도 엠파나다": "Grape Empanada",
+  "다진 고기와 양파, 계란에 달콤한 포도알을 콕콕 넣어 구운 안데스 포도밭의 엠파나다. 디저트로는 샤인머스캣 한 송이.": "Andean vineyard empanadas baked with minced meat, onion, egg and sweet grapes tucked inside — with a bunch of Shine Muscat for dessert.",
+  // 50 태양의 공중도시
+  "퀴노아": "Quinoa",
+  "태양의 황금 감자": "Sun Golden Potato",
+  "태양의 황금 수프": "Golden Sun Soup",
+  "요리책 《세상의 모든 맛》 마지막 장의 요리. 태양의 황금 감자와 퀴노아를 천 년 된 돌솥에 끓인, 한 숟갈이면 온몸이 따뜻해지는 수프.": "The dish on the last page of the cookbook, All the Flavors of the World. Sun golden potatoes and quinoa simmered in a thousand-year-old stone pot — one spoonful warms you head to toe.",
 };

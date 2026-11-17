@@ -92,6 +92,14 @@ export const BOSS_SKILLS: Record<EnemyKind, BossSkill> = {
   spiceElephant: { kind: "stun", variant: "confused", name: "매운 연기" },
   teaYak: { kind: "stun", variant: "stunned", name: "펄펄 끓는 찻물" },
   saffronParrot: { kind: "stun", variant: "confused", name: "보석 깃털 부채질" },
+  coconutCrab: { kind: "stun", variant: "stunned", name: "펄펄 끓는 똠얌 국물" },
+  paddyDuck: { kind: "stun", variant: "confused", name: "홀리는 탈춤" },
+  hulaPineapple: { kind: "stun", variant: "stunned", name: "용암 발 구르기" },
+  prairieDog: { kind: "stun", variant: "stunned", name: "자욱한 훈연" },
+  pinataDonkey: { kind: "stun", variant: "confused", name: "흥겨운 세레나데" },
+  cacaoSloth: { kind: "stun", variant: "stunned", name: "끈적한 초콜릿 폭포" },
+  grapeSnail: { kind: "stun", variant: "confused", name: "포도즙 물보라" },
+  llamaCook: { kind: "stun", variant: "stunned", name: "냄비 속으로!" },
 };
 
 export function getBossSkill(kind: EnemyKind): BossSkill {
