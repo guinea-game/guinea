@@ -29,7 +29,8 @@ export function showInterstitial(): Promise<boolean> {
   return Promise.resolve(false);
 }
 
-export function showRewardedAd(): Promise<AdResult> {
+export function showRewardedAd(onAboutToShow?: () => Promise<void>): Promise<AdResult> {
+  void onAboutToShow;
   return Promise.resolve("failed");
 }
 

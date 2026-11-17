@@ -228,11 +228,19 @@ export function initAds() {
 // Shows one rewarded ad. "earned": watched to the reward point, hand the reward out.
 // "dismissed": closed early, no reward. "failed": nothing could be loaded or shown (offline, no
 // fill yet), and the caller decides what to do instead.
-export async function showRewardedAd(): Promise<AdResult> {
+// `onAboutToShow`, if given, is awaited right before the native ad actually presents — the
+// caller's own RN <Modal> (the "로딩 중" one) must be fully dismissed by the time it resolves.
+// On iOS, that caller's native modal staying up the instant the SDK tries to present its own
+// full-screen ad races the SDK's own "is this screen visible" check and can time out (seen as
+// the ad error "Screen is not visible... timeout") — a plain `setState` before calling showAd()
+// isn't enough, since React doesn't flush it to the native side synchronously; the caller has
+// to actually confirm its modal is gone (e.g. via <Modal onDismiss>) before this resolves.
+export async function showRewardedAd(onAboutToShow?: () => Promise<void>): Promise<AdResult> {
   if (showing) return "failed";
   await initAds();
   const ready = await waitForRewardedReady(LOAD_TIMEOUT_MS);
   if (!ready) return "failed";
+  if (onAboutToShow) await onAboutToShow();
   showing = true;
   rewardEarned = false;
   return new Promise<AdResult>((resolve) => {

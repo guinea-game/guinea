@@ -6,7 +6,7 @@ import { kit, icons } from "../assets";
 import { NineSlice } from "./NineSlice";
 import { GameButton } from "./GameButton";
 import { AdBadge } from "./AdBadge";
-import { getLastAdError, showRewardedAd, subscribeAdShowing } from "../ads";
+import { getLastAdError, showRewardedAd } from "../ads";
 import { t } from "../i18n";
 
 type Phase = "prompt" | "loading" | "fallback";
@@ -39,10 +39,25 @@ export function RewardedAdModal({
   // The real native ad presents its own full-screen view the instant showRewardedAd() calls
   // showAd() — if our own RN Modal is still up at that exact moment, the two native
   // presentations fight over the window and the SDK's own "is this screen visible" check can
-  // time out (seen as the ad error "Screen is not visible... timeout"). Stepping our Modal
-  // aside while the native ad is actually up avoids that clash.
-  const [nativeAdShowing, setNativeAdShowing] = useState(false);
-  useEffect(() => subscribeAdShowing(setNativeAdShowing), []);
+  // time out (seen as the ad error "Screen is not visible... timeout"). `hiding` drops our
+  // Modal first; showRewardedAd() is told to wait for `onDismiss` (confirms the native modal
+  // is actually gone, not just that React scheduled the state update — a plain setState right
+  // before showAd() isn't enough, since React doesn't flush it to the native side
+  // synchronously) before it calls showAd(). `onDismiss` is iOS-only, hence the timeout
+  // fallback below for everywhere else (and belt-and-suspenders if iOS ever skips it).
+  const [hiding, setHiding] = useState(false);
+  const dismissResolver = useRef<(() => void) | null>(null);
+  const hideForNativeAd = () =>
+    new Promise<void>((resolve) => {
+      const finish = () => {
+        if (!dismissResolver.current) return;
+        dismissResolver.current = null;
+        resolve();
+      };
+      dismissResolver.current = finish;
+      setHiding(true);
+      setTimeout(finish, 300);
+    });
   const mounted = useRef(true);
   const callbacks = useRef({ onClaim, onCancel });
   useEffect(() => {
@@ -57,8 +72,9 @@ export function RewardedAdModal({
     else setPhase("prompt");
   };
   const start = () => {
-    showRewardedAd().then((result) => {
+    showRewardedAd(hideForNativeAd).then((result) => {
       if (!mounted.current) return;
+      setHiding(false);
       if (result === "earned") callbacks.current.onClaim();
       else if (result === "failed") setPhase("fallback");
       else dismissNoReward();
@@ -81,7 +97,13 @@ export function RewardedAdModal({
   const dismiss = phase === "fallback" ? dismissNoReward : phase === "prompt" ? onCancel : undefined;
 
   return (
-    <Modal visible={!nativeAdShowing} animationType="fade" transparent onRequestClose={() => dismiss?.()}>
+    <Modal
+      visible={!hiding}
+      animationType="fade"
+      transparent
+      onRequestClose={() => dismiss?.()}
+      onDismiss={() => dismissResolver.current?.()}
+    >
       <Pressable style={styles.backdrop} onPress={() => dismiss?.()}>
         <Pressable style={styles.panel} onPress={(event) => event.stopPropagation()}>
           <NineSlice slice={kit.panelLarge} />
