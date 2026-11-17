@@ -9,7 +9,6 @@ import { initialState } from "./initialState";
 import {
   addCompanionShards,
   applyCompanionUpgrade,
-  COMPANION_ATTACK_PER_LEVEL,
   countStars,
   getCodexGoldBonus,
   getCompanionLevel,
@@ -31,7 +30,7 @@ import { getOutfitGemPrice, getOutfitsGrantedByLoop, getOutfitsUnlockedByStage, 
 import { fitItems, getBagCapacity, getBagExpandCost, BAG_MAX_SLOTS, slotsUsed } from "./bag";
 import { BOSS_NAME, getClearedBosses, BOSS_PHASE_TWO_HP_MULTIPLIER, getDifficultyStage, getEffectiveDifficultyStage, getEnemyKind, getEnemyMaxHp, getEnemyRewardHp, getStageLabel, LAST_STAGE_NUMBER, isMiniBossDue, isGoldenMiniBoss, getMiniBossSalt, GOLDEN_GEMS, GOLDEN_GOLD_MULTIPLIER, STRAY_MOB_CHANCE, MINI_BOSS_COUNT, MINI_BOSS_EXP_MULTIPLIER, MINI_BOSS_HP_MULTIPLIER, STAGE_KILL_TARGET } from "./stages";
 import { rollDrops, type DropModifiers } from "./drops";
-import { BUFF_SLOT_PRICES, BUFFS, GRADE_DURATION_MS, GRADE_GOLD_MULTIPLIER, INSTANT_DISHES, OUTFIT_FIRST_STRIKE, OUTFIT_FORCED_MANUAL, OUTFIT_NAMES, OUTFIT_BUFFS, OUTFIT_COOLDOWN_REDUCTION_SEC, OUTFIT_FOOD_DURATION_BONUS_SEC, OUTFIT_HIT_COUNT, OUTFIT_MISS_CHANCE, OUTFIT_RELOAD_MS, OUTFIT_SHOTS_BEFORE_RELOAD, OUTFIT_SKILL_POWER, OUTFIT_SURE_DROPS, emptyBuffSlots, getBuffTotals, peekGrade, pushGrade, shiftGrade, type CookGrade } from "./buffs";
+import { BUFF_SLOT_PRICES, BUFFS, GRADE_DURATION_MS, GRADE_GOLD_MULTIPLIER, INSTANT_DISHES, OUTFIT_FORCED_MANUAL, OUTFIT_NAMES, OUTFIT_SKILL_POWER, OUTFIT_SURE_DROPS, emptyBuffSlots, getOutfitStats, getBuffTotals, peekGrade, pushGrade, shiftGrade, type CookGrade } from "./buffs";
 import { GROCERY, applyDiscount, getSellPrice, getShortfall } from "./grocery";
 import { canCook, consumeIngredients, getKnownRecipes, isRecipeForSale, RECIPES } from "./recipes";
 import { playSfx } from "../sound";
@@ -201,8 +200,17 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     return () => clearInterval(timer);
   }, []);
   const buffSlots = state.buffSlots ?? emptyBuffSlots();
-  const foodBuffs = getBuffTotals(buffSlots, now, state.equippedOutfit);
-  const outfitBuff = OUTFIT_BUFFS[state.equippedOutfit];
+  const outfitStats = getOutfitStats(state.equippedOutfit, getCompanionLevel(state, state.equippedOutfit));
+  const outfitBuff = outfitStats.buff;
+  const dishBuffs = getBuffTotals(buffSlots, now, state.equippedOutfit);
+  // The companion's cooking/drop quirks (셰프기니, 탐험기니's milestone) ride along with the
+  // dish totals, since that's where the kitchen and drop rolls read them.
+  const foodBuffs = {
+    ...dishBuffs,
+    cookSpeed: dishBuffs.cookSpeed + (outfitBuff.cookSpeed ?? 0),
+    greatSuccess: dishBuffs.greatSuccess + (outfitBuff.greatSuccess ?? 0),
+    dropRate: dishBuffs.dropRate + (outfitBuff.dropRate ?? 0),
+  };
   // Boss entrance's ad-for-attack-buff — same wall-clock-epoch shape as speedBoostUntil below,
   // so it keeps counting down while the app is closed.
   const bossBuffRemainingMs = state.bossBuffUntil ? Math.max(0, state.bossBuffUntil - now) : 0;
@@ -210,7 +218,6 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     attack:
       foodBuffs.attack +
       (outfitBuff?.attack ?? 0) +
-      getCompanionLevel(state, state.equippedOutfit) * COMPANION_ATTACK_PER_LEVEL +
       getCookbookAttackBonus(state.cookedRecipes) +
       (bossBuffRemainingMs > 0 ? BOSS_AD_BUFF_ATTACK_PERCENT : 0),
     criticalChance: foodBuffs.criticalChance + (outfitBuff?.criticalChance ?? 0),
@@ -226,7 +233,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   const speedBoostRemainingMs = state.speedBoostUntil ? Math.max(0, state.speedBoostUntil - now) : 0;
   const speedMultiplier = speedBoostRemainingMs > 0 ? 2 : 1;
   // The ad boost, attack-speed food and a companion's own pace (사무라이기니 -35%) stack.
-  const battleSpeed = speedMultiplier * (1 + foodBuffs.attackSpeed / 100) * (1 + (OUTFIT_BUFFS[state.equippedOutfit]?.attackSpeed ?? 0) / 100);
+  const battleSpeed = speedMultiplier * (1 + foodBuffs.attackSpeed / 100) * (1 + (outfitBuff.attackSpeed ?? 0) / 100);
   const watchAdForSpeedBoost = () => {
     if (speedBoostRemainingMs > 0) return;
     const startedAt = Date.now();
@@ -815,16 +822,16 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     criticalDamage: state.criticalDamage + buffs.criticalDamage,
     criticalChance: (state.criticalChance ?? 5) + buffs.criticalChance,
     goldBonus: state.goldBonus + buffs.gold,
-    missChance: Math.max(0, (OUTFIT_MISS_CHANCE[state.equippedOutfit] ?? 0) - foodBuffs.missReduction),
-    hitCount: OUTFIT_HIT_COUNT[state.equippedOutfit] ?? 1,
-    cooldownReductionMs: ((OUTFIT_COOLDOWN_REDUCTION_SEC[state.equippedOutfit] ?? 0) + foodBuffs.skillCooldown) * 1000,
+    missChance: Math.max(0, outfitStats.missChance - foodBuffs.missReduction),
+    hitCount: outfitStats.hitCount,
+    cooldownReductionMs: (outfitStats.cooldownSec + foodBuffs.skillCooldown) * 1000,
     bossDamage: foodBuffs.bossDamage,
     skillPower: OUTFIT_SKILL_POWER[state.equippedOutfit] ?? 1,
-    firstStrikeMultiplier: OUTFIT_FIRST_STRIKE[state.equippedOutfit] ?? 0,
+    firstStrikeMultiplier: outfitStats.firstStrike,
     forcedManual: OUTFIT_FORCED_MANUAL[state.equippedOutfit] ?? false,
-    shotsBeforeReload: OUTFIT_SHOTS_BEFORE_RELOAD[state.equippedOutfit] ?? 0,
-    reloadMs: OUTFIT_RELOAD_MS[state.equippedOutfit] ?? 0,
-    extraHitChance: foodBuffs.extraHit,
+    shotsBeforeReload: outfitStats.shotsBeforeReload,
+    reloadMs: outfitStats.reloadMs,
+    extraHitChance: foodBuffs.extraHit + outfitStats.extraHitChance,
     executeBonus: foodBuffs.execute,
     enemyMaxHp,
     enemyRewardHp,
@@ -1472,7 +1479,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
       // The grade this specific unit cooked at (FIFO — see buffs.ts) replaces the old
       // tier-fixed duration; glutton still stretches it, 모험기니 still tacks on a flat bonus.
       const grade = peekGrade(previous.dishQuality, recipeId);
-      const foodDurationBonusMs = (OUTFIT_FOOD_DURATION_BONUS_SEC[previous.equippedOutfit] ?? 0) * 1000;
+      const foodDurationBonusMs = getOutfitStats(previous.equippedOutfit, getCompanionLevel(previous, previous.equippedOutfit)).foodBonusSec * 1000;
       const durationMs = GRADE_DURATION_MS[grade] * (previous.equippedSkill === "glutton" ? GLUTTON_FOOD_MULTIPLIER : 1) + foodDurationBonusMs;
       const slots = previous.buffSlots ?? emptyBuffSlots();
       const running = (slot: (typeof slots)[number]) => slot && slot.expiresAt > startedAt;

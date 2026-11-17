@@ -337,6 +337,94 @@ export const OUTFIT_NO_OFFLINE: Partial<Record<Outfit, boolean>> = {
   boxerGini: true,
 };
 
+// --- 동료 승급 (조각): each level grows the companion's OWN quirk instead of a flat attack
+// bonus — sharpening its strength or shrinking its drawback. Levels 0..COMPANION_MAX_LEVEL
+// (progression.ts); 5 and 10 also unlock a milestone extra. Everything that reads a
+// companion's numbers goes through getOutfitStats, never the raw tables above.
+export type OutfitStats = {
+  buff: BuffEffect;
+  missChance: number;
+  hitCount: number;
+  // % chance a swing lands one more strike (on top of food's extraHit).
+  extraHitChance: number;
+  firstStrike: number;
+  cooldownSec: number;
+  foodBonusSec: number;
+  shotsBeforeReload: number;
+  reloadMs: number;
+};
+
+const round1 = (value: number) => Math.round(value * 10) / 10;
+
+export function getOutfitStats(outfit: Outfit, level = 0): OutfitStats {
+  const L = Math.max(0, Math.min(10, level));
+  const buff: BuffEffect = { ...(OUTFIT_BUFFS[outfit] ?? {}) };
+  const stats: OutfitStats = {
+    buff,
+    missChance: OUTFIT_MISS_CHANCE[outfit] ?? 0,
+    hitCount: OUTFIT_HIT_COUNT[outfit] ?? 1,
+    extraHitChance: 0,
+    firstStrike: OUTFIT_FIRST_STRIKE[outfit] ?? 0,
+    cooldownSec: OUTFIT_COOLDOWN_REDUCTION_SEC[outfit] ?? 0,
+    foodBonusSec: OUTFIT_FOOD_DURATION_BONUS_SEC[outfit] ?? 0,
+    shotsBeforeReload: OUTFIT_SHOTS_BEFORE_RELOAD[outfit] ?? 0,
+    reloadMs: OUTFIT_RELOAD_MS[outfit] ?? 0,
+  };
+  switch (outfit) {
+    case "default": // 음식 시간 +15초 → +90초
+      stats.foodBonusSec += L * 7.5;
+      break;
+    case "explorerHamster": // 골드 +10% → +35%, Lv5 재료 드롭 +10%
+      buff.gold = (buff.gold ?? 0) + L * 2.5;
+      if (L >= 5) buff.dropRate = (buff.dropRate ?? 0) + 10;
+      break;
+    case "tetoGini": // 헛스윙 40% → 15%
+      stats.missChance = Math.max(0, stats.missChance - L * 2.5);
+      break;
+    case "assassinGini": // 공격 -45% → -15%, Lv10 20% 확률로 3연타
+      buff.attack = (buff.attack ?? 0) + L * 3;
+      if (L >= 10) stats.extraHitChance += 20;
+      break;
+    case "samuraiGini": // 첫 타 ×5 → ×8, 공속 -35% → -15%
+      stats.firstStrike = round1(stats.firstStrike + L * 0.3);
+      buff.attackSpeed = (buff.attackSpeed ?? 0) + L * 2;
+      break;
+    case "egenGini": // 스킬 쿨 -60초 → -105초
+      stats.cooldownSec += L * 4.5;
+      break;
+    case "chefGini": // 대성공 +20% → +40%, 공격 -15% → 0%
+      buff.greatSuccess = (buff.greatSuccess ?? 0) + L * 2;
+      buff.attack = (buff.attack ?? 0) + L * 1.5;
+      break;
+    case "witchGini": // 치명 피해 +20 → +50, Lv10 치명 확률 +5
+      buff.criticalDamage = (buff.criticalDamage ?? 0) + L * 3;
+      if (L >= 10) buff.criticalChance = (buff.criticalChance ?? 0) + 5;
+      break;
+    case "boxerGini": // 탭 한 방 공격 +5%/레벨
+      buff.attack = (buff.attack ?? 0) + L * 5;
+      break;
+    case "cowboyGini": // 탄창 6 → 8발 (Lv5, Lv10), 재장전 2초 → 1.2초
+      stats.shotsBeforeReload += Math.floor(L / 5);
+      stats.reloadMs -= L * 80;
+      break;
+  }
+  return stats;
+}
+
+// One line on what the next 승급 improves, for the companion card.
+export const OUTFIT_GROWTH_HINT: Record<Outfit, [string, string, string, string]> = {
+  default: ["음식 시간 +7.5초", "+7.5s food duration", "料理時間 +7.5秒", "食物时间 +7.5秒"],
+  explorerHamster: ["골드 +2.5% (Lv5 재료 드롭 +10%)", "Gold +2.5% (Lv5: +10% drops)", "ゴールド +2.5%（Lv5 素材ドロップ +10%）", "金币 +2.5%（Lv5 材料掉落 +10%）"],
+  tetoGini: ["헛스윙 -2.5%", "Whiff -2.5%", "空振り -2.5%", "落空 -2.5%"],
+  assassinGini: ["공격 페널티 -3% (Lv10 3연타)", "Attack penalty -3% (Lv10: triple hit)", "攻撃ペナルティ -3%（Lv10 3連撃）", "攻击惩罚 -3%（Lv10 三连击）"],
+  samuraiGini: ["첫 타 +0.3배 · 공속 +2%", "First hit +0.3× · Speed +2%", "初撃 +0.3倍・攻速 +2%", "首击 +0.3倍 · 攻速 +2%"],
+  egenGini: ["스킬 쿨 -4.5초", "Skill cooldown -4.5s", "スキルクール -4.5秒", "技能冷却 -4.5秒"],
+  chefGini: ["대성공 +2% · 공격 페널티 -1.5%", "Great success +2% · Attack penalty -1.5%", "大成功 +2%・攻撃ペナルティ -1.5%", "大成功 +2% · 攻击惩罚 -1.5%"],
+  witchGini: ["치명 피해 +3 (Lv10 치명 확률 +5)", "Crit damage +3 (Lv10: +5 crit chance)", "クリダメ +3（Lv10 クリ率 +5）", "暴伤 +3（Lv10 暴击率 +5）"],
+  boxerGini: ["공격력 +5%", "Attack +5%", "攻撃力 +5%", "攻击力 +5%"],
+  cowboyGini: ["재장전 -0.08초 (Lv5·10 탄창 +1)", "Reload -0.08s (Lv5/10: +1 round)", "リロード -0.08秒（Lv5・10 装弾数 +1）", "装填 -0.08秒（Lv5/10 弹仓 +1）"],
+};
+
 const signed = (value: number) => `${value >= 0 ? "+" : ""}${value}`;
 
 const EFFECT_LABELS: Record<keyof BuffEffect, (value: number) => string> = {

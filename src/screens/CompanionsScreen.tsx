@@ -11,17 +11,12 @@ import { PageHeading } from "../components/PageHeading";
 import { GameButton } from "../components/GameButton";
 import { CharacterSprite } from "../components/CharacterSprite";
 import {
-  OUTFIT_BUFFS,
-  OUTFIT_COOLDOWN_REDUCTION_SEC,
-  OUTFIT_FOOD_DURATION_BONUS_SEC,
-  OUTFIT_HIT_COUNT,
-  OUTFIT_MISS_CHANCE,
-  OUTFIT_FIRST_STRIKE,
+  getOutfitStats,
+  OUTFIT_GROWTH_HINT,
   OUTFIT_FORCED_MANUAL,
   OUTFIT_NO_OFFLINE,
   OUTFIT_SURE_DROPS,
   OUTFIT_SKILL_POWER,
-  OUTFIT_SHOTS_BEFORE_RELOAD,
   DISH_PARTNERS,
   PARTNER_MULTIPLIER,
   describeEffect,
@@ -33,25 +28,26 @@ import { LockBadge } from "../components/LockBadge";
 import { getOutfitGemPrice, isOutfitUnlocked, OUTFIT_EARLY_UNLOCK_GEMS, OUTFIT_GEM_PRICE, OUTFIT_LOOP_GRANT, OUTFIT_UNLOCK_STAGE } from "../state/unlocks";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { RewardedAdModal } from "../components/RewardedAdModal";
-import { COMPANION_ATTACK_PER_LEVEL, COMPANION_MAX_LEVEL, COMPANION_SHARD_STAGE, getCompanionLevel, getCompanionShards, getShardCost, SHARD_AD_REWARD, SHARD_ADS_PER_DAY, SHARDS_PER_BOSS } from "../state/progression";
+import { COMPANION_MAX_LEVEL, COMPANION_SHARD_STAGE, getCompanionLevel, getCompanionShards, getShardCost, SHARD_AD_REWARD, SHARD_ADS_PER_DAY, SHARDS_PER_BOSS } from "../state/progression";
 import { BOSS_NAME, getEnemyKind, getStageCode } from "../state/stages";
 import type { GameState, Outfit } from "../types";
 import { t } from "../i18n";
 
 // Each entry swaps the battle sprite to that companion's art and grants whichever of these
 // quirks apply for as long as it stays equipped.
-function companionDetail(outfit: Outfit) {
+function companionDetail(outfit: Outfit, level = 0) {
   const parts: string[] = [];
-  const buff = OUTFIT_BUFFS[outfit];
+  const stats = getOutfitStats(outfit, level);
+  const buff = Object.keys(stats.buff).length > 0 ? stats.buff : undefined;
   if (buff) parts.push(describeEffect(buff));
-  const missChance = OUTFIT_MISS_CHANCE[outfit];
+  const missChance = stats.missChance;
   if (missChance)
     parts.push(
       t(`${missChance}% 확률로 공격 빗나감`, `${missChance}% chance to whiff`, `${missChance}%の確率で攻撃が外れる`, `${missChance}%概率攻击落空`),
     );
-  const hitCount = OUTFIT_HIT_COUNT[outfit];
+  const hitCount = stats.hitCount > 1 ? stats.hitCount : 0;
   if (hitCount) parts.push(t(`한 번에 ${hitCount}타씩 타격`, `Strikes ${hitCount} times per hit`, `一度に${hitCount}回攻撃`, `每次攻击${hitCount}连击`));
-  const foodDurationBonus = OUTFIT_FOOD_DURATION_BONUS_SEC[outfit];
+  const foodDurationBonus = stats.foodBonusSec;
   if (foodDurationBonus)
     parts.push(
       t(
@@ -61,7 +57,7 @@ function companionDetail(outfit: Outfit) {
         `食物效果时间 +${foodDurationBonus}秒`,
       ),
     );
-  const firstStrike = OUTFIT_FIRST_STRIKE[outfit];
+  const firstStrike = stats.firstStrike;
   if (firstStrike)
     parts.push(
       t(
@@ -73,14 +69,14 @@ function companionDetail(outfit: Outfit) {
       t("수동 공격 불가", "No manual attacking", "手動攻撃不可", "无法手动攻击"),
     );
   if (OUTFIT_SURE_DROPS[outfit]) parts.push(t("재료 드랍 확률 100%", "100% ingredient drop rate", "素材ドロップ率100%", "材料掉落率100%"));
-  const cooldownReduction = OUTFIT_COOLDOWN_REDUCTION_SEC[outfit];
+  const cooldownReduction = stats.cooldownSec;
   if (cooldownReduction)
     parts.push(
       t(
-        `스킬 쿨타임 -${cooldownReduction / 60}분`,
-        `Skill cooldown -${cooldownReduction / 60}min`,
-        `スキルクールタイム -${cooldownReduction / 60}分`,
-        `技能冷却 -${cooldownReduction / 60}分钟`,
+        `스킬 쿨타임 -${cooldownReduction}초`,
+        `Skill cooldown -${cooldownReduction}s`,
+        `スキルクールタイム -${cooldownReduction}秒`,
+        `技能冷却 -${cooldownReduction}秒`,
       ),
     );
   const skillPower = OUTFIT_SKILL_POWER[outfit];
@@ -97,14 +93,14 @@ function companionDetail(outfit: Outfit) {
     parts.push(t("항상 수동 전투 (탭해서 공격)", "Always manual combat (tap to attack)", "常に手動戦闘（タップで攻撃）", "始终手动战斗（点击攻击）"));
   if (OUTFIT_NO_OFFLINE[outfit])
     parts.push(t("휴식(오프라인) 중에는 사냥 안 함", "Doesn't hunt while resting (offline)", "休憩中（オフライン）は狩りをしない", "休息（离线）期间不进行狩猎"));
-  const shotsBeforeReload = OUTFIT_SHOTS_BEFORE_RELOAD[outfit];
+  const shotsBeforeReload = stats.shotsBeforeReload;
   if (shotsBeforeReload)
     parts.push(
       t(
-        `${shotsBeforeReload}발마다 재장전`,
-        `Reloads every ${shotsBeforeReload} shots`,
-        `${shotsBeforeReload}発ごとに再装填`,
-        `每${shotsBeforeReload}发需要装填`,
+        `${shotsBeforeReload}발마다 재장전 ${stats.reloadMs / 1000}초`,
+        `Reloads every ${shotsBeforeReload} shots (${stats.reloadMs / 1000}s)`,
+        `${shotsBeforeReload}発ごとに再装填 ${stats.reloadMs / 1000}秒`,
+        `每${shotsBeforeReload}发装填 ${stats.reloadMs / 1000}秒`,
       ),
     );
   return parts.length > 0 ? parts.join(" · ") : t("동료 없이 다닐 때", "Traveling without a companion", "一人で旅する時", "独自旅行时");
@@ -122,33 +118,34 @@ const EFFECT_ICONS: Partial<Record<keyof BuffEffect, number>> = {
   greatSuccess: icons.star,
 };
 
-function companionEffects(outfit: Outfit): { icon: number; text: string }[] {
+function companionEffects(outfit: Outfit, level = 0): { icon: number; text: string }[] {
   const parts: { icon: number; text: string }[] = [];
-  const buff = OUTFIT_BUFFS[outfit];
+  const stats = getOutfitStats(outfit, level);
+  const buff = Object.keys(stats.buff).length > 0 ? stats.buff : undefined;
   if (buff) for (const part of describeEffectParts(buff)) parts.push({ icon: EFFECT_ICONS[part.key] ?? icons.star, text: part.text });
-  const missChance = OUTFIT_MISS_CHANCE[outfit];
+  const missChance = stats.missChance;
   if (missChance)
     parts.push({ icon: statIcons.criticalChance, text: t(`${missChance}% 빗나감`, `${missChance}% whiff`, `${missChance}%ミス`, `${missChance}%落空`) });
-  const hitCount = OUTFIT_HIT_COUNT[outfit];
+  const hitCount = stats.hitCount > 1 ? stats.hitCount : 0;
   if (hitCount) parts.push({ icon: uiImages.swords, text: t(`${hitCount}연타`, `${hitCount}-hit combo`, `${hitCount}連撃`, `${hitCount}连击`) });
-  const foodDurationBonus = OUTFIT_FOOD_DURATION_BONUS_SEC[outfit];
+  const foodDurationBonus = stats.foodBonusSec;
   if (foodDurationBonus)
     parts.push({
       icon: food.cookPotTrim,
       text: t(`음식 시간 +${foodDurationBonus}초`, `+${foodDurationBonus}s food duration`, `料理時間 +${foodDurationBonus}秒`, `食物时间 +${foodDurationBonus}秒`),
     });
-  const firstStrike = OUTFIT_FIRST_STRIKE[outfit];
+  const firstStrike = stats.firstStrike;
   if (firstStrike)
     parts.push(
       { icon: skillImages.execute, text: t(`첫 공격 ×${firstStrike}`, `First hit ×${firstStrike}`, `初撃×${firstStrike}`, `首击×${firstStrike}`) },
       { icon: skillImages.barrage, text: t("수동 공격 불가", "No manual attack", "手動攻撃不可", "无法手动攻击") },
     );
   if (OUTFIT_SURE_DROPS[outfit]) parts.push({ icon: icons.chest, text: t("재료 드랍 100%", "100% ingredient drop", "素材ドロップ100%", "材料掉落100%") });
-  const cooldownReduction = OUTFIT_COOLDOWN_REDUCTION_SEC[outfit];
+  const cooldownReduction = stats.cooldownSec;
   if (cooldownReduction)
     parts.push({
       icon: icons.energy,
-      text: t(`쿨타임 -${cooldownReduction / 60}분`, `Cooldown -${cooldownReduction / 60}min`, `クールタイム -${cooldownReduction / 60}分`, `冷却 -${cooldownReduction / 60}分钟`),
+      text: t(`쿨타임 -${cooldownReduction}초`, `Cooldown -${cooldownReduction}s`, `クールタイム -${cooldownReduction}秒`, `冷却 -${cooldownReduction}秒`),
     });
   const skillPower = OUTFIT_SKILL_POWER[outfit];
   if (skillPower)
@@ -158,11 +155,16 @@ function companionEffects(outfit: Outfit): { icon: number; text: string }[] {
   if (OUTFIT_NO_OFFLINE[outfit])
     parts.push({ icon: icons.home, text: t("휴식 중 사냥 안 함", "Doesn't hunt while resting", "休憩中は狩りをしない", "休息期间不狩猎") });
   if (outfit === "witchGini") parts.push({ icon: icons.potionBlue, text: t("모든 공격이 마법", "Every attack is magic", "すべての攻撃が魔法", "所有攻击皆为魔法") });
-  const shotsBeforeReload = OUTFIT_SHOTS_BEFORE_RELOAD[outfit];
+  const shotsBeforeReload = stats.shotsBeforeReload;
   if (shotsBeforeReload)
     parts.push({
       icon: icons.energy,
-      text: t(`${shotsBeforeReload}발마다 재장전`, `Reloads every ${shotsBeforeReload} shots`, `${shotsBeforeReload}発ごとに再装填`, `每${shotsBeforeReload}发需要装填`),
+      text: t(`${shotsBeforeReload}발 · 재장전 ${stats.reloadMs / 1000}초`, `${shotsBeforeReload} rounds · ${stats.reloadMs / 1000}s reload`, `${shotsBeforeReload}発・リロード ${stats.reloadMs / 1000}秒`, `${shotsBeforeReload}发 · 装填 ${stats.reloadMs / 1000}秒`),
+    });
+  if (stats.extraHitChance)
+    parts.push({
+      icon: uiImages.swords,
+      text: t(`${stats.extraHitChance}% 추가타`, `${stats.extraHitChance}% extra hit`, `${stats.extraHitChance}%追加打`, `${stats.extraHitChance}%追加打击`),
     });
   return parts.length > 0 ? parts : [{ icon: icons.heart, text: t("동료 없이", "No companion", "一人で", "独自一人") }];
 }
@@ -439,7 +441,7 @@ export function CompanionsScreen({
             <Text style={styles.previewTitle}>{t(equippedItem.name)}</Text>
             <Text style={styles.previewBlurb}>{t(equippedItem.blurb)}</Text>
             <Text style={styles.previewSub}>
-              {equippedItem.outfit === "witchGini" ? `${companionDetail(equippedItem.outfit)} · ${t(WITCH_EXTRA_DETAIL, "Every attack is magic")}` : companionDetail(equippedItem.outfit)}
+              {equippedItem.outfit === "witchGini" ? `${companionDetail(equippedItem.outfit, getCompanionLevel(progress, equippedItem.outfit))} · ${t(WITCH_EXTRA_DETAIL, "Every attack is magic")}` : companionDetail(equippedItem.outfit, getCompanionLevel(progress, equippedItem.outfit))}
             </Text>
             <PartnerDishes outfit={equippedItem.outfit} light />
           </View>
@@ -544,7 +546,7 @@ export function CompanionsScreen({
                   hidden until it joins. */}
               {!locked && <View style={styles.tiles}>
                 <InfoTile label={t("적용 효과", "Effects")}>
-                  {companionEffects(item.outfit).map((effect) => (
+                  {companionEffects(item.outfit, level).map((effect) => (
                     <IconFact key={effect.text} icon={effect.icon} caption={effect.text} />
                   ))}
                 </InfoTile>
@@ -578,13 +580,17 @@ export function CompanionsScreen({
                   )}
                 >
                   <IconFact
-                    icon={statIcons.attack}
-                    caption={t(
-                      `공격력 +${level * COMPANION_ATTACK_PER_LEVEL}%${maxed ? "" : `\n조각 ${shards}/${shardCost}`}`,
-                      `Attack +${level * COMPANION_ATTACK_PER_LEVEL}%${maxed ? "" : `\nShards ${shards}/${shardCost}`}`,
-                      `攻撃力 +${level * COMPANION_ATTACK_PER_LEVEL}%${maxed ? "" : `\n欠片 ${shards}/${shardCost}`}`,
-                      `攻击力 +${level * COMPANION_ATTACK_PER_LEVEL}%${maxed ? "" : `\n碎片 ${shards}/${shardCost}`}`,
-                    )}
+                    icon={icons.star}
+                    caption={
+                      maxed
+                        ? t("고유 능력 최대 강화", "Signature ability maxed", "固有能力 最大強化", "专属能力已满级")
+                        : t(
+                            `다음: ${OUTFIT_GROWTH_HINT[item.outfit][0]}\n조각 ${shards}/${shardCost}`,
+                            `Next: ${OUTFIT_GROWTH_HINT[item.outfit][1]}\nShards ${shards}/${shardCost}`,
+                            `次: ${OUTFIT_GROWTH_HINT[item.outfit][2]}\n欠片 ${shards}/${shardCost}`,
+                            `下级: ${OUTFIT_GROWTH_HINT[item.outfit][3]}\n碎片 ${shards}/${shardCost}`,
+                          )
+                    }
                   />
                   {canUpgrade && (
                     <GameButton variant="green" onPress={() => onUpgrade(item.outfit)} style={styles.upgradeButton} textStyle={styles.equipButtonText} accessibilityLabel={t(`${item.name} 승급`, `Upgrade ${t(item.name)}`, `${t(item.name)}を昇格`, `升级${t(item.name)}`)}>
