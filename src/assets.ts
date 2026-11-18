@@ -1015,28 +1015,28 @@ const slice = (source: number, width: number, height: number, insets: UiSlice["i
 // Soft parchment-and-pill kit. Shared by the growth panel, buttons, cards and modals on
 // every page — swapping art here reskins all of them.
 export const kit = {
-  panelLarge: slice(require("../assets/kit2/panel-xl.webp"), 421, 145, [26, 26, 28, 26], "#feebbe"),
-  panel: slice(require("../assets/kit2/card.webp"), 176, 97, [24, 24, 26, 24], "#fbebcc"),
-  panelSmall: slice(require("../assets/kit2/panel-square.webp"), 133, 151, [26, 26, 28, 26], "#fdf0d6"),
-  panelBrown: slice(require("../assets/kit2/plank.webp"), 179, 59, [18, 24, 20, 24], "#deab6f"),
-  panelParchment: slice(require("../assets/kit2/panel-tall.webp"), 117, 153, [26, 26, 28, 26], "#feebbe"),
-  inset: slice(require("../assets/kit2/cushion.webp"), 157, 66, [22, 24, 24, 24], "#fde8bd"),
+  panelLarge: slice(require("../assets/kit2/panel-xl.webp"), 421, 145, [26, 26, 28, 26], "#fde7b5"),
+  panel: slice(require("../assets/kit2/card.webp"), 176, 97, [24, 24, 26, 24], "#fcebca"),
+  panelSmall: slice(require("../assets/kit2/panel-square.webp"), 133, 151, [26, 26, 28, 26], "#fdefce"),
+  panelBrown: slice(require("../assets/kit2/plank.webp"), 179, 59, [18, 24, 20, 24], "#d9a56b"),
+  panelParchment: slice(require("../assets/kit2/panel-tall.webp"), 117, 153, [26, 26, 28, 26], "#fdeabb"),
+  inset: slice(require("../assets/kit2/cushion.webp"), 157, 66, [22, 24, 24, 24], "#fde8b9"),
   slot: slice(require("../assets/kit2/sq-cream.webp"), 54, 56, [16, 16, 18, 16], "#fceccb"),
   buttonCream: slice(require("../assets/kit2/btn-cream.webp"), 147, 48, [16, 22, 18, 22]),
   buttonGreen: slice(require("../assets/kit2/btn-green.webp"), 145, 49, [16, 22, 18, 22]),
   buttonBeige: slice(require("../assets/kit2/btn-tan-2.webp"), 145, 48, [16, 22, 18, 22]),
   buttonGray: slice(require("../assets/kit2/btn-gray.webp"), 134, 47, [16, 22, 18, 22]),
   buttonBrown: slice(require("../assets/kit2/plank.webp"), 179, 59, [18, 24, 20, 24]),
-  tabGreen: slice(require("../assets/kit2/green-panel.webp"), 204, 95, [26, 28, 30, 28], "#82be3b"),
-  track: slice(require("../assets/ui/kit-track.webp"), 362, 47, [20, 24, 20, 24], "#f8eac7"),
+  tabGreen: slice(require("../assets/kit2/green-panel.webp"), 204, 95, [26, 28, 30, 28], "#81bd3b"),
+  track: slice(require("../assets/ui/kit-track.webp"), 362, 47, [20, 24, 20, 24], "#fcf2d8"),
 };
 
 // Grandma's grocery: warmer wood-and-linen frames from the shop sheet.
 export const shopKit = {
-  cardWood: slice(require("../assets/shop/card-wood.webp"), 184, 253, [36, 36, 40, 36], "#fcf1d5"),
+  cardWood: slice(require("../assets/shop/card-wood.webp"), 184, 253, [36, 36, 40, 36], "#fef1d2"),
   frameWide: slice(require("../assets/shop/frame-wide.webp"), 598, 237, [70, 60, 70, 70], "#faedd1"),
   // Tail hangs off the bottom-left, so those insets are wide enough to keep it whole.
-  bubble: slice(require("../assets/shop/bubble.webp"), 347, 206, [40, 40, 60, 80], "#fcf2d9"),
+  bubble: slice(require("../assets/shop/bubble.webp"), 347, 206, [40, 40, 60, 80], "#fdf4d9"),
   // Coin is baked into the left end.
   coinPill: slice(require("../assets/shop/coin-pill.webp"), 331, 104, [30, 50, 36, 100]),
   pillRed: slice(require("../assets/shop/pill-red.webp"), 225, 74, [30, 40, 34, 40]),
@@ -1106,13 +1106,13 @@ export const navIcons = {
 
 // Wood-and-brass frames: bars, slots, rings and emblems.
 export const frameKit = {
-  barFrame: slice(require("../assets/frames/bar-frame.webp"), 495, 40, [10, 22, 10, 22], "#fde6be"),
+  barFrame: slice(require("../assets/frames/bar-frame.webp"), 495, 40, [10, 22, 10, 22], "#fde4b8"),
   fillGold: slice(require("../assets/frames/fill-gold.webp"), 275, 36, [14, 18, 14, 18]),
   fillGreen: slice(require("../assets/frames/fill-green.webp"), 277, 36, [14, 18, 14, 18]),
   fillRed: slice(require("../assets/frames/fill-red.webp"), 275, 34, [14, 18, 14, 18]),
   fillBlue: slice(require("../assets/frames/fill-blue.webp"), 276, 36, [14, 18, 14, 18]),
   squareWood: slice(require("../assets/kit2/sq-cream.webp"), 54, 56, [16, 16, 18, 16], "#fceccb"),
-  squareGold: slice(require("../assets/kit2/frame-gold.webp"), 134, 153, [24, 24, 24, 24], "#fdf2d7"),
+  squareGold: slice(require("../assets/kit2/frame-gold.webp"), 134, 153, [24, 24, 24, 24], "#fdf0d3"),
 };
 
 export const frameImages = {
@@ -1122,10 +1122,10 @@ export const frameImages = {
 };
 
 export const headerKit = {
-  nameTag: slice(require("../assets/kit2/scroll-tag.webp"), 147, 55, [14, 26, 16, 26], "#f9e6c3"),
+  nameTag: slice(require("../assets/kit2/scroll-tag.webp"), 147, 55, [14, 26, 16, 26], "#fae3bd"),
   // One cream card holding the whole profile (avatar, name, level, exp).
   // Wood-rimmed pill with a round socket on the left that the avatar sits in.
-  profile: slice(require("../assets/kit2/pill-coin.webp"), 232, 68, [20, 34, 22, 66], "#fdedcc"),
+  profile: slice(require("../assets/kit2/pill-coin.webp"), 232, 68, [20, 34, 22, 66], "#fcebc8"),
 };
 
 export const kitImages = {
@@ -1479,8 +1479,8 @@ export const panelArt = [
 // The ones used as stretchy frames, with insets that keep their corners and trim intact.
 export const panelSlices = {
   // Big wood frame with brass bolts in each corner.
-  woodBolts: slice(panelArt[0], 480, 212, [44, 50, 44, 50], "#f6e2b8"),
-  goldPill: slice(panelArt[16], 393, 109, [48, 52, 48, 52], "#fce6a8"),
+  woodBolts: slice(panelArt[0], 480, 212, [44, 50, 44, 50], "#fadc99"),
+  goldPill: slice(panelArt[16], 393, 109, [48, 52, 48, 52], "#fde4a6"),
   // Wood frame with a leafy plank sign across the top — the title goes on the plank.
   leafPlank: slice(panelArt[1], 480, 257, [106, 66, 42, 66]),
   // Wood frame with a red ribbon arching across the top — the heading goes on the ribbon.
@@ -1523,11 +1523,11 @@ export const creamArt = [
 
 export const creamSlices = {
   // A big card that groups several rows.
-  card: slice(creamArt[0], 1114, 339, [96, 100, 100, 100], "#feecc3"),
+  card: slice(creamArt[0], 1114, 339, [96, 100, 100, 100], "#fdedc5"),
   // A full-width row plate.
-  row: slice(creamArt[6], 1105, 139, [64, 72, 68, 72], "#fdedc7"),
+  row: slice(creamArt[6], 1105, 139, [64, 72, 68, 72], "#fdeec8"),
   // A square cell for an item or icon.
-  cell: slice(creamArt[3], 224, 217, [56, 58, 60, 58], "#fdecc4"),
+  cell: slice(creamArt[3], 224, 217, [56, 58, 60, 58], "#feedc3"),
 };
 
 // 골목 상점: the merchant guinea (상인기니) and the gold-trimmed store frames from the shop

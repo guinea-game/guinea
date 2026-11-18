@@ -13,6 +13,7 @@ import { checkContent } from "./src/state/contentCheck";
 import { initAds } from "./src/ads";
 import { installWebWordBreak } from "./src/components/GameText";
 import { hasChosenLanguage } from "./src/i18n";
+import { preloadUiFrames } from "./src/components/uiPreload";
 
 // Lists any half-added recipe/ingredient in the console (dev builds only).
 if (__DEV__) checkContent();
@@ -52,6 +53,9 @@ export default function App() {
     startBgm();
     // Starts the ad SDK and preloads one rewarded ad (no-op on web).
     initAds();
+    // Fetch every frame image while the title screen is up, so panels never build up
+    // piece by piece in front of the player on a slow connection.
+    preloadUiFrames();
   }, []);
 
   if (!fontsLoaded || languageChosen === null) {

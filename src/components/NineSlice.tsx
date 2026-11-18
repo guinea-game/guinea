@@ -1,6 +1,7 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Image, StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from "react-native";
 import type { UiSlice } from "../assets";
+import { isSliceLoaded, markSliceLoaded, onSliceLoaded } from "./uiPreload";
 
 type Span = { srcStart: number; srcLength: number; start: number; length: number };
 
@@ -21,6 +22,23 @@ function spans(sourceLength: number, startInset: number, endInset: number, lengt
 // silhouette makes a drop shadow that follows the art's own outline (tails, rounded corners).
 export function NineSlice({ slice, scale = 0.5, tint }: { slice: UiSlice; scale?: number; tint?: string }) {
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+  // Hidden until the frame image has loaded, so the flat centre fill and the edge pieces
+  // all appear together instead of a bare rectangle first (see uiPreload). A short
+  // fallback shows it anyway in case a load event never arrives.
+  const [shownSource, setShownSource] = useState<number | null>(null);
+  const ready = shownSource === slice.source || isSliceLoaded(slice.source);
+  useEffect(() => {
+    if (isSliceLoaded(slice.source)) return;
+    const show = () => setShownSource(slice.source);
+    const stop = onSliceLoaded(() => {
+      if (isSliceLoaded(slice.source)) show();
+    });
+    const fallback = setTimeout(show, 2500);
+    return () => {
+      stop();
+      clearTimeout(fallback);
+    };
+  }, [slice.source]);
   const onLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
     setSize((previous) => (previous?.width === width && previous?.height === height ? previous : { width, height }));
@@ -48,6 +66,7 @@ export function NineSlice({ slice, scale = 0.5, tint }: { slice: UiSlice; scale?
             <Image
               source={slice.source}
               resizeMode="stretch"
+              onLoad={() => markSliceLoaded(slice.source)}
               style={{ position: "absolute", left: -column.srcStart * sx, top: -row.srcStart * sy, width: slice.width * sx, height: slice.height * sy, tintColor: tint }}
             />
           </View>
@@ -57,7 +76,7 @@ export function NineSlice({ slice, scale = 0.5, tint }: { slice: UiSlice; scale?
   }
 
   return (
-    <View style={StyleSheet.absoluteFill} onLayout={onLayout} pointerEvents="none">
+    <View style={[StyleSheet.absoluteFill, !ready && styles.hidden]} onLayout={onLayout} pointerEvents="none">
       {cells}
     </View>
   );
@@ -85,5 +104,6 @@ export function Panel({
 }
 
 const styles = StyleSheet.create({
+  hidden: { opacity: 0 },
   cell: { position: "absolute", overflow: "hidden" },
 });
