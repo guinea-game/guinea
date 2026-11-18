@@ -9,7 +9,9 @@ type Props = {
   durationMs: number; // full-cycle duration, ported verbatim from the web CSS animation-duration
   mode: "loop" | "once"; // loop = idle breathing; once = CSS "both" fill, holds last frame
   repeat?: number; // "once" mode only: play the full cycle this many times before holding (default 1)
-  restartKey?: string | number; // change this to force the animation to restart from frame 0 (mirrors the web's key={tick} remount trick)
+  restartKey?: string | number; // change this to force the animation to restart from startFrame (mirrors the web's key={tick} remount trick)
+  startFrame?: number; // frame a (re)start begins on, default 0 — e.g. to skip a wind-up
+
   onComplete?: () => void;
   // Recolors every opaque pixel this flat color, keeping the sprite's own silhouette —
   // used to flash a hit-reaction overlay exactly matching the current frame's shape.
@@ -25,25 +27,26 @@ export function SpriteStrip({
   mode,
   repeat = 1,
   restartKey,
+  startFrame = 0,
   onComplete,
   tintColor,
 }: Props) {
-  const [frame, setFrame] = useState(0);
+  const [frame, setFrame] = useState(startFrame);
 
-  // Rewind to frame 0 during render whenever the clip changes, rather than from inside
-  // the effect below (which would paint one stale frame first).
-  const run = [source, frameCount, durationMs, mode, repeat, restartKey];
+  // Rewind during render whenever the clip changes, rather than from inside the effect
+  // below (which would paint one stale frame first).
+  const run = [source, frameCount, durationMs, mode, repeat, restartKey, startFrame];
   const [previousRun, setPreviousRun] = useState(run);
   if (run.some((value, index) => value !== previousRun[index])) {
     setPreviousRun(run);
-    setFrame(0);
+    setFrame(startFrame);
   }
 
   useEffect(() => {
     if (frameCount <= 1) return;
     // CSS steps(frameCount - 1) visits frameCount frames across durationMs with no easing.
     const stepMs = durationMs / (frameCount - 1);
-    let current = 0;
+    let current = startFrame;
     let cyclesDone = 0;
     const id = setInterval(() => {
       current += 1;
@@ -67,7 +70,7 @@ export function SpriteStrip({
     }, stepMs);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [source, frameCount, durationMs, mode, repeat, restartKey]);
+  }, [source, frameCount, durationMs, mode, repeat, restartKey, startFrame]);
 
   const scale = displaySize / frameSize;
 

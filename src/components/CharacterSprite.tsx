@@ -117,6 +117,7 @@ export function CharacterSprite({
   scale = 1,
   repeat = 1,
   restartKey,
+  startFrame,
   tintColor,
 }: {
   outfit: Outfit;
@@ -125,6 +126,7 @@ export function CharacterSprite({
   scale?: number;
   repeat?: number;
   restartKey?: string | number;
+  startFrame?: number;
   // Flat recolor of every opaque pixel (e.g. "#000" for a locked companion's silhouette).
   tintColor?: string;
 }) {
@@ -154,6 +156,7 @@ export function CharacterSprite({
         mode={animation === "idle" ? "loop" : "once"}
         repeat={repeat}
         restartKey={restartKey}
+        startFrame={startFrame}
         tintColor={tintColor}
       />
     </View>

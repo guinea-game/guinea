@@ -245,6 +245,8 @@ export function useAutoBattle({
   const [reloadInfo, setReloadInfo] = useState({ endsAt: 0, totalMs: 0 });
   // Bumped on every gunshot (auto swing or a fanned shot) so the scene can fire a muzzle flash.
   const [shotId, setShotId] = useState(0);
+  // Whether the latest shot was part of a fan-the-hammer burst (gun already out, no draw).
+  const [fannedShot, setFannedShot] = useState(false);
   // Bumped to cancel the auto loop's pending swing chain (a fan-the-hammer takes over the gun);
   // `later` callbacks scheduled under an older generation never fire.
   const loopGenRef = useRef(0);
@@ -461,6 +463,7 @@ export function useAutoBattle({
         if (shotsBeforeReloadRef.current > 0) {
           shotsFiredRef.current += 1;
           setShotId((value) => value + 1);
+          setFannedShot(false);
         }
         const { isCritical, damage, missed, firstStrike } = rollAttack();
         const strikes = rollStrikes();
@@ -524,6 +527,7 @@ export function useAutoBattle({
         later(() => {
           shotsFiredRef.current += 1;
           setShotId((value) => value + 1);
+          setFannedShot(true);
           const { isCritical, damage, missed } = rollAttack();
           setLastCritical(isCritical);
           phaseRef.current = "attacking";
@@ -868,5 +872,6 @@ export function useAutoBattle({
     reloading,
     reloadInfo,
     shotId,
+    fannedShot,
   };
 }

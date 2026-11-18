@@ -78,6 +78,7 @@ export function BattleScreen({ game }: { game: UseGameState }) {
         enemyId={battle.enemyId}
         reloadInfo={battle.reloadInfo}
         shotId={battle.shotId}
+        fannedShot={battle.fannedShot}
         lastGoldReward={battle.lastGoldReward}
         stageAdvance={game.stageAnnouncement}
         onContinueStage={game.continueStage}

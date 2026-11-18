@@ -189,6 +189,10 @@ const AMBIENCE: Record<EnemyKind, MotePreset> = {
 const MUZZLE_SIZE = 60;
 // Length of the bright head of 카우보이기니's bullet tracer.
 const TRACER_STREAK = 34;
+// 카우보이기니's attack/critical strips: holster, draw, fire, smoke — the fire frame's index,
+// and when it shows in the 230ms strip (CharacterSprite DURATIONS.attack, 3 steps).
+const COWBOY_FIRE_FRAME = 2;
+const COWBOY_FIRE_FRAME_MS = Math.round((230 / 3) * COWBOY_FIRE_FRAME);
 
 const BACKGROUND: Record<EnemyKind, number> = {
   slime: images.battleBackground,
@@ -351,6 +355,7 @@ export function BattleScene({
   lastGoldReward,
   reloadInfo = { endsAt: 0, totalMs: 0 },
   shotId = 0,
+  fannedShot = false,
   stageAdvance,
   onContinueStage,
   battleSpeed = 1,
@@ -432,6 +437,8 @@ export function BattleScene({
   reloadInfo?: { endsAt: number; totalMs: number };
   // Bumped per gunshot, for the muzzle flash.
   shotId?: number;
+  // The latest shot was a fan-the-hammer round (gun already out — no draw).
+  fannedShot?: boolean;
   stageAdvance: string | null;
   // Tapping the stage-clear banner moves on (battle waits until then).
   onContinueStage?: () => void;
@@ -832,6 +839,7 @@ export function BattleScene({
               focusAuraId={focus.active ? focus.id : 0}
               reloadInfo={reloadInfo}
               shotId={shotId}
+              fannedShot={fannedShot}
             />
             {levelUpAnnouncement !== null && <LevelUpBurst key={levelUpAnnouncement} level={levelUpAnnouncement} />}
 
@@ -1155,6 +1163,7 @@ function PlayerFighter({
   focusAuraId,
   reloadInfo,
   shotId,
+  fannedShot,
 }: {
   animation: PlayerAnimation;
   outfit: Outfit;
@@ -1170,6 +1179,7 @@ function PlayerFighter({
   focusAuraId: number;
   reloadInfo: { endsAt: number; totalMs: number };
   shotId: number;
+  fannedShot: boolean;
 }) {
   const isAttacking = animation === "attack" || animation === "critical";
   // Spellcasters fire from where they stand: a small kick back per cast, never a lunge.
@@ -1233,7 +1243,10 @@ function PlayerFighter({
   }, [animation, skillPoseKey]);
 
   // 카우보이기니: a pixel muzzle flash at the barrel on every shot, timed to the sprite's firing
-  // frame (the 3rd of the 230ms attack strip). A fresh key per shot restarts the one-shot strip.
+  // frame. A fresh key per shot restarts the one-shot strip. An auto shot plays the whole
+  // draw (holster → draw → fire → smoke); a fanned round lands every 110ms, faster than the
+  // draw ever reaches the fire frame, so it restarts on the fire frame with the flash at once
+  // — otherwise each round rewinds to the hand-on-holster frame and leaves an empty hand.
   const gunslinger = outfit === "cowboyGini";
   const [muzzleId, setMuzzleId] = useState(0);
   // Not cleared per shot: a fanned burst fires faster than the flash delay, and every shot
@@ -1241,7 +1254,8 @@ function PlayerFighter({
   const muzzleTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(() => {
     if (!gunslinger || shotId === 0) return;
-    muzzleTimers.current.push(setTimeout(() => setMuzzleId((value) => value + 1), 110));
+    muzzleTimers.current.push(setTimeout(() => setMuzzleId((value) => value + 1), fannedShot ? 0 : COWBOY_FIRE_FRAME_MS));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gunslinger, shotId]);
   useEffect(() => () => muzzleTimers.current.forEach((timer) => clearTimeout(timer)), []);
   // Reload bar over the nameplate, ticking every 100ms only while a reload is running.
@@ -1289,6 +1303,7 @@ function PlayerFighter({
           animation={animation}
           repeat={reloadLeftMs > 0 && animation === "win" ? Math.max(1, Math.round(reloadInfo.totalMs / 480)) : animation === "win" && boss ? 3 : 1}
           restartKey={skillPoseKey ? `${outfit}-${skillPoseKey}` : gunslinger && isAttacking ? `${outfit}-${animation}-${shotId}` : `${outfit}-${animation}`}
+          startFrame={gunslinger && isAttacking && fannedShot && !skillPoseKey ? COWBOY_FIRE_FRAME : 0}
         />
         {gunslinger && muzzleId > 0 && <BulletTracer key={`tracer-${muzzleId}`} length={Math.max(40, teleportX - 10)} />}
         {gunslinger && muzzleId > 0 && (
