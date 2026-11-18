@@ -15,8 +15,6 @@ import {
   getCookbookAttackBonus,
   getShardCompanion,
   SHARDS_PER_BOSS,
-  SHARD_AD_REWARD,
-  SHARD_ADS_PER_DAY,
   STAR_CLEAR,
   STAR_FAST,
   STAR_GEMS,
@@ -52,7 +50,7 @@ export type DropEvent = { id: number; name: string; delay: number };
 // No ad SDK wired up yet — watching one grants this instantly, same as a completed view would.
 const SPEED_BOOST_DURATION_MS = 5 * 60_000; // 5 minutes
 // The shop's "광고 보고 보석 받기" button.
-export const AD_GEMS_REWARD = 25;
+export const AD_GEMS_REWARD = 10;
 // The boss entrance banner's "광고 보고 공격력 버프" option.
 export const BOSS_AD_BUFF_ATTACK_PERCENT = 50;
 const BOSS_AD_BUFF_DURATION_MS = 3 * 60_000; // 3 minutes
@@ -75,7 +73,7 @@ export const LOOT_COIN_GAP_MS = 280;
 // Gems for beating a stage's boss for the very first time — always paid — and the extra the
 // celebration's ad adds on top.
 export const FIRST_CLEAR_GEMS = 25;
-export const FIRST_CLEAR_AD_GEMS = 25;
+export const FIRST_CLEAR_AD_GEMS = 10;
 // A retry after the boss fled (watching an ad) gets this share of the usual time limit: the
 // boss keeps its remaining HP, so a near miss still has plenty, while one far off is better
 // served by getting stronger first.
@@ -1561,14 +1559,6 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     // Held back while the first-clear celebration covers the screen.
     bossReward: firstClear ? null : bossReward,
     upgradeCompanion: (outfit: Outfit) => setState((previous) => applyCompanionUpgrade(previous, outfit)),
-    shardAdsLeft: Math.max(0, SHARD_ADS_PER_DAY - (state.shardAds?.day === todayKey() ? state.shardAds.count : 0)),
-    claimShardAd: () =>
-      setState((previous) => {
-        const day = todayKey();
-        const count = previous.shardAds?.day === day ? previous.shardAds.count : 0;
-        if (count >= SHARD_ADS_PER_DAY) return previous;
-        return { ...addCompanionShards(previous, previous.equippedOutfit, SHARD_AD_REWARD), shardAds: { day, count: count + 1 } };
-      }),
     claimFirstClearGems,
     levelUpAnnouncement,
     upgradeMode,

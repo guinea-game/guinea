@@ -6,7 +6,7 @@ import { tutorialRef } from "./tutorialTargets";
 import { NineSlice } from "./NineSlice";
 import { playSfx } from "../sound";
 
-export type ButtonVariant = "cream" | "green" | "beige" | "gray" | "brown" | "red" | "pillCream" | "pillGray";
+export type ButtonVariant = "cream" | "green" | "beige" | "gray" | "brown" | "red" | "pillCream" | "pillGray" | "box";
 
 const SLICES = {
   cream: kit.buttonCream,
@@ -17,6 +17,8 @@ const SLICES = {
   red: shopKit.pillRed,
   pillCream: shopKit.pillCream,
   pillGray: shopKit.pillGray,
+  // The plain cream cushion box the 기니 성장 rows sit on.
+  box: kit.inset,
 } as const;
 
 // Label colour that reads on each button face.
@@ -29,6 +31,7 @@ const LABEL_COLORS: Record<ButtonVariant, string> = {
   red: colors.cream,
   pillCream: colors.ink,
   pillGray: "#4f463c",
+  box: colors.ink,
 };
 
 export function GameButton({

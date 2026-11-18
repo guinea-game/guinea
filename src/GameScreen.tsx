@@ -295,8 +295,6 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             onPurchase={game.purchaseOutfit}
             progress={state}
             onUpgrade={game.upgradeCompanion}
-            shardAdsLeft={game.shardAdsLeft}
-            onClaimShardAd={game.claimShardAd}
             onOpenShop={() => onSelectTab("shop")}
           />
         );

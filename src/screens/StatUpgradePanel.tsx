@@ -132,10 +132,6 @@ function StatRow({
             <FloatText key={gain.id} text={gain.text} style={styles.gainFloat} />
           ))}
         </View>
-        <View style={styles.gain}>
-          <Text style={styles.gainSmall}>{t("다음", "Next")}</Text>
-          <Text style={styles.gainValue}>{formatStat(nextValue)}{suffix}</Text>
-        </View>
         {/* Short of gold looks just like a maxed-out stat: the same faded button (it stays
             pressable so a tap still gives the "can't afford" shake). */}
         <GameButton
@@ -198,9 +194,6 @@ const styles = StyleSheet.create({
   rowCopy: { flex: 1 },
   rowSmall: { fontFamily: fonts.light, letterSpacing: -0.36, color: colors.brown, fontSize: 12, lineHeight: 16 },
   rowValue: { fontSize: 19, fontWeight: "900", fontFamily: fonts.bold, color: colors.ink },
-  gain: { alignItems: "flex-end" },
-  gainSmall: { fontFamily: fonts.light, letterSpacing: -0.36, color: colors.muted, fontSize: 12, lineHeight: 16, marginBottom: 2 },
-  gainValue: { color: colors.green, fontWeight: "900", fontFamily: fonts.bold, fontSize: 15 },
   upgradeButton: { minWidth: 74, minHeight: 50, paddingHorizontal: 7 },
   upgradeButtonText: { color: colors.ink, fontWeight: "900", fontFamily: fonts.bold, fontSize: 15, textAlign: "center" },
   upgradeButtonCost: { fontFamily: fonts.light, letterSpacing: -0.36, color: colors.brown, fontSize: 12, lineHeight: 16, textAlign: "center" },

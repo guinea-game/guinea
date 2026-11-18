@@ -137,7 +137,9 @@ const styles = StyleSheet.create({
   heroImage: { position: "absolute", left: 0, bottom: 0 },
   keeper: { position: "absolute", left: 10, bottom: 4, width: 140, height: 140 },
   keeperImage: { width: "100%", height: "100%" },
-  bubble: { position: "absolute", top: 14, right: 12, width: "52%", paddingLeft: 16, paddingRight: 14, paddingTop: 11, paddingBottom: 24 },
+  // Anchored to the shopkeeper (its tail sits just past their head), not to the far edge,
+  // so on a wide tablet frame the bubble stays beside them instead of drifting right.
+  bubble: { position: "absolute", top: 14, left: 128, right: 12, maxWidth: 280, paddingLeft: 16, paddingRight: 14, paddingTop: 11, paddingBottom: 24 },
   bubbleName: { fontSize: 12, fontWeight: "900", fontFamily: fonts.bold, color: colors.red, letterSpacing: 0.5 },
   bubbleText: { marginTop: 3, fontSize: 12, lineHeight: 16, fontWeight: "700", fontFamily: fonts.bold, color: colors.ink },
 });

@@ -86,7 +86,7 @@ export function MiniGuide({ line, topic, targetIds = [], onTap, tapAnywhere = fa
 const styles = StyleSheet.create({
   overlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 50 },
   // Over the top of the battle scene (the stage bar), leaving the ground and the buttons clear.
-  wrap: { position: "absolute", top: 84, left: 12, right: 12 },
+  wrap: { position: "absolute", top: 84, left: 12, right: 12, maxWidth: 460 },
   row: { flexDirection: "row", alignItems: "center" },
   pressed: { transform: [{ scale: 0.98 }] },
   face: {

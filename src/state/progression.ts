@@ -12,8 +12,6 @@ export const COMPANION_MAX_LEVEL = 10;
 export const COMPANION_ATTACK_PER_LEVEL = 5;
 // Three a kill: one boss a run would otherwise take 165 runs to fill a companion.
 export const SHARDS_PER_BOSS = 3;
-export const SHARD_AD_REWARD = 3;
-export const SHARD_ADS_PER_DAY = 3;
 
 // The stage (0-based) whose boss drops each companion's shards: the stage it joins at, or
 // where its story points; 복서기니 has no stage, so it gets a boss worth punching.

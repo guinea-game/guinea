@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Image, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./GameText";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming, Easing } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming, Easing } from "react-native-reanimated";
 import { colors, fonts } from "../theme";
-import { AdBadge } from "./AdBadge";
+import { shopKit, uiImages } from "../assets";
+import { NineSlice, Panel } from "./NineSlice";
+import { StrokedText } from "./StrokedText";
 import { t } from "../i18n";
 
 const EXIT_MS = 200;
@@ -31,22 +33,17 @@ export function BossEntranceBanner({
   buffPercent?: number;
 }) {
   const reveal = useSharedValue(0);
-  const ringA = useSharedValue(0);
-  const ringB = useSharedValue(0);
   const punch = useSharedValue(0.6);
-  const prompt = useSharedValue(0);
+  // Starts fully visible and only pulses down from there, so if the pulse never runs (reduced
+  // motion, or a web quirk) the call to fight still shows.
+  const prompt = useSharedValue(1);
   const exit = useSharedValue(0);
   const [leaving, setLeaving] = useState(false);
   const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     reveal.value = withTiming(1, { duration: 220, easing: Easing.out(Easing.quad) });
-    prompt.value = withSequence(
-      withTiming(0, { duration: 500 }),
-      withRepeat(withSequence(withTiming(1, { duration: 520 }), withTiming(0.35, { duration: 520 })), -1),
-    );
-    ringA.value = withTiming(1, { duration: 760, easing: Easing.out(Easing.quad) });
-    ringB.value = withSequence(withTiming(0, { duration: 60 }), withTiming(1, { duration: 760, easing: Easing.out(Easing.quad) }));
+    prompt.value = withDelay(500, withRepeat(withSequence(withTiming(0.55, { duration: 520 }), withTiming(1, { duration: 520 })), -1));
     punch.value = withSequence(withTiming(1.12, { duration: 180, easing: Easing.out(Easing.quad) }), withTiming(1, { duration: 180 }));
     return () => {
       if (exitTimer.current) clearTimeout(exitTimer.current);
@@ -62,16 +59,8 @@ export function BossEntranceBanner({
   };
 
   const revealStyle = useAnimatedStyle(() => ({ opacity: reveal.value * (1 - exit.value) }));
-  const ringAStyle = useAnimatedStyle(() => ({
-    opacity: ringA.value < 1 ? 1 - Math.abs(ringA.value - 0.35) : 0,
-    transform: [{ scale: 0.35 + ringA.value * 0.9 }, { rotate: `${24 - ringA.value * 38}deg` }],
-  }));
-  const ringBStyle = useAnimatedStyle(() => ({
-    opacity: ringB.value < 1 ? 1 - Math.abs(ringB.value - 0.35) : 0,
-    transform: [{ scale: 0.35 + ringB.value * 0.9 }, { rotate: `${24 - ringB.value * 38}deg` }],
-  }));
   const punchStyle = useAnimatedStyle(() => ({ transform: [{ scale: punch.value }] }));
-  const promptStyle = useAnimatedStyle(() => ({ opacity: prompt.value, transform: [{ scale: 0.96 + prompt.value * 0.06 }] }));
+  const promptStyle = useAnimatedStyle(() => ({ opacity: prompt.value, transform: [{ scale: 0.97 + prompt.value * 0.03 }] }));
 
   return (
     <Animated.View style={[styles.overlay, revealStyle]}>
@@ -89,36 +78,46 @@ export function BossEntranceBanner({
           end={{ x: 1, y: 0.5 }}
           style={StyleSheet.absoluteFill}
         />
+        {/* Left-aligned column over the dark side: BOSS tag, name, then the call to fight with
+            the ad buff's speech bubble right beside it. The boss's line sits below as a tip. */}
         <View style={styles.content} pointerEvents="box-none">
-          <Animated.View style={[styles.ring, styles.ringDashed, ringAStyle]} />
-          <Animated.View style={[styles.ring, styles.ringSolid, ringBStyle]} />
           <Animated.View style={[styles.title, punchStyle]} pointerEvents="none">
-            <Text style={styles.badge}>BOSS</Text>
-            <Text style={styles.name}>{t(bossName)}</Text>
-            <Text style={styles.sub}>{t(tagline)}</Text>
+            <Panel slice={shopKit.pillRed} scale={0.3} style={styles.badge}>
+              <Text style={styles.badgeText}>BOSS</Text>
+            </Panel>
+            <StrokedText style={styles.name} strokeColor={colors.line} strokeWidth={3}>
+              {t(bossName)}
+            </StrokedText>
           </Animated.View>
-          <Animated.View style={[styles.prompt, promptStyle]} pointerEvents="none">
-            <Text style={styles.promptText}>{t("터치해서 도전!", "Tap to Fight!")}</Text>
-          </Animated.View>
-          {buffActive ? (
-            <View style={styles.buffChip} pointerEvents="none">
-              <Text style={styles.buffChipText}>{t("공격력 버프 적용 중!", "Attack buff active!")}</Text>
-            </View>
-          ) : (
-            onWatchAd && (
+          <View style={styles.actionRow} pointerEvents="box-none">
+            <Animated.View style={promptStyle} pointerEvents="none">
+              <StrokedText style={styles.promptText} strokeColor={colors.line} strokeWidth={2.5}>
+                {t("터치해서 도전!", "Tap to Fight!")}
+              </StrokedText>
+            </Animated.View>
+            {(buffActive || onWatchAd) && (
               <Pressable
-                style={styles.adButton}
+                style={styles.buffBubble}
+                disabled={buffActive}
                 onPress={(event) => {
                   event.stopPropagation();
-                  onWatchAd();
+                  onWatchAd?.();
                 }}
+                accessibilityRole="button"
+                accessibilityLabel={buffActive ? t("공격력 버프 적용 중", "Attack buff active") : t(`광고 보고 공격력 +${buffPercent}%`, `Watch ad: +${buffPercent}% attack`)}
               >
-                <Text style={styles.adButtonText}>{t(`광고 보고 공격력 +${buffPercent}%`, `Watch Ad: +${buffPercent}% Attack`)}</Text>
-                <AdBadge inline />
+                <NineSlice slice={shopKit.bubble} scale={0.24} />
+                <View style={styles.buffRow}>
+                  {!buffActive && <Image source={uiImages.adClapper} style={styles.buffIcon} />}
+                  <Text style={styles.buffText}>{buffActive ? t(`+${buffPercent}% 적용 중`, `+${buffPercent}% On`) : t(`공격력 +${buffPercent}%`, `+${buffPercent}% ATK`)}</Text>
+                </View>
               </Pressable>
-            )
-          )}
+            )}
+          </View>
         </View>
+        <Text style={styles.tip} pointerEvents="none">
+          {`TIP · ${t(tagline)}`}
+        </Text>
       </Pressable>
     </Animated.View>
   );
@@ -126,71 +125,19 @@ export function BossEntranceBanner({
 
 const styles = StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFill, zIndex: 8 },
-  // Left ~58% of the scene, so the boss on the right stays uncovered.
-  content: { position: "absolute", left: 0, top: 0, bottom: 0, width: "58%", alignItems: "center", justifyContent: "center" },
-  ring: { position: "absolute", borderRadius: 999 },
-  ringDashed: { width: 210, height: 210, borderWidth: 2, borderColor: "#f3a993", borderStyle: "dashed" },
-  ringSolid: { width: 155, height: 155, borderWidth: 2, borderColor: "#ffd4bd88" },
-  title: { alignItems: "center" },
-  badge: {
-    color: colors.cream,
-    backgroundColor: colors.red,
-    borderWidth: 2,
-    borderColor: colors.line,
-    borderRadius: 6,
-    paddingVertical: 3,
-    paddingHorizontal: 11,
-    fontSize: 14,
-    fontWeight: "900",
-    fontFamily: fonts.bold,
-    letterSpacing: 3,
-  },
-  name: { marginTop: 7, color: "#ffe3d4", fontSize: 28, fontWeight: "800", fontFamily: fonts.bold, letterSpacing: -1 },
-  sub: {
-    marginTop: 7,
-    color: colors.cream,
-    backgroundColor: "#382d25b8",
-    borderRadius: 5,
-    paddingVertical: 3,
-    paddingHorizontal: 7,
-    fontSize: 14,
-    fontWeight: "900",
-    fontFamily: fonts.bold,
-    // Per-boss lines vary in length — wrap within the banner's column, centred.
-    maxWidth: 190,
-    textAlign: "center",
-  },
-  prompt: {
-    marginTop: 14,
-    backgroundColor: colors.red,
-    borderWidth: 2,
-    borderColor: colors.line,
-    borderRadius: 999,
-    paddingVertical: 5,
-    paddingHorizontal: 14,
-  },
-  promptText: { color: colors.cream, fontSize: 14, fontWeight: "900", fontFamily: fonts.bold },
-  adButton: {
-    marginTop: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: colors.green,
-    borderWidth: 2,
-    borderColor: colors.line,
-    borderRadius: 999,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-  },
-  adButtonText: { color: colors.cream, fontSize: 13, fontWeight: "900", fontFamily: fonts.bold },
-  buffChip: {
-    marginTop: 10,
-    backgroundColor: colors.green,
-    borderWidth: 2,
-    borderColor: colors.line,
-    borderRadius: 999,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-  },
-  buffChipText: { color: colors.cream, fontSize: 13, fontWeight: "900", fontFamily: fonts.bold },
+  // Left side of the scene, so the boss on the right stays uncovered.
+  content: { position: "absolute", left: 18, right: 10, top: 0, bottom: 28, alignItems: "flex-start", justifyContent: "center" },
+  title: { alignItems: "flex-start" },
+  badge: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 7, alignItems: "center" },
+  badgeText: { color: colors.cream, fontSize: 14, fontWeight: "900", fontFamily: fonts.bold, letterSpacing: 3 },
+  name: { marginTop: 6, color: "#ffe3d4", fontSize: 28, fontWeight: "800", fontFamily: fonts.bold, letterSpacing: -1 },
+  actionRow: { marginTop: 12, flexDirection: "row", alignItems: "center", gap: 8 },
+  promptText: { color: colors.cream, fontSize: 22, fontWeight: "900", fontFamily: fonts.bold },
+  // Tail (bottom-left) leans back toward "터치해서 도전!".
+  buffBubble: { marginBottom: 8, paddingLeft: 11, paddingRight: 11, paddingTop: 6, paddingBottom: 15 },
+  buffRow: { flexDirection: "row", alignItems: "center", gap: 5 },
+  buffIcon: { width: 18, height: 21, resizeMode: "contain" },
+  buffText: { color: colors.ink, fontSize: 12, fontWeight: "900", fontFamily: fonts.bold },
+  // The boss's own line, as a small tip along the bottom.
+  tip: { position: "absolute", left: 18, right: 18, bottom: 10, fontFamily: fonts.light, letterSpacing: -0.36, fontSize: 12, lineHeight: 16, color: "#f5e6cf" },
 });

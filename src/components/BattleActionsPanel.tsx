@@ -40,32 +40,38 @@ export function BattleActionsPanel({
       <GameButton variant={reloading ? "red" : isAutoBattle ? "green" : "beige"} style={styles.action} textStyle={styles.actionLabel}>
         <View style={styles.autoContent}>
           <Image source={reloading ? uiImages.swords : isAutoBattle ? icons.energy : uiImages.swords} style={styles.autoIcon} />
-          <View style={styles.stack}>
-            <Text style={[styles.actionSmall, isAutoBattle && !reloading && styles.actionSmallOnGreen]}>
-              {reloading ? t("재장전 중", "Reloading", "リロード中", "装填中") : isAutoBattle ? t("자동 전투", "Auto Battle") : t("난타 중", "Flurry Active")}
-            </Text>
-            <Text style={[styles.actionLabel, isAutoBattle && !reloading && styles.actionLabelOnGreen]}>
-              {reloading
-                ? t("잠시만요!", "Hang on!")
-                : autoLocked
-                  ? t("고정", "Locked")
-                  : isAutoBattle
-                    ? t("진행 중", "Running")
-                    : t("직접 공격", "Manual Attack")}
-            </Text>
-          </View>
+          {/* Plain auto battle reads as one word ("자동 전투"); the other states keep their
+              caption-over-label pair. */}
+          {isAutoBattle && !reloading && !autoLocked ? (
+            <Text style={[styles.actionLabel, styles.actionLabelOnGreen]}>{t("자동 전투", "Auto Battle")}</Text>
+          ) : (
+            <View style={styles.stack}>
+              <Text style={[styles.actionSmall, isAutoBattle && !reloading && styles.actionSmallOnGreen]}>
+                {reloading ? t("재장전 중", "Reloading", "リロード中", "装填中") : isAutoBattle ? t("자동 전투", "Auto Battle") : t("난타 중", "Flurry Active")}
+              </Text>
+              <Text style={[styles.actionLabel, isAutoBattle && !reloading && styles.actionLabelOnGreen]}>
+                {reloading ? t("잠시만요!", "Hang on!") : autoLocked ? t("고정", "Locked") : t("직접 공격", "Manual Attack")}
+              </Text>
+            </View>
+          )}
         </View>
       </GameButton>
 
       {/* The ad clapper sits left of the text, inside the button — the same icon-then-text
           layout as the auto-battle button beside it. */}
-      <GameButton variant={speedBoostActive ? "gray" : "beige"} disabled={speedBoostActive} onPress={onWatchAd} style={styles.action}>
-        <View style={styles.autoContent}>
+      {/* Same plain cream box as the 기니 성장 rows. */}
+      <GameButton variant={speedBoostActive ? "gray" : "box"} disabled={speedBoostActive} onPress={onWatchAd} style={styles.action}>
+        <View style={[styles.autoContent, styles.adContent]}>
           {!speedBoostActive && <Image source={uiImages.adClapper} style={styles.adIcon} />}
-          <View style={styles.stack}>
-            <Text style={styles.actionSmall}>{speedBoostActive ? t("2배속 중", "2x Active") : t("광고 보고", "Watch Ad")}</Text>
-            <Text style={styles.actionLabel}>{speedBoostActive ? formatDuration(speedBoostRemainingMs) : t("2배속", "2x Speed")}</Text>
-          </View>
+          {speedBoostActive ? (
+            <View style={styles.stack}>
+              <Text style={styles.actionSmall}>{t("2배속 중", "2x Active")}</Text>
+              <Text style={styles.actionLabel}>{formatDuration(speedBoostRemainingMs)}</Text>
+            </View>
+          ) : (
+            // The clapper beside it already says "ad", so the label is just the reward.
+            <Text style={styles.actionLabel}>{t("2배속", "2x Speed")}</Text>
+          )}
         </View>
       </GameButton>
     </View>
@@ -81,6 +87,8 @@ const styles = StyleSheet.create({
   action: { width: ACTION_WIDTH, minHeight: 50, paddingHorizontal: 8 },
   autoContent: { flexDirection: "row", alignItems: "center", gap: 4 },
   autoIcon: { width: 16, height: 16 },
+  // A little more air between the clapper and "2배속" than the auto button's small icon needs.
+  adContent: { gap: 8 },
   // Clapper art is 219x256.
   adIcon: { width: 22, height: 26, resizeMode: "contain" },
   stack: { alignItems: "center" },

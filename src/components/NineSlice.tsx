@@ -56,9 +56,7 @@ export function NineSlice({ slice, scale = 0.5, tint }: { slice: UiSlice; scale?
         if (column.length <= 0 || row.length <= 0) return null;
         // +0.5px overlap hides hairline seams between cells from subpixel rounding.
         const frame = { left: column.start, top: row.start, width: column.length + 0.5, height: row.length + 0.5 };
-        if (r === 1 && c === 1 && slice.centerColor) {
-          return <View key="center" style={[styles.cell, frame, { backgroundColor: tint ?? slice.centerColor }]} />;
-        }
+        if (r === 1 && c === 1 && slice.centerColor) return null;
         const sx = column.length / column.srcLength;
         const sy = row.length / row.srcLength;
         return (
@@ -73,6 +71,24 @@ export function NineSlice({ slice, scale = 0.5, tint }: { slice: UiSlice; scale?
         );
       })
     );
+    // The flat centre fill is drawn over the art as a rounded box reaching part-way into
+    // the edge pieces, so where flat colour meets the painted face it follows the frame's
+    // own rounded inner shape instead of a straight-edged rectangle.
+    if (slice.centerColor) {
+      const reach = CENTER_REACH;
+      const inset = { left: left * fit * reach, right: right * fit * reach, top: top * fit * reach, bottom: bottom * fit * reach };
+      const radius = Math.min(left, right, top, bottom) * fit * (1 - reach) + 4;
+      cells = [
+        ...(cells as ReactNode[]),
+        <View
+          key="center"
+          style={[
+            styles.cell,
+            { left: inset.left, right: inset.right, top: inset.top, bottom: inset.bottom, borderRadius: radius, backgroundColor: tint ?? slice.centerColor },
+          ]}
+        />,
+      ];
+    }
   }
 
   return (
@@ -102,6 +118,9 @@ export function Panel({
     </View>
   );
 }
+
+// How far in from the outer edge (as a share of each inset) the flat centre fill starts.
+const CENTER_REACH = 0.62;
 
 const styles = StyleSheet.create({
   hidden: { opacity: 0 },

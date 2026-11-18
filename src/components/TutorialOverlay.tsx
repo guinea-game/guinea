@@ -400,7 +400,9 @@ const styles = StyleSheet.create({
   },
   spriteShadow: { filter: "drop-shadow(0px 5px 4px rgba(10, 6, 3, 0.55))" },
   // The tail sits at the bubble's bottom-left, so the bubble hangs up and right of the guinea's head.
-  bubbleWrap: { marginLeft: 70, marginRight: 12 },
+  // Capped so on a wide tablet frame the bubble stays over the guinea instead of stretching
+  // across the screen away from it.
+  bubbleWrap: { marginLeft: 70, marginRight: 12, maxWidth: 380 },
   bubble: { paddingTop: 16, paddingLeft: 20, paddingRight: 18, paddingBottom: 34, minHeight: 150 },
   bubbleShadow: { position: "absolute", top: 7, left: 5, right: -5, bottom: -7, opacity: 0.5, filter: "blur(3px)" },
   body: { flexDirection: "row", alignItems: "flex-start", gap: 10 },

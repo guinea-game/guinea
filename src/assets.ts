@@ -1478,7 +1478,8 @@ export const panelArt = [
 // The ones used as stretchy frames, with insets that keep their corners and trim intact.
 export const panelSlices = {
   // Big wood frame with brass bolts in each corner.
-  woodBolts: slice(panelArt[0], 480, 212, [44, 50, 44, 50], "#fadc99"),
+  // No flat centre colour: the art's own parchment stretches to fill, keeping its grain.
+  woodBolts: slice(panelArt[0], 480, 212, [44, 50, 44, 50]),
   goldPill: slice(panelArt[16], 393, 109, [48, 52, 48, 52], "#fde4a6"),
   // Wood frame with a leafy plank sign across the top — the title goes on the plank.
   leafPlank: slice(panelArt[1], 480, 257, [106, 66, 42, 66]),
@@ -1567,3 +1568,15 @@ export const storeSlices = {
   // The brighter yellow-gold version of the same frame.
   simpleGold: slice(require("../assets/shop/frame-simple-gold.webp"), 577, 226, [115, 288, 85, 289], "#fcebc6"),
 };
+
+// 동료 조각: one badge, three colours by how far the companion has been promoted —
+// orange to Lv.4, green from Lv.5 (first milestone), purple at Lv.10 (max).
+export const shardImages = {
+  orange: require("../assets/companions/shard-orange.webp"),
+  green: require("../assets/companions/shard-green.webp"),
+  purple: require("../assets/companions/shard-purple.webp"),
+};
+
+export function shardImageForLevel(level: number) {
+  return level >= 10 ? shardImages.purple : level >= 5 ? shardImages.green : shardImages.orange;
+}

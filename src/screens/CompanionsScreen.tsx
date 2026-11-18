@@ -4,11 +4,12 @@ import { Text } from "../components/GameText";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors, fonts } from "../theme";
-import { creamSlices, food, frameImages, icons, images, kit, shopKit, skillImages, statIcons, uiImages } from "../assets";
+import { creamSlices, food, frameImages, icons, images, kit, shardImageForLevel, shopKit, skillImages, statIcons, uiImages } from "../assets";
 import { EnemySprite } from "../components/EnemySprite";
 import { Panel } from "../components/NineSlice";
 import { PageHeading } from "../components/PageHeading";
 import { GameButton } from "../components/GameButton";
+import { ProgressBar } from "../components/ProgressBar";
 import { CharacterSprite } from "../components/CharacterSprite";
 import {
   getOutfitStats,
@@ -27,8 +28,7 @@ import { RECIPES } from "../state/recipes";
 import { LockBadge } from "../components/LockBadge";
 import { getOutfitGemPrice, isOutfitUnlocked, OUTFIT_EARLY_UNLOCK_GEMS, OUTFIT_GEM_PRICE, OUTFIT_LOOP_GRANT, OUTFIT_UNLOCK_STAGE } from "../state/unlocks";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { RewardedAdModal } from "../components/RewardedAdModal";
-import { COMPANION_MAX_LEVEL, COMPANION_SHARD_STAGE, getCompanionLevel, getCompanionShards, getShardCost, SHARD_AD_REWARD, SHARD_ADS_PER_DAY, SHARDS_PER_BOSS } from "../state/progression";
+import { COMPANION_MAX_LEVEL, COMPANION_SHARD_STAGE, getCompanionLevel, getCompanionShards, getShardCost, SHARDS_PER_BOSS } from "../state/progression";
 import { BOSS_NAME, getEnemyKind, getStageCode } from "../state/stages";
 import type { GameState, Outfit } from "../types";
 import { t } from "../i18n";
@@ -377,14 +377,10 @@ export function CompanionsScreen({
   onOpenShop,
   progress,
   onUpgrade,
-  shardAdsLeft,
-  onClaimShardAd,
 }: {
   // 동료 승급 (state/progression.ts).
   progress: Pick<GameState, "companionLevels" | "companionShards">;
   onUpgrade: (outfit: Outfit) => void;
-  shardAdsLeft: number;
-  onClaimShardAd: () => void;
   equippedOutfit: Outfit;
   // Furthest stage reached (0-based) — companions join on arriving at their stage.
   highestStageNumber: number;
@@ -402,7 +398,6 @@ export function CompanionsScreen({
   const [previewWidth, setPreviewWidth] = useState(0);
   // A locked companion whose gem button was tapped: confirm before spending.
   const [buying, setBuying] = useState<Outfit | null>(null);
-  const [shardAdOpen, setShardAdOpen] = useState(false);
   const unlockedNow = COMPANIONS.filter((item) => isOutfitUnlocked(item.outfit, highestStageNumber, purchasedOutfits)).map((item) => item.outfit);
   // Unlocked since the last visit: their padlock breaks open this time.
   const [freshlyUnlocked] = useState(() => (outfitsSeen ? unlockedNow.filter((outfit) => !outfitsSeen.includes(outfit)) : []));
@@ -452,24 +447,6 @@ export function CompanionsScreen({
           </View>
         </View>
       </Panel>
-
-      <Text style={styles.shardHint}>
-        {t(`동료마다 전담 보스가 있어요. 그 보스를 쓰러뜨리면 조각 ${SHARDS_PER_BOSS}개를 얻어요.`, `Each companion has its own boss — defeat it for ${SHARDS_PER_BOSS} shards.`)}
-      </Text>
-      <GameButton
-        variant={shardAdsLeft > 0 ? "green" : "gray"}
-        disabled={shardAdsLeft === 0}
-        onPress={() => setShardAdOpen(true)}
-        style={styles.shardAdButton}
-        textStyle={styles.equipButtonText}
-      >
-        {t(
-          `광고 보고 ${equippedItem.name} 조각 +${SHARD_AD_REWARD} (오늘 ${shardAdsLeft}/${SHARD_ADS_PER_DAY})`,
-          `Watch an ad for +${SHARD_AD_REWARD} ${t(equippedItem.name)} shards (${shardAdsLeft}/${SHARD_ADS_PER_DAY} today)`,
-          `広告を見て${t(equippedItem.name)}の欠片+${SHARD_AD_REWARD}（本日${shardAdsLeft}/${SHARD_ADS_PER_DAY}）`,
-          `看广告获得${t(equippedItem.name)}碎片+${SHARD_AD_REWARD}（今日${shardAdsLeft}/${SHARD_ADS_PER_DAY}）`,
-        )}
-      </GameButton>
 
       <View style={styles.list}>
         {COMPANIONS.map((item) => {
@@ -542,6 +519,34 @@ export function CompanionsScreen({
                 </GameButton>
               )}
               </View>
+              {/* 승급: the shard badge (its colour shows the tier), level, shards toward the next
+                  level, and the button — the one place on the card that grows the companion. */}
+              {!locked && (
+                <View style={styles.growth}>
+                  <Image source={shardImageForLevel(level)} style={styles.growthIcon} />
+                  <View style={styles.growthCopy}>
+                    <Text style={styles.growthLevel}>{maxed ? t(`Lv.${level} 최고`, `Lv.${level} Max`) : `Lv.${level}`}</Text>
+                    <ProgressBar
+                      progress={maxed ? 100 : Math.min(100, (shards / shardCost) * 100)}
+                      fill={maxed ? "blue" : canUpgrade ? "green" : "gold"}
+                      height={16}
+                      label={maxed ? t("최고 레벨", "Max") : `${shards} / ${shardCost}`}
+                    />
+                  </View>
+                  {!maxed && (
+                    <GameButton
+                      variant={canUpgrade ? "green" : "gray"}
+                      disabled={!canUpgrade}
+                      onPress={() => onUpgrade(item.outfit)}
+                      style={styles.upgradeButton}
+                      textStyle={styles.equipButtonText}
+                      accessibilityLabel={t(`${item.name} 승급`, `Upgrade ${t(item.name)}`, `${t(item.name)}を昇格`, `升级${t(item.name)}`)}
+                    >
+                      {t("승급", "Upgrade")}
+                    </GameButton>
+                  )}
+                </View>
+              )}
               {/* What the companion does, as little cards rather than lines of text — kept
                   hidden until it joins. */}
               {!locked && <View style={styles.tiles}>
@@ -557,7 +562,7 @@ export function CompanionsScreen({
                     ))}
                   </InfoTile>
                 )}
-                <InfoTile label={t("조각 획득", "Get Shards")}>
+                <InfoTile label={t(`조각 획득 +${SHARDS_PER_BOSS}`, `Shards +${SHARDS_PER_BOSS}`)}>
                   <IconFact
                     caption={t(
                       `${BOSS_NAME[getEnemyKind(COMPANION_SHARD_STAGE[item.outfit])]}\n${getStageCode(COMPANION_SHARD_STAGE[item.outfit])}스테이지 보스`,
@@ -571,49 +576,17 @@ export function CompanionsScreen({
                     </View>
                   </IconFact>
                 </InfoTile>
-                <InfoTile
-                  label={t(
-                    `레벨 ${level}${maxed ? " · 최고" : ""}`,
-                    `Level ${level}${maxed ? " · Max" : ""}`,
-                    `レベル ${level}${maxed ? "・最大" : ""}`,
-                    `等级 ${level}${maxed ? "·满级" : ""}`,
-                  )}
-                >
+                <InfoTile label={maxed ? t("최고 레벨", "Max Level") : t("다음 승급", "Next Upgrade")}>
                   <IconFact
                     icon={icons.star}
-                    caption={
-                      maxed
-                        ? t("고유 능력 최대 강화", "Signature ability maxed", "固有能力 最大強化", "专属能力已满级")
-                        : t(
-                            `다음: ${OUTFIT_GROWTH_HINT[item.outfit][0]}\n조각 ${shards}/${shardCost}`,
-                            `Next: ${OUTFIT_GROWTH_HINT[item.outfit][1]}\nShards ${shards}/${shardCost}`,
-                            `次: ${OUTFIT_GROWTH_HINT[item.outfit][2]}\n欠片 ${shards}/${shardCost}`,
-                            `下级: ${OUTFIT_GROWTH_HINT[item.outfit][3]}\n碎片 ${shards}/${shardCost}`,
-                          )
-                    }
+                    caption={maxed ? t("고유 능력 최대 강화", "Signature ability maxed", "固有能力 最大強化", "专属能力已满级") : t(OUTFIT_GROWTH_HINT[item.outfit][0], OUTFIT_GROWTH_HINT[item.outfit][1], OUTFIT_GROWTH_HINT[item.outfit][2], OUTFIT_GROWTH_HINT[item.outfit][3])}
                   />
-                  {canUpgrade && (
-                    <GameButton variant="green" onPress={() => onUpgrade(item.outfit)} style={styles.upgradeButton} textStyle={styles.equipButtonText} accessibilityLabel={t(`${item.name} 승급`, `Upgrade ${t(item.name)}`, `${t(item.name)}を昇格`, `升级${t(item.name)}`)}>
-                      {t("승급", "Upgrade")}
-                    </GameButton>
-                  )}
                 </InfoTile>
               </View>}
             </Panel>
           );
         })}
       </View>
-      {shardAdOpen && (
-        <RewardedAdModal
-          message={t(`지금은 광고가 없네요. 그래도 조각 ${SHARD_AD_REWARD}개를 챙겨드릴게요.`, `No ad available right now. We'll still give you ${SHARD_AD_REWARD} shards.`)}
-          claimLabel={t(`조각 ${SHARD_AD_REWARD}개 받기`, `Claim ${SHARD_AD_REWARD} Shards`)}
-          onClaim={() => {
-            onClaimShardAd();
-            setShardAdOpen(false);
-          }}
-          onCancel={() => setShardAdOpen(false)}
-        />
-      )}
       {buying && (() => {
         const price = getOutfitGemPrice(buying) ?? 0;
         const gemOnly = buying in OUTFIT_GEM_PRICE;
@@ -664,9 +637,11 @@ const styles = StyleSheet.create({
   previewSub: { marginTop: 5, color: "#f3d993", fontSize: 12, fontWeight: "800", fontFamily: fonts.bold },
   previewSprite: { flex: 1, alignSelf: "stretch", alignItems: "center", justifyContent: "center" },
   list: { gap: 8 },
-  shardHint: { marginBottom: 6, fontFamily: fonts.light, letterSpacing: -0.36, fontSize: 12, lineHeight: 16, color: colors.brown, textAlign: "center" },
-  shardAdButton: { marginBottom: 12 },
-  upgradeButton: { alignSelf: "flex-start", minWidth: 56 },
+  growth: { flexDirection: "row", alignItems: "center", gap: 8 },
+  growthIcon: { width: 36, height: 35, resizeMode: "contain" },
+  growthCopy: { flex: 1, gap: 3 },
+  growthLevel: { fontSize: 14, fontWeight: "900", fontFamily: fonts.bold, color: colors.ink },
+  upgradeButton: { minWidth: 60, minHeight: 40 },
   swap: { alignItems: "center", justifyContent: "center" },
   puff: { position: "absolute", width: 36, height: 36, borderRadius: 18, backgroundColor: "#f3eee2" },
   breaking: { position: "absolute", right: 0, bottom: 0, width: 24, height: 24 },

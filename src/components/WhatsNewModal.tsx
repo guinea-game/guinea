@@ -55,7 +55,7 @@ export function WhatsNewModal({ gift, onClose }: { gift: boolean; onClose: () =>
           </View>
           <GameButton variant="green" onPress={onClose} style={styles.button}>
             {gift ? (
-              // The gems are the point: a big gem bursting out of the button and a bold count.
+              // The gems are the point: a gem icon and a bold count.
               <View style={styles.gift}>
                 <Text style={styles.giftText}>{t("업데이트 보상", "Update Reward")}</Text>
                 <Image source={uiImages.crystal} style={styles.gem} />
@@ -87,7 +87,6 @@ const styles = StyleSheet.create({
   button: { marginTop: 18, minWidth: 210, minHeight: 46 },
   gift: { flexDirection: "row", alignItems: "center", gap: 2 },
   giftText: { fontSize: 15, fontWeight: "900", fontFamily: fonts.bold, color: colors.cream, marginRight: 6 },
-  // Bigger than the button is tall, so it pokes out above and below.
-  gem: { width: 40, height: 40, marginVertical: -10, resizeMode: "contain" },
+  gem: { width: 26, height: 26, resizeMode: "contain" },
   giftAmount: { fontSize: 22, fontWeight: "900", fontFamily: fonts.bold, color: "#fff4b8" },
 });
