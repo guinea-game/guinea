@@ -1083,6 +1083,9 @@ export const statIcons = {
   criticalDamage: require("../assets/stats/critical-damage.webp"),
   criticalChance: require("../assets/stats/critical-chance.webp"),
   goldBonus: require("../assets/stats/gold.webp"),
+  // Same icon as every other attack-speed reference in the game (CompanionsScreen's
+  // EFFECT_ICONS) — no dedicated stats/ art for it.
+  attackSpeed: icons.energy,
 };
 
 // Rounded green/cream button set.

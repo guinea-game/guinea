@@ -10,7 +10,13 @@ export const statInfo: Record<StatKey, { label: string; mark: string; step: numb
   criticalDamage: { label: "치명타 피해", mark: "DMG", step: 1, baseCost: 100 },
   criticalChance: { label: "치명타 확률", mark: "CRIT", step: 0.25, baseCost: 140 },
   goldBonus: { label: "골드 획득", mark: "GOLD", step: 2.5, baseCost: 160 },
+  // Bought with gems, not gold, at a flat baseCost per level — see getUpgradeCost's
+  // attackSpeed special case and upgradeStat's currency branch.
+  attackSpeed: { label: "공속", mark: "SPD", step: 0.5, baseCost: 50 },
 };
+
+// Stats bought with gems instead of gold (see upgradeStat and StatUpgradePanel).
+export const GEM_STATS: StatKey[] = ["attackSpeed"];
 
 // Attack upgrades are multiplicative (% of current attack) instead of a flat add. A flat
 // add next to upgrade cost's own exponential growth (see getUpgradeCost) means the gold
@@ -185,6 +191,9 @@ const UPGRADE_COST_SAFE_LEVELS = 1500;
 
 export function getUpgradeCost(key: StatKey | "defense", level: number) {
   const resolvedKey: StatKey = key === "defense" ? "criticalChance" : key;
+  // Flat per level, not exponential — a gem stat with a hard 25% cap doesn't need (or want)
+  // a runaway cost curve the way the gold stats do.
+  if (resolvedKey === "attackSpeed") return statInfo.attackSpeed.baseCost;
   const safeLevel = Number.isFinite(level) && level > 0 ? level : 1;
   return Math.round(safeExponential(statInfo[resolvedKey].baseCost, 1.35, safeLevel - 1, UPGRADE_COST_SAFE_LEVELS) / 10) * 10;
 }
@@ -199,9 +208,12 @@ export function getUpgradeCost(key: StatKey | "defense", level: number) {
 export const STAT_CAP: Partial<Record<StatKey, number>> = {
   criticalChance: 25,
   criticalDamage: 300,
+  attackSpeed: 25,
 };
 
-export function getUpgradeQuote(key: StatKey, level: number, gold: number, mode: UpgradeMode, value: number) {
+// `currency`: gold for most stats, gems for the ones in GEM_STATS — only used to cap "max"
+// mode at what's actually affordable, so the caller picks which balance to pass in.
+export function getUpgradeQuote(key: StatKey, level: number, currency: number, mode: UpgradeMode, value: number) {
   const cap = STAT_CAP[key];
   const capLevels = cap === undefined ? Number.POSITIVE_INFINITY : Math.max(0, Math.floor((cap - value) / statInfo[key].step + 1e-9));
   const requestedLevels = Math.min(
@@ -221,7 +233,7 @@ export function getUpgradeQuote(key: StatKey, level: number, gold: number, mode:
       if (mode === "max") break;
       return { levels: requestedLevels, cost: Number.POSITIVE_INFINITY };
     }
-    if (mode === "max" && cost + nextCost > gold) break;
+    if (mode === "max" && cost + nextCost > currency) break;
     cost += nextCost;
     levels += 1;
   }
@@ -246,5 +258,6 @@ export function getStatLevel(state: GameState, key: StatKey) {
 
 export function getStatValue(state: GameState, key: StatKey) {
   if (key === "criticalChance") return state.criticalChance ?? 5;
+  if (key === "attackSpeed") return state.attackSpeed ?? 0;
   return state[key];
 }

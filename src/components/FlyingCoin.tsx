@@ -157,15 +157,15 @@ function CatchPopup({ caught, onDone, onClaimGem }: { caught: Catch; onDone: () 
           {caught.kind === "gem" ? (
             <>
               <Text style={styles.popupLabel}>{t("보석 발견!", "Gem Found!")}</Text>
-              <GameButton variant="green" onPress={openAd} style={styles.adButton}>{t(`광고 보고 보석 ${FLYING_GEM_AD_REWARD}개 받기`, `Watch an ad for ${FLYING_GEM_AD_REWARD} gems`)}</GameButton>
+              <GameButton variant="green" onPress={openAd} style={styles.adButton}>{t(`광고 보고 보석 ${FLYING_GEM_AD_REWARD}개 더 받기`, `Watch an ad for ${FLYING_GEM_AD_REWARD} more gems`)}</GameButton>
             </>
           ) : <Text style={styles.popupLabel}>{t("잡았다!", "Caught it!")}</Text>}
         </Animated.View>
       )}
       {adOpen && (
         <RewardedAdModal
-          message={t(`대신 섭섭하지 않게 보석 ${FLYING_GEM_AD_REWARD}개는 그대로 챙겨드릴게요.`, `To make up for it, you'll still get the full ${FLYING_GEM_AD_REWARD} gems.`)}
-          claimLabel={t(`보석 ${FLYING_GEM_AD_REWARD}개 받기`, `Claim ${FLYING_GEM_AD_REWARD} gems`)}
+          message={t(`광고를 보면 보석 ${FLYING_GEM_AD_REWARD}개를 더 드려요.`, `Watch an ad for ${FLYING_GEM_AD_REWARD} more gems.`)}
+          claimLabel={t(`보석 ${FLYING_GEM_AD_REWARD}개 더 받기`, `Claim ${FLYING_GEM_AD_REWARD} more gems`)}
           onClaim={() => {
             onClaimGem();
             onDone();

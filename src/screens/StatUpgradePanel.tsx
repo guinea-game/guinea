@@ -3,11 +3,11 @@ import { Image, StyleSheet, View } from "react-native";
 import { Text } from "../components/GameText";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { colors, fonts } from "../theme";
-import { frameKit, kit, panelSlices, statIcons } from "../assets";
+import { frameKit, kit, panelSlices, statIcons, uiImages } from "../assets";
 import { GameButton } from "../components/GameButton";
 import { Panel } from "../components/NineSlice";
 import { FloatText, useFlash, useHoldRepeat, useShake } from "../components/motion";
-import { applyUpgradeLevels, formatGameNumber, getStatLevel, getStatValue, getUpgradeQuote, getNextUpgradeMode, statInfo, STAT_CAP } from "../state/gameMath";
+import { applyUpgradeLevels, formatGameNumber, GEM_STATS, getStatLevel, getStatValue, getUpgradeQuote, getNextUpgradeMode, statInfo, STAT_CAP } from "../state/gameMath";
 import { CoinPrice } from "../components/CoinPrice";
 import type { GameState, StatKey, UpgradeMode } from "../types";
 import { t } from "../i18n";
@@ -83,7 +83,10 @@ function StatRow({
   const info = statInfo[key];
   const value = getStatValue(state, key);
   const level = getStatLevel(state, key);
-  const quote = getUpgradeQuote(key, level, state.gold, upgradeMode, value);
+  // Gem stats (attackSpeed) spend gems at a flat per-level cost instead of gold.
+  const usesGems = GEM_STATS.includes(key);
+  const balance = usesGems ? state.gems : state.gold;
+  const quote = getUpgradeQuote(key, level, balance, upgradeMode, value);
   const nextValue = applyUpgradeLevels(key, value, quote.levels);
   const suffix = key === "attack" ? "" : "%";
   // 공격력 only: formatGameNumber shows up to 3 decimals under 1000 — too noisy here,
@@ -91,7 +94,7 @@ function StatRow({
   // formatGameNumber already drops decimals, and past six digits it adds the a/b/c units.
   const formatStat = (n: number) => (key === "attack" && Math.abs(n) < 1000 ? n.toLocaleString("ko-KR", { maximumFractionDigits: 1 }) : formatGameNumber(n));
   const atCap = STAT_CAP[key] !== undefined && getStatValue(state, key) >= STAT_CAP[key]!;
-  const affordable = quote.levels > 0 && state.gold >= quote.cost;
+  const affordable = quote.levels > 0 && balance >= quote.cost;
   const short = !atCap && !affordable;
 
   const [gains, setGains] = useState<{ id: number; text: string }[]>([]);
@@ -150,6 +153,7 @@ function StatRow({
             {!atCap && (
               <CoinPrice
                 amount={quote.cost}
+                icon={usesGems ? uiImages.crystal : undefined}
                 textStyle={styles.upgradeButtonCost}
                 style={styles.upgradeButtonCostRow}
               />

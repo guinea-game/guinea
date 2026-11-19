@@ -1,7 +1,7 @@
 import type { SkillTimers } from "./state/skills";
 import type { CookGrade } from "./state/buffs";
 export type Tab = "battle" | "companions" | "inventory" | "skills" | "shop" | "milestone" | "kitchen" | "grocery" | "recipes" | "cookbook" | "comics" | "stats" | "guide" | "credits" | "backup";
-export type StatKey = "attack" | "criticalDamage" | "criticalChance" | "goldBonus";
+export type StatKey = "attack" | "criticalDamage" | "criticalChance" | "goldBonus" | "attackSpeed";
 export type BattlePhase = "idle" | "attacking" | "hit" | "defeated" | "entering";
 export type PlayerAnimation = "idle" | "attack" | "critical" | "win";
 export type EnemyAnimation = "idle" | "hit" | "die";
@@ -30,6 +30,8 @@ export interface GameState {
   criticalDamage: number;
   criticalChance?: number;
   goldBonus: number;
+  // Permanent upgrade bought with gems (statInfo.attackSpeed) — older saves have none yet.
+  attackSpeed?: number;
   currentStage: string;
   stageNumber: number;
   stageKills: number;

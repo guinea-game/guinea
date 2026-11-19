@@ -18,6 +18,7 @@ export const initialState: GameState = {
   criticalDamage: 200,
   criticalChance: 5,
   goldBonus: 10,
+  attackSpeed: 0,
   currentStage: getStageLabel(0),
   stageNumber: 0,
   stageKills: 0,
@@ -47,5 +48,6 @@ export const initialState: GameState = {
     criticalDamage: 1,
     criticalChance: 1,
     goldBonus: 1,
+    attackSpeed: 1,
   },
 };

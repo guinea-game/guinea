@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 import type { EnemyKind, GameState, Outfit, SkillId, StatKey, UpgradeMode } from "../types";
 import { ATTENDANCE_REWARDS, getAttendance, todayKey } from "./attendance";
-import { showInterstitial, subscribeAdShowing } from "../ads";
+import { subscribeAdShowing } from "../ads";
 import { LATEST_UPDATE } from "./updates";
 import { GLUTTON_FOOD_MULTIPLIER, INITIAL_SKILL_TIMERS, SKILL_SWAP_LOCK_MS, getSkill } from "./skills";
 import { initialState } from "./initialState";
@@ -20,7 +20,7 @@ import {
   STAR_GEMS,
   STAR_NO_FOOD,
 } from "./progression";
-import { applyUpgradeLevels, BOSS_PHASE_TWO_TIME_LIMIT_MS, getBossTimeLimitMs, getExpReward, getGoldReward, getExpToLevel, getStatLevel, getStatValue, getUpgradeQuote } from "./gameMath";
+import { applyUpgradeLevels, BOSS_PHASE_TWO_TIME_LIMIT_MS, GEM_STATS, getBossTimeLimitMs, getExpReward, getGoldReward, getExpToLevel, getStatLevel, getStatValue, getUpgradeQuote } from "./gameMath";
 import { useAutoBattle } from "./useAutoBattle";
 import { clearSave, loadSave, writeSave } from "./storage";
 import { claimHiddenQuest, claimMission, migrateQuestClaims } from "./quests";
@@ -51,6 +51,8 @@ export type DropEvent = { id: number; name: string; delay: number };
 const SPEED_BOOST_DURATION_MS = 5 * 60_000; // 5 minutes
 // The shop's "광고 보고 보석 받기" button.
 export const AD_GEMS_REWARD = 10;
+// No boss gets a second (enraged) phase at or before this stage — see startBossFight.
+const NO_BOSS_PHASE_TWO_UNTIL_STAGE = 5;
 // The boss entrance banner's "광고 보고 공격력 버프" option.
 export const BOSS_AD_BUFF_ATTACK_PERCENT = 50;
 const BOSS_AD_BUFF_DURATION_MS = 3 * 60_000; // 3 minutes
@@ -58,8 +60,10 @@ const BOSS_AD_BUFF_DURATION_MS = 3 * 60_000; // 3 minutes
 export const AD_GOLD_MOBS = 100;
 // Each of the shop's two ads (gems, gold) can be watched this many times a day.
 export const SHOP_ADS_PER_DAY = 5;
-// The winged gem's "watch an ad" offer: gems per ad, and ads a day before only coins fly.
-export const FLYING_GEM_AD_REWARD = 5;
+// The winged gem: the catch itself pays this much immediately, and the ad it then offers
+// pays this many more on top; ads a day before only coins fly.
+export const FLYING_GEM_CATCH_REWARD = 1;
+export const FLYING_GEM_AD_REWARD = 4;
 export const FLYING_GEM_ADS_PER_DAY = 8;
 const flyingGemAdsToday = (state: GameState) => (state.flyingGemAds?.day === todayKey() ? state.flyingGemAds.count : 0);
 // Gold each of the three post-intro gift kills pays at the least (the first attack
@@ -230,8 +234,10 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   // wall-clock time like the food buffs, so it keeps counting down while the app is closed.
   const speedBoostRemainingMs = state.speedBoostUntil ? Math.max(0, state.speedBoostUntil - now) : 0;
   const speedMultiplier = speedBoostRemainingMs > 0 ? 2 : 1;
-  // The ad boost, attack-speed food and a companion's own pace (사무라이기니 -35%) stack.
-  const battleSpeed = speedMultiplier * (1 + foodBuffs.attackSpeed / 100) * (1 + (outfitBuff.attackSpeed ?? 0) / 100);
+  // The ad boost, attack-speed food, a companion's own pace (사무라이기니 -35%) and the
+  // permanent gem-bought attack-speed stat (statInfo.attackSpeed) all stack.
+  const battleSpeed =
+    speedMultiplier * (1 + foodBuffs.attackSpeed / 100) * (1 + (outfitBuff.attackSpeed ?? 0) / 100) * (1 + (state.attackSpeed ?? 0) / 100);
   const watchAdForSpeedBoost = () => {
     if (speedBoostRemainingMs > 0) return;
     const startedAt = Date.now();
@@ -478,7 +484,9 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   const startBossFight = useCallback((stageNumber: number = state.stageNumber) => {
     setMiniBoss(false);
     setBossPhase(1);
-    setBossHasPhaseTwo(stageNumber >= LAST_STAGE_NUMBER || Math.random() < 0.5);
+    // No second phase yet for the first few stages — still-learning players shouldn't meet an
+    // enraged boss comeback this early.
+    setBossHasPhaseTwo(stageNumber > NO_BOSS_PHASE_TWO_UNTIL_STAGE && (stageNumber >= LAST_STAGE_NUMBER || Math.random() < 0.5));
     setBossTimerStartedAt(null);
     setBossTimeLimitMs(getBossTimeLimitMs(stageNumber));
     setBossIntroPending(true);
@@ -714,7 +722,8 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   }, []);
 
   // Flying coins grant stage-scaled gold (5x the stage's regular mob); a winged gem pays
-  // nothing on the catch itself — its gems come from the ad it offers (FLYING_GEM_AD_REWARD).
+  // FLYING_GEM_CATCH_REWARD on the catch itself, plus FLYING_GEM_AD_REWARD more from the ad
+  // it then offers.
   // What one of the current stage's regular mobs pays right now (buffs included) — the unit
   // the flying coin and the attendance gold days are measured in.
   const currentMobGold = () => {
@@ -752,7 +761,11 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
 
   const catchFlyingCoin = (kind: "coin" | "gem", watchAd = false) => {
     if (kind === "gem") {
-      if (!watchAd || flyingGemAdsToday(state) >= FLYING_GEM_ADS_PER_DAY) return { gold: 0, gems: 0 };
+      if (!watchAd) {
+        setState((previous) => ({ ...previous, gems: previous.gems + FLYING_GEM_CATCH_REWARD }));
+        return { gold: 0, gems: FLYING_GEM_CATCH_REWARD };
+      }
+      if (flyingGemAdsToday(state) >= FLYING_GEM_ADS_PER_DAY) return { gold: 0, gems: 0 };
       setState((previous) => {
         const count = flyingGemAdsToday(previous);
         if (count >= FLYING_GEM_ADS_PER_DAY) return previous;
@@ -1012,23 +1025,10 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boss, bossPhase, bossTimerStartedAt, state.stageNumber, battle.enemyHp, battle.enemyId, enemyMaxHp]);
 
-  // Tapping on past the stage-clear banner shows an interstitial every time — the only
-  // guards left are structural, not pacing: never during the intro tutorial (a new player's
-  // first run shouldn't be interrupted by an ad), and never while the first-clear
-  // celebration is already up (that's its own full-screen modal; stacking an ad on top of
-  // it would look broken). `interstitialAds` is still recorded for later reference even
-  // though nothing gates on it anymore.
+  // Tapping on past the stage-clear banner used to show an interstitial every time; removed
+  // per user request (2026-11-20) — clearing a stage no longer shows any ad.
   const continueStage = () => {
     setStageAnnouncement(null);
-    if (!state.tutorialDone || firstClear !== null) return;
-    showInterstitial().then((shown) => {
-      if (!shown) return;
-      setState((previous) => {
-        const day = todayKey();
-        const count = previous.interstitialAds?.day === day ? previous.interstitialAds.count : 0;
-        return { ...previous, interstitialAds: { day, count: count + 1, lastAt: Date.now() } };
-      });
-    });
   };
 
   // The first-clear celebration's "watch an ad" reward. Clears `firstClear` in the same
@@ -1096,8 +1096,10 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
 
   const upgradeStat = (key: StatKey) => {
     setState((previous) => {
-      const quote = getUpgradeQuote(key, getStatLevel(previous, key), previous.gold, upgradeMode, getStatValue(previous, key));
-      if (quote.levels === 0 || previous.gold < quote.cost) return previous;
+      const usesGems = GEM_STATS.includes(key);
+      const balance = usesGems ? previous.gems : previous.gold;
+      const quote = getUpgradeQuote(key, getStatLevel(previous, key), balance, upgradeMode, getStatValue(previous, key));
+      if (quote.levels === 0 || balance < quote.cost) return previous;
       const attackUpgrades =
         key === "attack"
           ? previous.attackUpgrades + quote.levels
@@ -1107,10 +1109,11 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
         criticalDamage: getStatLevel(previous, "criticalDamage"),
         criticalChance: getStatLevel(previous, "criticalChance"),
         goldBonus: getStatLevel(previous, "goldBonus"),
+        attackSpeed: getStatLevel(previous, "attackSpeed"),
       };
       return {
         ...previous,
-        gold: previous.gold - quote.cost,
+        ...(usesGems ? { gems: previous.gems - quote.cost } : { gold: previous.gold - quote.cost }),
         [key]: applyUpgradeLevels(key, getStatValue(previous, key), quote.levels),
         statLevels: {
           ...previousLevels,
