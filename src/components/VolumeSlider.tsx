@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { PanResponder, StyleSheet, View } from "react-native";
 import { colors } from "../theme";
 
@@ -25,23 +25,38 @@ export function VolumeSlider({
   accessibilityLabel: string;
 }) {
   const [trackWidth, setTrackWidth] = useState(0);
-  const setValueFromX = (x: number) => {
+  const touchAreaRef = useRef<View>(null);
+  // Where the track's left edge actually sits on screen, measured once on layout — not
+  // derived from each touch event. `locationX` (what this used before) is relative to
+  // whichever nested view is currently under the finger, which drifts as the drag crosses
+  // over the thumb/fill/track sub-views, so a real drag felt like a series of disconnected
+  // taps instead of a smooth slide. `pageX` minus this fixed offset stays correct regardless
+  // of which child the finger is over. Kept in state (not a ref) for the same reason
+  // trackWidth is — see the comment above.
+  const [trackPageX, setTrackPageX] = useState(0);
+  const setValueFromPageX = (pageX: number) => {
     if (trackWidth <= 0) return;
-    onChange(Math.min(1, Math.max(0, x / trackWidth)));
+    onChange(Math.min(1, Math.max(0, (pageX - trackPageX) / trackWidth)));
   };
   const panHandlers = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: () => true,
-    onPanResponderGrant: (event) => setValueFromX(event.nativeEvent.locationX),
-    onPanResponderMove: (event) => setValueFromX(event.nativeEvent.locationX),
+    onPanResponderGrant: (event) => setValueFromPageX(event.nativeEvent.pageX),
+    onPanResponderMove: (event) => setValueFromPageX(event.nativeEvent.pageX),
   }).panHandlers;
 
   return (
     <View
+      ref={touchAreaRef}
       accessibilityRole="adjustable"
       accessibilityLabel={accessibilityLabel}
       style={styles.touchArea}
-      onLayout={(event) => setTrackWidth(event.nativeEvent.layout.width)}
+      onLayout={(event) => {
+        setTrackWidth(event.nativeEvent.layout.width);
+        touchAreaRef.current?.measure((_x, _y, _width, _height, pageX) => {
+          setTrackPageX(pageX);
+        });
+      }}
       {...panHandlers}
     >
       <View style={styles.track}>
