@@ -2316,7 +2316,8 @@ export const COMIC_ON_FIRST_CLEAR: Partial<Record<number, ComicId>> = {
 // Story order, for the album: the opening, then each by the stage that unlocks it. "ending"
 // and "bazaarBound" are both normal stage-keyed entries now (dynamic and 38, respectively) so
 // they're included automatically below — only apprenticeGini/apprenticeWeak/apprenticeGuard/
-// boxerEvolution (loop-specific triggers, not stage-keyed) are appended by hand.
+// boxerEvolution/apprenticeMisfire/apprenticeQuickdraw/cowboyEvolution (loop-specific triggers,
+// not stage-keyed) are appended by hand.
 export const COMIC_ORDER: ComicId[] = [
   "opening",
   ...(Object.entries(COMIC_ON_FIRST_CLEAR) as [string, ComicId][])
@@ -2326,6 +2327,9 @@ export const COMIC_ORDER: ComicId[] = [
   "apprenticeWeak",
   "apprenticeGuard",
   "boxerEvolution",
+  "apprenticeMisfire",
+  "apprenticeQuickdraw",
+  "cowboyEvolution",
 ];
 
 // What opens a comic, for the album's locked cards.
