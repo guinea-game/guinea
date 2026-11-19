@@ -5,7 +5,7 @@ import { buttonImages, kit } from "../assets";
 import { NineSlice } from "./NineSlice";
 import { GameButton } from "./GameButton";
 import { VolumeSlider } from "./VolumeSlider";
-import { playSfx, setBgmVolume, setSfxVolume, useBgmVolume, useSfxVolume } from "../sound";
+import { playSfx, setBgmVolume, setCalmBgm, setSfxVolume, useBgmVolume, useCalmBgm, useSfxVolume } from "../sound";
 import { playHaptic, setHapticsEnabled, useHapticsEnabled } from "../haptics";
 import { setLanguage, t, useLanguage, type Lang } from "../i18n";
 import { launchAdTestSuite } from "../ads";
@@ -53,6 +53,7 @@ export function SettingsModal({
 }) {
   const sfxVolume = useSfxVolume();
   const bgmVolume = useBgmVolume();
+  const calmBgm = useCalmBgm();
   const hapticsEnabled = useHapticsEnabled();
   const language = useLanguage();
   return (
@@ -112,6 +113,20 @@ export function SettingsModal({
             <View style={styles.sliderWrap}>
               <VolumeSlider value={bgmVolume} accessibilityLabel={t("배경음 음량", "Music volume")} onChange={setBgmVolume} />
             </View>
+          </View>
+          <View style={[styles.sfxRow, styles.bgmRow]}>
+            <Text style={styles.sfxLabel}>{t("차분한 배경음", "Calm Music")}</Text>
+            <GameButton
+              variant={calmBgm ? "green" : "beige"}
+              onPress={() => {
+                setCalmBgm(!calmBgm);
+                playSfx("uiToggle");
+              }}
+              style={styles.hapticButton}
+              textStyle={styles.hapticButtonText}
+            >
+              {calmBgm ? t("켜짐", "On") : t("꺼짐", "Off")}
+            </GameButton>
           </View>
           <View style={[styles.sfxRow, styles.bgmRow]}>
             <Text style={styles.sfxLabel}>{t("진동", "Vibration")}</Text>

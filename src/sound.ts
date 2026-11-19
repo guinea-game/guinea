@@ -104,6 +104,7 @@ export function useSfxVolume() {
 // --- Background music ---------------------------------------------------------------
 
 const BGM_VOLUME_KEY = "gini.bgm.volume";
+const CALM_BGM_KEY = "gini.bgm.calm";
 const DEFAULT_BGM_VOLUME = 0.35;
 
 // Only the region groups with actual tracks in assets.ts's bgm object — not every
@@ -125,6 +126,12 @@ bgmPlayer.addListener("playbackStatusUpdate", (status) => {
 });
 // The title screen plays its own theme instead of any region's, until the game starts.
 let titleMode = true;
+// User preference (설정 > 차분한 배경음): keeps the calm title theme playing everywhere
+// instead of each stage's own field/boss track, for players who find the stage music
+// too busy. Composes with titleMode below rather than reusing it, since titleMode's own
+// false is a one-way "the game has started" flip (see App.tsx) that this must survive.
+let calmBgm = false;
+const calmBgmListeners = new Set<(on: boolean) => void>();
 
 let bgmGroup: LoadedBgmGroup = FALLBACK_GROUP;
 let bgmKind: BgmKind = "field";
@@ -141,7 +148,7 @@ function applyBgmVolume() {
 applyBgmVolume();
 
 function syncBgm() {
-  const source = titleMode ? bgmTitle : bgm[bgmGroup][bgmKind];
+  const source = titleMode || calmBgm ? bgmTitle : bgm[bgmGroup][bgmKind];
   if (source !== loadedBgmSource) {
     loadedBgmSource = source;
     bgmPlayer.replace(source);
@@ -172,6 +179,15 @@ AsyncStorage.getItem(BGM_VOLUME_KEY)
     bgmVolume = Math.min(1, Math.max(0, parsed));
     applyBgmVolume();
     bgmListeners.forEach((listener) => listener(bgmVolume));
+    syncBgm();
+  })
+  .catch(() => {});
+
+AsyncStorage.getItem(CALM_BGM_KEY)
+  .then((raw) => {
+    if (raw !== "1") return;
+    calmBgm = true;
+    calmBgmListeners.forEach((listener) => listener(calmBgm));
     syncBgm();
   })
   .catch(() => {});
@@ -222,6 +238,30 @@ export function useBgmVolume() {
     bgmListeners.add(setValue);
     return () => {
       bgmListeners.delete(setValue);
+    };
+  }, []);
+  return value;
+}
+
+// 설정 > 차분한 배경음: plays the title theme everywhere instead of each stage's own track.
+export function getCalmBgm() {
+  return calmBgm;
+}
+
+export function setCalmBgm(on: boolean) {
+  if (calmBgm === on) return;
+  calmBgm = on;
+  syncBgm();
+  calmBgmListeners.forEach((listener) => listener(calmBgm));
+  AsyncStorage.setItem(CALM_BGM_KEY, calmBgm ? "1" : "0").catch(() => {});
+}
+
+export function useCalmBgm() {
+  const [value, setValue] = useState(calmBgm);
+  useEffect(() => {
+    calmBgmListeners.add(setValue);
+    return () => {
+      calmBgmListeners.delete(setValue);
     };
   }, []);
   return value;

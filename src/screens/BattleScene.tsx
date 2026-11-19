@@ -368,6 +368,9 @@ export function BattleScene({
   apprenticeAttackId = 0,
   apprenticeAttackKind = "slam",
   apprenticeAttackHitMs = 500,
+  apprenticeUnlocked = false,
+  apprenticeHidden = false,
+  onToggleApprentice,
   manualEnabled,
   onManualAttack,
   onOpenMap,
@@ -450,11 +453,19 @@ export function BattleScene({
   onQuest: () => void;
   outfit: Outfit;
   // From the second loop on (loopsCompleted >= 1): 견습기니 wanders the scene (see ApprenticeFollower).
+  // Already false whenever the player has toggled it off (apprenticeHidden) — BattleScreen ANDs
+  // that into this before it ever reaches here.
   apprenticeActive?: boolean;
   // Bumped each time it attacks on its own clock (see useAutoBattle's own fields of the same name).
   apprenticeAttackId?: number;
   apprenticeAttackKind?: "slam" | "beam";
   apprenticeAttackHitMs?: number;
+  // Whether the toggle button itself should show at all (independent of apprenticeActive, which
+  // also goes false while hidden) — true once loopsCompleted >= 1, same gate apprenticeActive
+  // used before the hide toggle existed.
+  apprenticeUnlocked?: boolean;
+  apprenticeHidden?: boolean;
+  onToggleApprentice?: () => void;
   manualEnabled: boolean;
   onManualAttack: () => void;
   onOpenMap: () => void;
@@ -767,6 +778,26 @@ export function BattleScene({
             style={styles.stageBar}
             pointerEvents="box-none"
           >
+            {apprenticeUnlocked && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={apprenticeHidden ? tr("견습기니 보이기", "Show the apprentice") : tr("견습기니 숨기기", "Hide the apprentice")}
+                onPress={onToggleApprentice}
+                hitSlop={6}
+                style={({ pressed }) => [styles.apprenticeToggle, apprenticeHidden && styles.apprenticeToggleOff, pressed && styles.questPressed]}
+              >
+                <SpriteStrip
+                  source={apprenticeSprite.idle}
+                  frameSize={500}
+                  frameCount={4}
+                  displaySize={34}
+                  durationMs={1800}
+                  mode="loop"
+                  tintColor={apprenticeHidden ? "#000" : undefined}
+                />
+                <IconCaption offset={-5}>{tr("견습기니", "Apprentice")}</IconCaption>
+              </Pressable>
+            )}
             <View style={styles.stageBarInfo} pointerEvents="none">
               <StrokedText style={styles.stageBarTitle} strokeColor={colors.line} strokeWidth={1.5}>
                 {stageLabel}
@@ -1771,6 +1802,9 @@ const styles = StyleSheet.create({
   questButton: { width: 42, height: 42, alignItems: "center", justifyContent: "center" },
   questPressed: { transform: [{ scale: 0.92 }] },
   questIcon: { width: 38, height: 38 },
+  // Toggles the wandering 견습기니 on/off — same slot/size as questButton, on the bar's other end.
+  apprenticeToggle: { width: 42, height: 42, alignItems: "center", justifyContent: "center" },
+  apprenticeToggleOff: { opacity: 0.45 },
   // Just a dot — whether there's something to claim, not how many.
   heldLoot: { position: "absolute", width: 140, flexDirection: "row", justifyContent: "center", alignItems: "flex-end", gap: 18, zIndex: 13 },
   heldGoldSpot: { width: 50, height: 50, alignItems: "center", justifyContent: "center" },

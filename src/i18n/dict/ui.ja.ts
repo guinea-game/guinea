@@ -5,6 +5,10 @@
 // given at the call site, never to nothing, so an incomplete dictionary never breaks or
 // blanks out the UI.
 export const UI_DICT_JA: Record<string, string> = {
+  "차분한 배경음": "落ち着いたBGM",
+  "견습기니": "見習いギニー",
+  "견습기니 보이기": "見習いギニーを表示",
+  "견습기니 숨기기": "見習いギニーを隠す",
   "한 번 더 받기": "もう一度もらう",
   "출석 보상": "出席報酬",
   "닫기": "閉じる",

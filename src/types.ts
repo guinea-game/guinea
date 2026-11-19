@@ -99,6 +99,9 @@ export interface GameState {
   discoveredItems?: string[];
   // Kitchen recipe layout the player picked (one-column list / two-column cards).
   kitchenLayout?: "list" | "grid";
+  // The wandering 견습기니 (loopsCompleted >= 1) toggled off from the battle screen's own
+  // button; missing on older saves = shown.
+  apprenticeHidden?: boolean;
   // Bought bag expansions (see state/bag.ts); missing on older saves = none.
   bagExpansions?: number;
   // Unused leftovers from when cooking went through pots (pick a recipe -> it sits in a pot
