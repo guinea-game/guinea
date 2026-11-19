@@ -237,11 +237,20 @@ export function initAds() {
 // to actually confirm its modal is gone (e.g. via <Modal onDismiss>) before this resolves.
 export async function showRewardedAd(onAboutToShow?: () => Promise<void>): Promise<AdResult> {
   if (showing) return "failed";
+  // Claimed synchronously, before any `await` below, not after — otherwise a second call that
+  // starts while this one is still awaiting init/load/onAboutToShow would also read `showing` as
+  // false and the two could both reach rewardedAd.showAd(). A double-tap on a "watch ad" button
+  // (nothing here debounces the button itself) was enough to trigger that: two concurrent native
+  // showAd() calls on iOS's ad SDK, which is exactly the kind of overlapping presentation that
+  // leaves a dangling invisible view eating every touch afterward.
+  showing = true;
   await initAds();
   const ready = await waitForRewardedReady(LOAD_TIMEOUT_MS);
-  if (!ready) return "failed";
+  if (!ready) {
+    showing = false;
+    return "failed";
+  }
   if (onAboutToShow) await onAboutToShow();
-  showing = true;
   rewardEarned = false;
   return new Promise<AdResult>((resolve) => {
     pendingRewardedShow = resolve;
@@ -261,12 +270,14 @@ export function launchAdTestSuite() {
 // Shows the preloaded interstitial if there is one; resolves true once it was shown and closed.
 export async function showInterstitial(): Promise<boolean> {
   if (showing) return false;
+  // Same early-claim as showRewardedAd() above — see its comment.
+  showing = true;
   await initAds();
   if (!(await interstitialAd.isAdReady())) {
+    showing = false;
     loadInterstitial();
     return false;
   }
-  showing = true;
   return new Promise<boolean>((resolve) => {
     pendingInterstitialShow = resolve;
     setBgmSuspended(true);
