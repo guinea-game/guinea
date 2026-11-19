@@ -4,9 +4,9 @@
 
 export type AdResult = "earned" | "dismissed" | "failed";
 
-// No ATT prompt outside iOS/Android — App.tsx can await this unconditionally.
-export function ensureTrackingPermission(): Promise<void> {
-  return Promise.resolve();
+// No ATT prompt outside iOS/Android — always "determined" (there's nothing to ask).
+export function ensureTrackingPermission(): Promise<boolean> {
+  return Promise.resolve(true);
 }
 
 // Returns a resolved promise (not void) so callers that do `initAds().then((success) => ...)` —

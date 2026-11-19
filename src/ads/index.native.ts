@@ -1,4 +1,4 @@
-import { Platform } from "react-native";
+import { AppState, Platform } from "react-native";
 import {
   LevelPlay,
   LevelPlayInitRequest,
@@ -7,7 +7,7 @@ import {
   LevelPlayInterstitialAd,
 } from "unity-levelplay-mediation";
 import type { LevelPlayAdError, LevelPlayInitError } from "unity-levelplay-mediation";
-import { requestTrackingPermissionsAsync } from "expo-tracking-transparency";
+import { PermissionStatus, requestTrackingPermissionsAsync } from "expo-tracking-transparency";
 import { setBgmSuspended } from "../sound";
 
 export type AdResult = "earned" | "dismissed" | "failed";
@@ -34,20 +34,61 @@ const INTERSTITIAL_UNIT_ID = Platform.select({
 // How long a button press waits for a rewarded ad that isn't loaded yet before giving up.
 const LOAD_TIMEOUT_MS = 8000;
 
-// Resolved once the ATT system prompt has been answered (or skipped, e.g. not iOS). Split out
-// from initAds() so the app can await it on its own, before anything with its own native
-// presentation (a title screen's buttons, a tutorial RN <Modal>, ...) is on screen — see
-// App.tsx. Calling requestTrackingPermissionsAsync() while some other native view is already
-// presenting/animating is exactly the kind of competing-presentation race that has previously
-// left iOS with a dangling view eating every touch (see withLevelPlayTopViewController.js and
-// RewardedAdModal's hideForNativeAd); the OS decides on its own when the real alert actually
-// appears, which does not reliably line up with when we happened to call this.
-let attPromise: Promise<void> | null = null;
-export function ensureTrackingPermission(): Promise<void> {
+// How long to wait between retries when iOS silently skips showing the ATT alert (see below).
+const ATT_RETRY_DELAY_MS = 1200;
+const ATT_MAX_ATTEMPTS = 3;
+
+function delay(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
+function waitUntilActive(): Promise<void> {
+  if (AppState.currentState === "active") return Promise.resolve();
+  return new Promise((resolve) => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        sub.remove();
+        resolve();
+      }
+    });
+  });
+}
+
+// Resolves once ATT is genuinely *determined* (granted or denied) — or gives up and resolves
+// false after a few tries, meaning it's still "undetermined" and must be left that way for the
+// rest of this session (see below). Split out from initAds() so the app can await it on its
+// own, before anything with its own native presentation (a title screen's buttons, a tutorial RN
+// <Modal>, ...) is on screen — see App.tsx.
+//
+// On a brand-new install, calling requestTrackingPermissionsAsync() from our very first effect
+// can land a hair before the app is actually `active` (first-run disk/JS-bundle work makes this
+// launch slower than every later one) — iOS then just silently returns the still-"undetermined"
+// status without ever showing the alert at all, no error, nothing to await differently. Observed
+// behavior matches this exactly: first install, no visible prompt, an ad plays fine once, then
+// touches are dead; quitting and reopening shows the real prompt (this time the app is already
+// properly active by the time we call it) and everything is fine from then on, forever.
+// The actual freeze is very likely the ad mediation SDK's own internal ATT re-check firing (some
+// ad networks probe/re-request tracking authorization themselves around serving/closing an ad
+// when they see "undetermined") right as our own Modal/ad presentation sequencing is in the
+// middle of handing control back — the same class of competing-native-presentation bug
+// withLevelPlayTopViewController.js and RewardedAdModal's hideForNativeAd were written to avoid,
+// just from a presenter neither of those knows about or can wait for.
+// Retrying a few times (each after confirming `active` and a short delay) reliably gets the real
+// prompt to show within the same session; initAds() below refuses to touch the SDK at all for
+// the rest of this session if it still comes back undetermined, which is the actual fix — an ad
+// SDK that's never initialized can't surprise-trigger ATT mid-flow.
+let attPromise: Promise<boolean> | null = null;
+export function ensureTrackingPermission(): Promise<boolean> {
   if (!attPromise) {
-    attPromise = requestTrackingPermissionsAsync()
-      .catch(() => null)
-      .then(() => undefined);
+    attPromise = (async () => {
+      for (let attempt = 0; attempt < ATT_MAX_ATTEMPTS; attempt++) {
+        await waitUntilActive();
+        const { status } = await requestTrackingPermissionsAsync().catch(() => ({ status: PermissionStatus.UNDETERMINED }));
+        if (status !== PermissionStatus.UNDETERMINED) return true;
+        await delay(ATT_RETRY_DELAY_MS);
+      }
+      return false;
+    })();
   }
   return attPromise;
 }
@@ -206,30 +247,35 @@ export function initAds() {
     // Apple requires the ATT prompt before any IDFA-dependent SDK init; the SDK then serves
     // personalized or non-personalized ads based on the user's answer on its own. By the time
     // this runs, App.tsx has already awaited ensureTrackingPermission() with nothing else on
-    // screen, so this just resolves immediately off the cached answer — see its comment.
+    // screen, so this is normally already resolved. If ATT is STILL undetermined (the first-run
+    // timing miss described on ensureTrackingPermission()), the SDK is deliberately never
+    // touched this session — ads are simply unavailable until the next app open, rather than
+    // risking the SDK's own ATT re-check firing mid-ad and freezing the app (see that comment).
     initPromise = ensureTrackingPermission()
-      // The SDK's own README says these privacy calls must happen before LevelPlay.init(),
-      // not after — no CMP/consent UI of our own yet, so this is a placeholder consent answer
-      // (matches the README's own example), not a real per-region GDPR decision.
-      .then(() =>
-        Promise.all([
+      .then((determined) => {
+        if (!determined) return false;
+        // The SDK's own README says these privacy calls must happen before LevelPlay.init(),
+        // not after — no CMP/consent UI of our own yet, so this is a placeholder consent answer
+        // (matches the README's own example), not a real per-region GDPR decision.
+        return Promise.all([
           LevelPlayPrivacySettings.setGDPRConsent(true),
           LevelPlayPrivacySettings.setCCPA(false),
           LevelPlayPrivacySettings.setCOPPA(false),
-        ]).catch(() => null),
-      )
-      .then(
-        () =>
-          new Promise<boolean>((resolve) => {
-            LevelPlay.init(LevelPlayInitRequest.builder(APP_KEY).build(), {
-              onInitSuccess: () => resolve(true),
-              onInitFailed: (error) => {
-                lastAdError = `init: ${describeError(error)}`;
-                resolve(false);
-              },
-            });
-          }),
-      )
+        ])
+          .catch(() => null)
+          .then(
+            () =>
+              new Promise<boolean>((resolve) => {
+                LevelPlay.init(LevelPlayInitRequest.builder(APP_KEY).build(), {
+                  onInitSuccess: () => resolve(true),
+                  onInitFailed: (error) => {
+                    lastAdError = `init: ${describeError(error)}`;
+                    resolve(false);
+                  },
+                });
+              }),
+          );
+      })
       .catch(() => false);
     // Loading ads after a failed init just reproduces the SDK's own "Load must be called
     // after init success callback" error — skip it and leave ads as simply unavailable.
