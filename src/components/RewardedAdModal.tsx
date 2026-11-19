@@ -67,17 +67,33 @@ export function RewardedAdModal({
   // No ad watched to the end: no reward. "failed" (load/display failure, no fill) still shows
   // the fallback panel to explain why before dismissing; "dismissed" (closed early) skips
   // straight to it.
+  // Only brings our RN Modal back (`setHiding(false)`) when this component is going to stay
+  // mounted to show it (fallback/prompt) — never right before the parent unmounts us (onClaim,
+  // or onCancel, which every caller uses to close this same modal). Telling the native Modal to
+  // re-present for a single frame right as React tears the whole tree down is what left iOS
+  // with a dangling, invisible presented view controller eating every touch app-wide after an ad
+  // (seen as "ad 보고 나면 터치가 안 먹음") — the ad's own full-screen cover dismissing at the same
+  // moment our Modal flips visible again raced the two native presentations.
   const dismissNoReward = () => {
     if (callbacks.current.onCancel) callbacks.current.onCancel();
-    else setPhase("prompt");
+    else {
+      setHiding(false);
+      setPhase("prompt");
+    }
   };
   const start = () => {
     showRewardedAd(hideForNativeAd).then((result) => {
       if (!mounted.current) return;
-      setHiding(false);
-      if (result === "earned") callbacks.current.onClaim();
-      else if (result === "failed") setPhase("fallback");
-      else dismissNoReward();
+      if (result === "earned") {
+        callbacks.current.onClaim();
+        return;
+      }
+      if (result === "failed") {
+        setHiding(false);
+        setPhase("fallback");
+        return;
+      }
+      dismissNoReward();
     });
   };
   const play = () => {
