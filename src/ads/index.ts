@@ -4,6 +4,11 @@
 
 export type AdResult = "earned" | "dismissed" | "failed";
 
+// No ATT prompt outside iOS/Android — App.tsx can await this unconditionally.
+export function ensureTrackingPermission(): Promise<void> {
+  return Promise.resolve();
+}
+
 // Returns a resolved promise (not void) so callers that do `initAds().then((success) => ...)` —
 // needed because the native module's initAds() is genuinely async and resolves with whether
 // LevelPlay.init() succeeded — type-check here too; plain `tsc` doesn't know about the

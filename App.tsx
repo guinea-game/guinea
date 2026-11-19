@@ -10,7 +10,7 @@ import { setTitleBgm, startBgm } from "./src/sound";
 import { writeSave } from "./src/state/storage";
 import type { GameState } from "./src/types";
 import { checkContent } from "./src/state/contentCheck";
-import { initAds } from "./src/ads";
+import { ensureTrackingPermission, initAds } from "./src/ads";
 import { installWebWordBreak } from "./src/components/GameText";
 import { hasChosenLanguage } from "./src/i18n";
 import { preloadUiFrames } from "./src/components/uiPreload";
@@ -36,6 +36,14 @@ export default function App() {
   useEffect(() => {
     hasChosenLanguage().then(setLanguageChosen);
   }, []);
+  // On a fresh install, the OS's ATT prompt is a native alert whose exact pop-up timing is up to
+  // iOS, not us — holding every other screen back (just the blank view below) until it's been
+  // answered guarantees nothing with its own native presentation (a tutorial RN <Modal>, in
+  // particular) can ever be on screen while it appears. See ensureTrackingPermission()'s comment.
+  const [attReady, setAttReady] = useState(false);
+  useEffect(() => {
+    ensureTrackingPermission().then(() => setAttReady(true));
+  }, []);
   // Restoring a backup: the game is taken down (so its own autosave can't write the old state
   // over the new one), the backup written with no lastSeenAt (no offline reward off it), then
   // a fresh GameScreen loads it.
@@ -58,7 +66,7 @@ export default function App() {
     preloadUiFrames();
   }, []);
 
-  if (!fontsLoaded || languageChosen === null) {
+  if (!fontsLoaded || languageChosen === null || !attReady) {
     return <View style={{ flex: 1, backgroundColor: colors.appBackground }} />;
   }
 

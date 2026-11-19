@@ -34,6 +34,24 @@ const INTERSTITIAL_UNIT_ID = Platform.select({
 // How long a button press waits for a rewarded ad that isn't loaded yet before giving up.
 const LOAD_TIMEOUT_MS = 8000;
 
+// Resolved once the ATT system prompt has been answered (or skipped, e.g. not iOS). Split out
+// from initAds() so the app can await it on its own, before anything with its own native
+// presentation (a title screen's buttons, a tutorial RN <Modal>, ...) is on screen — see
+// App.tsx. Calling requestTrackingPermissionsAsync() while some other native view is already
+// presenting/animating is exactly the kind of competing-presentation race that has previously
+// left iOS with a dangling view eating every touch (see withLevelPlayTopViewController.js and
+// RewardedAdModal's hideForNativeAd); the OS decides on its own when the real alert actually
+// appears, which does not reliably line up with when we happened to call this.
+let attPromise: Promise<void> | null = null;
+export function ensureTrackingPermission(): Promise<void> {
+  if (!attPromise) {
+    attPromise = requestTrackingPermissionsAsync()
+      .catch(() => null)
+      .then(() => undefined);
+  }
+  return attPromise;
+}
+
 let initPromise: Promise<unknown> | null = null;
 // Guards loadRewarded()/loadInterstitial() against ever calling the native loadAd() before (or
 // after a failed) LevelPlay.init() — that's what throws the SDK's own "Load must be called
@@ -186,9 +204,10 @@ export function initAds() {
     });
 
     // Apple requires the ATT prompt before any IDFA-dependent SDK init; the SDK then serves
-    // personalized or non-personalized ads based on the user's answer on its own.
-    initPromise = requestTrackingPermissionsAsync()
-      .catch(() => null)
+    // personalized or non-personalized ads based on the user's answer on its own. By the time
+    // this runs, App.tsx has already awaited ensureTrackingPermission() with nothing else on
+    // screen, so this just resolves immediately off the cached answer — see its comment.
+    initPromise = ensureTrackingPermission()
       // The SDK's own README says these privacy calls must happen before LevelPlay.init(),
       // not after — no CMP/consent UI of our own yet, so this is a placeholder consent answer
       // (matches the README's own example), not a real per-region GDPR decision.
