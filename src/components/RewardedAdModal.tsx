@@ -11,6 +11,10 @@ import { t } from "../i18n";
 
 type Phase = "prompt" | "loading" | "fallback";
 
+// How long hiding our own Modal is given before the native ad presents (see hideForNativeAd).
+const HIDE_FALLBACK_MS = 400;
+const HIDE_SETTLE_MS = 600;
+
 // Every "watch an ad for X" button goes through this. It plays a real rewarded ad (src/ads):
 // - watched to the end: onClaim hands the reward out.
 // - closed early, or no ad to show (offline, no fill yet, web): no reward — onCancel (or,
@@ -47,16 +51,30 @@ export function RewardedAdModal({
   // fallback below for everywhere else (and belt-and-suspenders if iOS ever skips it).
   const [hiding, setHiding] = useState(false);
   const dismissResolver = useRef<(() => void) | null>(null);
+  // onDismiss can fire before the fade-out has actually finished (logged: the ad was presented
+  // 13ms after hiding, mid-transition, and iOS refused it "while a presentation is in
+  // progress"), so it's never trusted alone: the ad waits for BOTH onDismiss (or its fallback)
+  // and a floor long enough for the native dismissal to settle.
   const hideForNativeAd = () =>
     new Promise<void>((resolve) => {
+      let dismissed = false;
+      let settled = false;
+      const maybeResolve = () => {
+        if (dismissed && settled) resolve();
+      };
       const finish = () => {
         if (!dismissResolver.current) return;
         dismissResolver.current = null;
-        resolve();
+        dismissed = true;
+        maybeResolve();
       };
       dismissResolver.current = finish;
       setHiding(true);
-      setTimeout(finish, 300);
+      setTimeout(finish, HIDE_FALLBACK_MS);
+      setTimeout(() => {
+        settled = true;
+        maybeResolve();
+      }, HIDE_SETTLE_MS);
     });
   const mounted = useRef(true);
   const callbacks = useRef({ onClaim, onCancel });
