@@ -802,20 +802,19 @@ export const skillImages = {
   chiliThrow: require("../assets/skills/chiliThrow.webp"),
   meteor: require("../assets/skills/meteor.webp"),
 };
-const WIDE_ICON = 256 / 222;
 const SQUARE_ICON = 256 / 258;
 export const SKILL_ICON_ASPECT: Record<keyof typeof skillImages, number> = {
-  beam: WIDE_ICON,
-  steal: WIDE_ICON,
-  focus: WIDE_ICON,
-  execute: WIDE_ICON,
-  shout: SQUARE_ICON,
+  beam: 1,
+  steal: 1,
+  focus: 1,
+  execute: 1,
+  shout: 1,
   diligent: SQUARE_ICON,
   glutton: SQUARE_ICON,
-  barrage: SQUARE_ICON,
-  teleport: SQUARE_ICON,
-  carrotThrow: SQUARE_ICON,
-  chiliThrow: SQUARE_ICON,
+  barrage: 1,
+  teleport: 1,
+  carrotThrow: 1,
+  chiliThrow: 1,
   meteor: 1,
 };
 
