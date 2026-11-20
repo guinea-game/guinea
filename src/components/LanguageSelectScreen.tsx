@@ -34,10 +34,10 @@ export function LanguageSelectScreen({ onDone }: { onDone: () => void }) {
             Choose Your Language
           </StrokedText>
           <View style={[styles.buttons, styles.buttonsFirstRow]}>
-            <GameButton variant="cream" onPress={() => choose("ko")} style={styles.button} textStyle={styles.buttonText}>
+            <GameButton variant="beige" onPress={() => choose("ko")} style={styles.button} textStyle={styles.buttonText}>
               한국어
             </GameButton>
-            <GameButton variant="green" onPress={() => choose("en")} style={styles.button} textStyle={styles.buttonText}>
+            <GameButton variant="beige" onPress={() => choose("en")} style={styles.button} textStyle={styles.buttonText}>
               English
             </GameButton>
           </View>
@@ -45,7 +45,7 @@ export function LanguageSelectScreen({ onDone }: { onDone: () => void }) {
             <GameButton variant="beige" onPress={() => choose("ja")} style={styles.button} textStyle={styles.buttonText}>
               日本語
             </GameButton>
-            <GameButton variant="brown" onPress={() => choose("zh")} style={styles.button} textStyle={styles.buttonText}>
+            <GameButton variant="beige" onPress={() => choose("zh")} style={styles.button} textStyle={styles.buttonText}>
               中文
             </GameButton>
           </View>
