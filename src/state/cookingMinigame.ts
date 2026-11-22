@@ -27,6 +27,18 @@ export const MINIGAME_ROUNDS = 3;
 // Auto-miss if the player never taps 멈춰! — so a round (and the modal) can't hang forever.
 export const ROUND_TIMEOUT_MS = 6000;
 
+// 불 조절: an alternate round for recipes whose name says 구이/스테이크/바비큐 (grilled/steak/BBQ
+// — see Recipe.minigame in recipes.ts). Same zoneWidth/drift/classifyStop/grading as the sweep
+// game above (so difficulty and rewards line up tier-for-tier); only how the indicator moves
+// differs — held down, it climbs toward 1 (more heat); let go, it cools back toward 0. The
+// round doesn't end on a tap: it just samples wherever the gauge sits once HEAT_ROUND_MS is up,
+// same as sweepPosition is sampled at the moment of a manual stop.
+export const HEAT_ROUND_MS = 2600;
+// Per second. Rises a little faster than it falls, so holding it down too long overshoots —
+// landing in the zone takes a tap-release rhythm, not just a single well-timed hold.
+export const HEAT_RISE_PER_SEC = 0.9;
+export const HEAT_FALL_PER_SEC = 0.6;
+
 // cookSpeed (see buffs.ts) widens the zone by its % — easier, not faster — capped so the
 // hardest tier never trivializes into a free pass.
 export function getZoneWidth(tier: RecipeTier, cookSpeedPercent: number): number {

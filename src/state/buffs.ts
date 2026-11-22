@@ -220,6 +220,9 @@ export const DISH_PARTNERS: Record<string, Outfit> = {
   "lamb-rib": "dosaGini",
   "tuna-sashimi": "samuraiGini",
   "squid-ink-risotto": "chefGini",
+  "slime-potion": "witchGini",
+  steak: "boxerGini",
+  "pecan-bbq-ribs": "cowboyGini",
 };
 
 export const OUTFIT_NAMES: Record<Outfit, string> = {

@@ -15,6 +15,9 @@ import {
   getRoundSweepMs,
   getZoneWidth,
   gradeFromRounds,
+  HEAT_FALL_PER_SEC,
+  HEAT_RISE_PER_SEC,
+  HEAT_ROUND_MS,
   isDriftingRound,
   MINIGAME_DIFFICULTY,
   MINIGAME_ROUNDS,
@@ -178,6 +181,14 @@ export function CookingMinigame({
             </View>
           ) : showingResult && lastResult ? (
             <ResultReveal key={`${attempt}-${results.length}`} result={lastResult} combo={combo} />
+          ) : recipe.minigame === "heat" ? (
+            <HeatRound
+              key={`${attempt}-${round}`}
+              round={round}
+              zoneWidth={zoneWidth}
+              guideActive={guideActive && round === 0 && attempt === 0}
+              onStop={handleStop}
+            />
           ) : (
             <Round
               key={`${attempt}-${round}`}
@@ -390,6 +401,117 @@ function Round({
   );
 }
 
+// 불 조절: the grilled/steak/BBQ dishes' round (recipe.minigame === "heat"). Same track/zone
+// art and the same classifyStop/grading as Round above — only the indicator's own motion
+// differs: held down it climbs toward 1, let go it cools back toward 0, simulated tick by
+// tick (unlike the sweep's closed-form sweepPosition, this depends on the player's own press
+// history, not just elapsed time). Nothing stops it early; it just samples wherever the gauge
+// sits once HEAT_ROUND_MS runs out.
+function HeatRound({
+  round,
+  zoneWidth,
+  guideActive,
+  onStop,
+}: {
+  round: number;
+  zoneWidth: number;
+  guideActive: boolean;
+  onStop: (result: RoundResult) => void;
+}) {
+  const drifting = isDriftingRound(round);
+  const margin = drifting ? getDriftMargin(zoneWidth) : 0;
+  const [zoneCenter] = useState(() => randomZoneCenter(zoneWidth, margin));
+  const [startedAt] = useState(() => Date.now());
+  const [now, setNow] = useState(startedAt);
+  const [position, setPosition] = useState(0.1);
+  const [channelWidth, setChannelWidth] = useState(0);
+  const heldRef = useRef(false);
+  const positionRef = useRef(0.1);
+  const stoppedRef = useRef(false);
+  const pulse = useSharedValue(0);
+
+  const finish = () => {
+    if (stoppedRef.current) return;
+    stoppedRef.current = true;
+    const elapsed = Date.now() - startedAt;
+    onStop(classifyStop(positionRef.current, driftingZoneCenter(elapsed, zoneCenter, margin), zoneWidth));
+  };
+
+  useEffect(() => {
+    let lastTick = Date.now();
+    const tick = setInterval(() => {
+      const current = Date.now();
+      const dtSec = (current - lastTick) / 1000;
+      lastTick = current;
+      const rate = heldRef.current ? HEAT_RISE_PER_SEC : -HEAT_FALL_PER_SEC;
+      positionRef.current = Math.min(1, Math.max(0, positionRef.current + rate * dtSec));
+      setPosition(positionRef.current);
+      setNow(current);
+    }, 16);
+    const timeout = setTimeout(finish, HEAT_ROUND_MS);
+    pulse.value = withRepeat(withSequence(withTiming(1, { duration: 500, easing: Easing.inOut(Easing.quad) }), withTiming(0, { duration: 500, easing: Easing.inOut(Easing.quad) })), -1);
+    return () => {
+      clearInterval(tick);
+      clearTimeout(timeout);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const liveZoneCenter = driftingZoneCenter(now - startedAt, zoneCenter, margin);
+  const zonePulseStyle = useAnimatedStyle(() => ({ opacity: 0.75 + pulse.value * 0.25 }));
+  const indicatorPulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: 1 + pulse.value * 0.12 }] }));
+
+  return (
+    <View style={styles.round}>
+      {drifting && <Text style={styles.driftHint}>{t("타겟이 움직여요!", "The target is moving!")}</Text>}
+      <View style={styles.track}>
+        <NineSlice slice={frameKit.barFrame} scale={TRACK_SCALE} />
+        <View
+          style={[styles.channel, { top: CHANNEL_INSET_Y, bottom: CHANNEL_INSET_Y, left: CHANNEL_INSET_X, right: CHANNEL_INSET_X }]}
+          onLayout={(event) => setChannelWidth(event.nativeEvent.layout.width)}
+        >
+          {channelWidth > 0 && (
+            <>
+              <Animated.View
+                style={[styles.zone, { left: (liveZoneCenter - zoneWidth / 2) * channelWidth, width: zoneWidth * channelWidth }, zonePulseStyle]}
+              >
+                <View
+                  style={[
+                    styles.perfectZone,
+                    { left: ((1 - PERFECT_SHARE) / 2) * zoneWidth * channelWidth, width: PERFECT_SHARE * zoneWidth * channelWidth },
+                  ]}
+                />
+              </Animated.View>
+              <Animated.View style={[styles.indicator, styles.heatIndicator, { left: position * channelWidth - INDICATOR_SIZE / 2 }, indicatorPulseStyle]} />
+            </>
+          )}
+        </View>
+      </View>
+      <View style={styles.stopButtonWrap}>
+        <GameButton
+          variant="red"
+          onPressIn={() => {
+            heldRef.current = true;
+          }}
+          onPressOut={() => {
+            heldRef.current = false;
+          }}
+          style={styles.stopButton}
+          textStyle={styles.stopButtonText}
+        >
+          {t("꾹 눌러요!", "Press!")}
+        </GameButton>
+        {guideActive && (
+          <>
+            <GuideArrow direction="down" style={styles.guideArrow} />
+            <Text style={styles.guideHint}>{t("눌러서 화력을 올려봐!", "Press it to turn up the heat!")}</Text>
+          </>
+        )}
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   backdrop: { flex: 1, padding: 22, paddingHorizontal: 14, justifyContent: "center", backgroundColor: "#263024cf" },
   panel: { width: "100%", maxWidth: 410, alignSelf: "center", paddingHorizontal: 20, paddingTop: 18, paddingBottom: 22, alignItems: "center" },
@@ -415,6 +537,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.line,
   },
+  // 불 조절's own indicator — same shape as the sweep's, just flame-colored instead of gold.
+  heatIndicator: { backgroundColor: "#ff6b3a" },
   resultWrap: { width: "100%", height: TRACK_HEIGHT + 56, marginTop: 14, alignItems: "center", justifyContent: "center", gap: 4 },
   resultText: { fontSize: 28, fontWeight: "900", fontFamily: fonts.bold },
   comboText: { fontSize: 15, fontWeight: "900", fontFamily: fonts.bold, color: colors.gold },
