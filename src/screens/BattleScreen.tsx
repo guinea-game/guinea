@@ -3,6 +3,8 @@ import { DishPicker } from "../components/DishPicker";
 import { BattleActionsPanel } from "../components/BattleActionsPanel";
 import { BuffSlots } from "../components/BuffSlots";
 import { SkillSlot } from "../components/SkillSlot";
+import { CompanionSkillSlot } from "../components/CompanionSkillSlot";
+import { View } from "react-native";
 import { RewardedAdModal } from "../components/RewardedAdModal";
 import { BattleScene } from "./BattleScene";
 import { StatUpgradePanel } from "./StatUpgradePanel";
@@ -114,18 +116,29 @@ export function BattleScreen({ game }: { game: UseGameState }) {
         giftKills={state.giftKills ?? 0}
         heldLoot={game.heldLoot}
         skillBar={
-          <SkillSlot
-            skillId={state.equippedSkill ?? null}
-            timers={battle.skillTimers}
-            now={game.now}
-            canCast={!game.bossIntroPending && (state.equippedSkill === "teleport" ? game.canTeleportToBoss(game.now) : battle.canCastSkill(game.now))}
-            onCast={state.equippedSkill === "teleport" ? game.teleportToBoss : battle.castSkill}
-            onOpenSkills={() => game.setState((previous) => ({ ...previous, selectedTab: "skills" }))}
-          />
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <SkillSlot
+              skillId={state.equippedSkill ?? null}
+              timers={battle.skillTimers}
+              now={game.now}
+              canCast={!game.bossIntroPending && (state.equippedSkill === "teleport" ? game.canTeleportToBoss(game.now) : battle.canCastSkill(game.now))}
+              onCast={state.equippedSkill === "teleport" ? game.teleportToBoss : battle.castSkill}
+              onOpenSkills={() => game.setState((previous) => ({ ...previous, selectedTab: "skills" }))}
+            />
+            <CompanionSkillSlot
+              outfit={state.equippedOutfit}
+              readyAt={game.companionSkillReadyAt}
+              activeUntil={game.companionSkillActiveUntil}
+              now={game.now}
+              canCast={game.canCastCompanionSkill(game.now)}
+              onCast={game.castCompanionSkill}
+            />
+          </View>
         }
         goldEvents={battle.goldEvents}
         executeId={battle.executeId}
         firstStrikeId={battle.firstStrikeId}
+        companionSkillCastId={game.companionSkillCastId}
         executedKill={battle.lastKillExecuted}
         beamId={battle.castIds.beam}
         stealId={battle.castIds.steal}

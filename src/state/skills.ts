@@ -44,6 +44,10 @@ export const SHOUT_DAMAGE_BONUS = 0.3;
 export const DILIGENT_OFFLINE_BONUS = 0.5;
 // With Glutton equipped, food buffs eaten last this many times longer.
 export const GLUTTON_FOOD_MULTIPLIER = 2;
+// With 알찬 수확 equipped, every ingredient drop gets this much extra chance to come in twos
+// (on top of whatever dropDouble the equipped food buff already grants — see dropOptions in
+// useGameState's kill handler).
+export const HARVEST_DROP_DOUBLE_BONUS = 20;
 // 당근던지기: removes this share of the enemy's current HP, the moment the thrown carrot
 // lands — CARROT_THROW_HIT_MS is its travel time, shared with CarrotThrowEffect so the
 // damage lands exactly when the carrot visually arrives.
@@ -102,6 +106,13 @@ export const SKILLS: Skill[] = [
     description: "하늘에서 운석이 떨어져 일반 몹 5마리를 차례로 한 방에 쓰러뜨려요. 보스에게는 최대 체력의 30% 피해를 줘요.",
     cooldownMs: SKILL_COOLDOWN_MS,
   },
+  {
+    id: "harvest",
+    name: "알찬 수확",
+    description: `장착하면 항상 적용 · 재료 드롭이 2배로 떨어질 확률 +${HARVEST_DROP_DOUBLE_BONUS}%.`,
+    passive: true,
+    cooldownMs: 0,
+  },
 ];
 
 // One-line effect summaries for the battle slot's info bubble.
@@ -118,6 +129,7 @@ export const SKILL_SUMMARY: Record<SkillId, string> = {
   carrotThrow: "적 체력 25% 즉시 감소",
   chiliThrow: "적 체력 30%를 화상 피해로 감소 (지속)",
   meteor: "일반 몹 5마리 즉사 · 보스 체력 -30%",
+  harvest: `재료 2배 드롭 확률 +${HARVEST_DROP_DOUBLE_BONUS}%`,
 };
 
 export function getSkill(id: SkillId) {
@@ -139,6 +151,7 @@ export const INITIAL_SKILL_TIMERS: SkillTimers = {
   carrotThrow: { readyAt: 0, activeUntil: 0 },
   chiliThrow: { readyAt: 0, activeUntil: 0 },
   meteor: { readyAt: 0, activeUntil: 0 },
+  harvest: { readyAt: 0, activeUntil: 0 },
 };
 
 export function isSkillActive(timers: SkillTimers, id: SkillId, now: number) {

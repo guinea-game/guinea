@@ -4,7 +4,7 @@ import type { EnemyKind, GameState, Outfit, SkillId, StatKey, UpgradeMode } from
 import { ATTENDANCE_REWARDS, getAttendance, todayKey } from "./attendance";
 import { subscribeAdShowing } from "../ads";
 import { LATEST_UPDATE } from "./updates";
-import { GLUTTON_FOOD_MULTIPLIER, INITIAL_SKILL_TIMERS, SKILL_SWAP_LOCK_MS, getSkill } from "./skills";
+import { GLUTTON_FOOD_MULTIPLIER, HARVEST_DROP_DOUBLE_BONUS, INITIAL_SKILL_TIMERS, SKILL_SWAP_LOCK_MS, getSkill } from "./skills";
 import { initialState } from "./initialState";
 import {
   addCompanionShards,
@@ -28,6 +28,14 @@ import { getOutfitGemPrice, getOutfitsGrantedByLoop, getOutfitsUnlockedByStage, 
 import { fitItems, getBagCapacity, getBagExpandCost, BAG_MAX_SLOTS, slotsUsed } from "./bag";
 import { BOSS_NAME, getClearedBosses, BOSS_PHASE_TWO_HP_MULTIPLIER, getDifficultyStage, getEffectiveDifficultyStage, getEnemyKind, getEnemyMaxHp, getEnemyRewardHp, getStageLabel, LAST_STAGE_NUMBER, isMiniBossDue, isGoldenMiniBoss, getMiniBossSalt, GOLDEN_GEMS, GOLDEN_GOLD_MULTIPLIER, STRAY_MOB_CHANCE, MINI_BOSS_COUNT, MINI_BOSS_EXP_MULTIPLIER, MINI_BOSS_HP_MULTIPLIER, STAGE_KILL_TARGET } from "./stages";
 import { rollDrops, type DropModifiers } from "./drops";
+import {
+  COMPANION_CHEF_CRIT_BONUS,
+  COMPANION_CHEF_DROP_DOUBLE_BONUS,
+  COMPANION_FOOD_BOOST_MULTIPLIER,
+  COMPANION_REDUCE_COOLDOWN_MS,
+  COMPANION_SKILL_COOLDOWN_MS,
+  COMPANION_SKILL_WINDOW_MS,
+} from "./companionSkills";
 import { BUFF_SLOT_PRICES, BUFFS, GRADE_DURATION_MS, GRADE_GOLD_MULTIPLIER, INSTANT_DISHES, OUTFIT_FORCED_MANUAL, OUTFIT_NAMES, OUTFIT_SKILL_POWER, OUTFIT_SURE_DROPS, emptyBuffSlots, getOutfitStats, getBuffTotals, peekGrade, pushGrade, shiftGrade, type CookGrade } from "./buffs";
 import { GROCERY, applyDiscount, getSellPrice, getShortfall } from "./grocery";
 import { canCook, consumeIngredients, getKnownRecipes, isRecipeForSale, RECIPES } from "./recipes";
@@ -201,6 +209,34 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
+  // Every companion's own active skill (companionSkills.ts) — 10s cooldown, tapped next to
+  // the equipped skill slot. Not saved: a short cooldown like this doesn't need to survive a
+  // reload, and switching outfits resets it to ready (below) since each outfit's skill differs.
+  const [companionSkillReadyAt, setCompanionSkillReadyAt] = useState(0);
+  // End of the current buff-style companion skill's window (default/tetoGini/chefGini/
+  // cowboyGini only — the rest are instant, see castCompanionSkill). 0 = none running.
+  const [companionSkillActiveUntil, setCompanionSkillActiveUntil] = useState(0);
+  // Bumped on every companion skill cast, so the battle scene can play its SkillCallout
+  // banner (name slammed across the top), same as every equipped active skill does.
+  const [companionSkillCastId, setCompanionSkillCastId] = useState(0);
+  // Switching outfits resets the companion skill to ready (adjusted during render, not an
+  // effect — see https://react.dev/learn/you-might-not-need-an-effect#adjusting-state-when-a-prop-changes).
+  const companionSkillOutfitRef = useRef(state.equippedOutfit);
+  if (companionSkillOutfitRef.current !== state.equippedOutfit) {
+    companionSkillOutfitRef.current = state.equippedOutfit;
+    setCompanionSkillReadyAt(0);
+    setCompanionSkillActiveUntil(0);
+  }
+  // 탐험기니's companion skill (보물 탐지): doubles the very next non-boss kill's gold. A plain
+  // ref, not state — it's consumed (and gone) well before any render would need to show it.
+  const explorerGoldX2Ref = useRef(false);
+  const companionSkillWindowActive = now < companionSkillActiveUntil;
+  const companionFoodBoost = state.equippedOutfit === "default" && companionSkillWindowActive ? COMPANION_FOOD_BOOST_MULTIPLIER : 1;
+  const companionChefCritBonus = state.equippedOutfit === "chefGini" && companionSkillWindowActive ? COMPANION_CHEF_CRIT_BONUS : 0;
+  const companionChefDropBoost = state.equippedOutfit === "chefGini" && companionSkillWindowActive ? COMPANION_CHEF_DROP_DOUBLE_BONUS : 0;
+  const companionTetoNoMiss = state.equippedOutfit === "tetoGini" && companionSkillWindowActive;
+  const companionCowboyNoReload = state.equippedOutfit === "cowboyGini" && companionSkillWindowActive;
+
   const buffSlots = state.buffSlots ?? emptyBuffSlots();
   const outfitStats = getOutfitStats(state.equippedOutfit, getCompanionLevel(state, state.equippedOutfit));
   const outfitBuff = outfitStats.buff;
@@ -218,13 +254,14 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   const bossBuffRemainingMs = state.bossBuffUntil ? Math.max(0, state.bossBuffUntil - now) : 0;
   const buffs = {
     attack:
-      foodBuffs.attack +
+      foodBuffs.attack * companionFoodBoost +
       (outfitBuff?.attack ?? 0) +
       getCookbookAttackBonus(state.cookedRecipes) +
       (bossBuffRemainingMs > 0 ? BOSS_AD_BUFF_ATTACK_PERCENT : 0),
-    criticalChance: foodBuffs.criticalChance + (outfitBuff?.criticalChance ?? 0),
-    criticalDamage: foodBuffs.criticalDamage + (outfitBuff?.criticalDamage ?? 0),
-    gold: foodBuffs.gold + (outfitBuff?.gold ?? 0) + getCodexGoldBonus(state.droppedItems),
+    // The chef's companion skill (불맛) adds a flat window bonus on top, same as food would.
+    criticalChance: foodBuffs.criticalChance * companionFoodBoost + (outfitBuff?.criticalChance ?? 0) + companionChefCritBonus,
+    criticalDamage: foodBuffs.criticalDamage * companionFoodBoost + (outfitBuff?.criticalDamage ?? 0),
+    gold: foodBuffs.gold * companionFoodBoost + (outfitBuff?.gold ?? 0) + getCodexGoldBonus(state.droppedItems),
   };
   // Ingredient drops currently flying from the defeated monster into the bag button.
   const [dropEvents, setDropEvents] = useState<DropEvent[]>([]);
@@ -237,7 +274,10 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   // The ad boost, attack-speed food, a companion's own pace (사무라이기니 -35%) and the
   // permanent gem-bought attack-speed stat (statInfo.attackSpeed) all stack.
   const battleSpeed =
-    speedMultiplier * (1 + foodBuffs.attackSpeed / 100) * (1 + (outfitBuff.attackSpeed ?? 0) / 100) * (1 + (state.attackSpeed ?? 0) / 100);
+    speedMultiplier *
+    (1 + (foodBuffs.attackSpeed * companionFoodBoost) / 100) *
+    (1 + (outfitBuff.attackSpeed ?? 0) / 100) *
+    (1 + (state.attackSpeed ?? 0) / 100);
   const watchAdForSpeedBoost = () => {
     if (speedBoostRemainingMs > 0) return;
     const startedAt = Date.now();
@@ -274,13 +314,13 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
       if (save) {
         // Guards against a save written before an outfit was retired (e.g. "forest") —
         // falls back to default rather than crashing when looking up its sprite sheet.
-        const validOutfits = ["default", "explorerHamster", "tetoGini", "assassinGini", "egenGini", "samuraiGini", "chefGini", "boxerGini", "witchGini", "cowboyGini"];
+        const validOutfits = ["default", "explorerHamster", "tetoGini", "assassinGini", "dosaGini", "samuraiGini", "chefGini", "boxerGini", "witchGini", "cowboyGini"];
         const equippedOutfit = validOutfits.includes(save.state.equippedOutfit)
           ? save.state.equippedOutfit
           : "default";
         // Same guard for a save written before a skill (e.g. the old "freeze"/"swords"/"meteor"
         // magic trio) was retired — getSkill() would otherwise throw looking it up.
-        const validSkills = ["beam", "steal", "focus", "execute", "shout", "diligent", "glutton", "barrage", "teleport", "carrotThrow", "chiliThrow", "meteor"];
+        const validSkills = ["beam", "steal", "focus", "execute", "shout", "diligent", "glutton", "barrage", "teleport", "carrotThrow", "chiliThrow", "meteor", "harvest"];
         const equippedSkill = save.state.equippedSkill && validSkills.includes(save.state.equippedSkill) ? save.state.equippedSkill : null;
         // Placeholder starter materials that were never used by any recipe — strip them
         // from older saves so they stop cluttering the bag.
@@ -512,7 +552,10 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     // A gift kill (right after the intro) pays at least enough for the first upgrade over
     // the three of them, and always drops one 초록 젤리 for the recipe tutorial.
     const gift = (state.giftKills ?? 0) > 0 && !boss;
-    const goldReward = gift ? Math.max(rawGold, GIFT_KILL_GOLD) : rawGold;
+    // 탐험기니's companion skill (보물 탐지): doubles this kill's gold, boss fights excluded.
+    const explorerBoosted = explorerGoldX2Ref.current && !boss;
+    if (explorerBoosted) explorerGoldX2Ref.current = false;
+    const goldReward = Math.round((gift ? Math.max(rawGold, GIFT_KILL_GOLD) : rawGold) * (explorerBoosted ? 2 : 1));
     // The boss's first life: it pays its share and gets back up enraged. Its second life gets
     // a fresh clock once it's on its feet (see the effect by the flee timer). Skipped entirely
     // for the half of boss fights rolled with no second phase (see startBossFight) — that
@@ -586,7 +629,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
         dropRate +
         (ITEM_CATEGORY.get(name) === "vegetable" ? vegetableDrop : 0) +
         (ITEM_CATEGORY.get(name) === "seafood" ? seafoodDrop : 0),
-      doubleChance: dropDouble,
+      doubleChance: dropDouble + (state.equippedSkill === "harvest" ? HARVEST_DROP_DOUBLE_BONUS : 0) + companionChefDropBoost,
       bossSure: bossDropSure > 0,
       allSure: OUTFIT_SURE_DROPS[state.equippedOutfit] ?? false,
     };
@@ -707,7 +750,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
         experience,
       };
     });
-  }, [boss, bossPhase, bossHasPhaseTwo, miniBoss, goldenMini, strayKind, state.stageKills, state.stageMiniBosses, state.bossKills, state.runSeed, state.stageNumber, state.inventory, state.bagExpansions, state.bossesCleared, state.highestStageNumber, state.loopsCompleted, state.purchasedOutfits, state.equippedOutfit, dropRate, vegetableDrop, seafoodDrop, dropDouble, bossDropSure, expBonus, startBossFight, state.giftKills, state.giftLootExplained, bossTimeLimitMs, state.buffSlots, state.stageStars]);
+  }, [boss, bossPhase, bossHasPhaseTwo, miniBoss, goldenMini, strayKind, state.stageKills, state.stageMiniBosses, state.bossKills, state.runSeed, state.stageNumber, state.inventory, state.bagExpansions, state.bossesCleared, state.highestStageNumber, state.loopsCompleted, state.purchasedOutfits, state.equippedOutfit, state.equippedSkill, dropRate, vegetableDrop, seafoodDrop, dropDouble, bossDropSure, expBonus, startBossFight, state.giftKills, state.giftLootExplained, bossTimeLimitMs, state.buffSlots, state.stageStars, companionChefDropBoost]);
 
   // Gold that isn't a kill reward (the Steal skill) still counts toward the gold quest.
   const addBonusGold = useCallback((amount: number) => {
@@ -833,14 +876,16 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     criticalDamage: state.criticalDamage + buffs.criticalDamage,
     criticalChance: (state.criticalChance ?? 5) + buffs.criticalChance,
     goldBonus: state.goldBonus + buffs.gold,
-    missChance: Math.max(0, outfitStats.missChance - foodBuffs.missReduction),
+    // 테토기니's companion skill (전력 질주): forces 0% for the window, food reduction included.
+    missChance: companionTetoNoMiss ? 0 : Math.max(0, outfitStats.missChance - foodBuffs.missReduction),
     hitCount: outfitStats.hitCount,
     cooldownReductionMs: (outfitStats.cooldownSec + foodBuffs.skillCooldown) * 1000,
     bossDamage: foodBuffs.bossDamage,
     skillPower: OUTFIT_SKILL_POWER[state.equippedOutfit] ?? 1,
     firstStrikeMultiplier: outfitStats.firstStrike,
     forcedManual: OUTFIT_FORCED_MANUAL[state.equippedOutfit] ?? false,
-    shotsBeforeReload: outfitStats.shotsBeforeReload,
+    // 카우보이기니's companion skill (연속 사격): 0 disables the reload mechanic for the window.
+    shotsBeforeReload: companionCowboyNoReload ? 0 : outfitStats.shotsBeforeReload,
     reloadMs: outfitStats.reloadMs,
     extraHitChance: foodBuffs.extraHit + outfitStats.extraHitChance,
     executeBonus: foodBuffs.execute,
@@ -863,6 +908,51 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     // throws in its own attacks on its own clock, independent of the player's.
     apprenticeActive: (state.loopsCompleted ?? 0) >= 1,
   });
+
+  // Whether the companion skill button can be tapped right now — off cooldown, and not
+  // mid-cutscene/intro (same gate the equipped skill slot uses).
+  const canCastCompanionSkill = (checkNow: number) =>
+    checkNow >= companionSkillReadyAt && !battlePaused && !bossIntroPending && battle.phase !== "defeated" && battle.phase !== "entering";
+
+  // Every companion's own active (companionSkills.ts) — one dispatcher, since what it does
+  // depends entirely on the equipped outfit. Buff-style ones (default/tetoGini/chefGini/
+  // cowboyGini) just open companionSkillActiveUntil's window; the props above read it on
+  // their own each render. The rest reach straight into useAutoBattle for an instant effect.
+  const castCompanionSkill = useCallback(() => {
+    if (!canCastCompanionSkill(Date.now())) return;
+    const castAt = Date.now();
+    setCompanionSkillReadyAt(castAt + COMPANION_SKILL_COOLDOWN_MS);
+    // Bumped on every cast regardless of outfit — the battle scene shows a SkillCallout
+    // banner off this, same as every equipped active skill already does.
+    setCompanionSkillCastId((value) => value + 1);
+    switch (state.equippedOutfit) {
+      case "default":
+      case "tetoGini":
+      case "chefGini":
+      case "cowboyGini":
+        setCompanionSkillActiveUntil(castAt + COMPANION_SKILL_WINDOW_MS);
+        break;
+      case "explorerHamster":
+        explorerGoldX2Ref.current = true;
+        break;
+      case "assassinGini":
+        battle.flagAmbush();
+        break;
+      case "dosaGini":
+        battle.reduceSkillCooldown(COMPANION_REDUCE_COOLDOWN_MS);
+        break;
+      case "samuraiGini":
+        battle.strikeIaido();
+        break;
+      case "witchGini":
+        battle.strikeArcaneBurst();
+        break;
+      case "boxerGini":
+        battle.strikeUppercut();
+        break;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.equippedOutfit, companionSkillReadyAt, battlePaused, bossIntroPending, battle.phase, battle]);
 
   // Personal best: the biggest single hit.
   useEffect(() => {
@@ -1544,6 +1634,11 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     leaveBossFight,
     bossIntroPending,
     beginBossFight,
+    companionSkillReadyAt,
+    companionSkillActiveUntil,
+    companionSkillCastId,
+    canCastCompanionSkill,
+    castCompanionSkill,
     bossSkillCastId,
     bossSkillConfig,
     bossStunned: now < bossStunnedUntil,

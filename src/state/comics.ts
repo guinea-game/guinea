@@ -22,7 +22,7 @@ export type ComicBubble = {
 // `aspect`: the panel art's height / width (panels from one page can differ slightly).
 export type ComicPanel = { image: number; aspect: number; bubbles: ComicBubble[]; sfx?: SfxKey; shake?: boolean };
 
-export type ComicId = "opening" | "explorer" | "cookbook" | "teto" | "assassin" | "egen" | "samurai" | "harbor" | "dive" | "kite" | "snowpass" | "jungle" | "cavevillage" | "cloudpalace" | "farmchicken" | "jungleoasis" | "marketsilk" | "oasisdesert" | "slimeroad" | "swampfarm" | "snowvillage" | "tigerride" | "foxpath" | "chiliport" | "shrinesteps" | "tanukimap" | "castleonsen" | "nightthief" | "dragonroad" | "dragongate" | "whaleride" | "alpinetrain" | "sledbakery" | "ginitown" | "townasleep" | "pumpkinforest" | "beeChase" | "giniReturn" | "griffinFlight" | "ending" | "bazaarBound" | "teaTrail" | "saffronGarden" | "floatingMarket" | "baliTerraces" | "hawaiiBeach" | "texasCanyon" | "tacoFiesta" | "cacaoJungle" | "andesVineyard" | "skyCity" | "apprenticeGini" | "apprenticeWeak" | "apprenticeGuard" | "boxerEvolution" | "apprenticeMisfire" | "apprenticeQuickdraw" | "cowboyEvolution";
+export type ComicId = "opening" | "explorer" | "cookbook" | "teto" | "assassin" | "moonhill" | "samurai" | "harbor" | "dive" | "kite" | "snowpass" | "jungle" | "cavevillage" | "cloudpalace" | "farmchicken" | "jungleoasis" | "marketsilk" | "oasisdesert" | "slimeroad" | "swampfarm" | "snowvillage" | "tigerride" | "foxpath" | "chiliport" | "shrinesteps" | "tanukimap" | "castleonsen" | "nightthief" | "dragonroad" | "dragongate" | "whaleride" | "alpinetrain" | "sledbakery" | "ginitown" | "townasleep" | "pumpkinforest" | "beeChase" | "giniReturn" | "griffinFlight" | "ending" | "bazaarBound" | "teaTrail" | "saffronGarden" | "floatingMarket" | "baliTerraces" | "hawaiiBeach" | "texasCanyon" | "tacoFiesta" | "cacaoJungle" | "andesVineyard" | "skyCity" | "apprenticeGini" | "apprenticeWeak" | "apprenticeGuard" | "boxerEvolution" | "apprenticeMisfire" | "apprenticeQuickdraw" | "cowboyEvolution";
 
 // Loop-gated story beats: each fires once, in GameScreen's comic chain, the first time
 // `loopsCompleted` equals `afterLoop` and (if given) `stageNumber` has passed `afterStage` —
@@ -248,41 +248,41 @@ export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = 
     ],
   },
   // Reaching stage 21 (stage 20's tavern boss down): the worn-out party drags itself up the
-  // azalea path; 에겐기니 sweeps them back to life with a flower breeze (her skill cooldown
-  // cut) and shares azalea pancakes. A nine-tailed silhouette watches from the pavilion —
-  // stage 21's boss, 구미호.
-  egen: {
-    title: "진달래길의 꽃바람",
+  // mountain path toward 달맞이고개; 도사기니 (a wandering mountain sage) revives them with a
+  // breathing technique (his skill cooldown cut) and joins them. A nine-tailed silhouette
+  // watches from the pavilion — stage 21's boss, 구미호.
+  moonhill: {
+    title: "달빛 고개의 노스승",
     panels: [
       {
-        image: comics.egen1,
-        aspect: 498 / 752,
+        image: comics.moonhill1,
+        aspect: 504 / 760,
         bubbles: [
-          { text: "주막에서\n너무 놀았어...", right: 0.02, top: 0.04, maxWidth: 0.34, tail: "bottom", tailAt: 0.1 },
-          { text: "다리가\n안 움직여...", left: 0.3, top: 0.28, maxWidth: 0.26, tail: "bottom", tailAt: 0.4 },
+          { text: "주막에서\n너무 놀았어...", left: 0.02, top: 0.03, maxWidth: 0.3, tail: "bottom", tailAt: 0.6 },
+          { text: "다리가\n안 움직여...", right: 0.02, top: 0.3, maxWidth: 0.28, tail: "bottom", tailAt: 0.4 },
         ],
       },
       {
-        image: comics.egen2,
-        aspect: 498 / 752,
+        image: comics.moonhill2,
+        aspect: 504 / 760,
         sfx: "levelup",
-        bubbles: [{ text: "어머,\n다들 많이 지쳤구나.", left: 0.02, top: 0.04, maxWidth: 0.36, tail: "right", tailAt: 0.6 }],
+        bubbles: [{ text: "허허,\n다들 고생이 많구먼.", right: 0.02, top: 0.04, maxWidth: 0.4, tail: "bottom", tailAt: 0.5 }],
       },
       {
-        image: comics.egen3,
-        aspect: 498 / 752,
+        image: comics.moonhill3,
+        aspect: 504 / 760,
         sfx: "cookDone",
         bubbles: [
-          { text: "꽃바람 한 번이면\n괜찮아질 거야.", right: 0.02, top: 0.03, maxWidth: 0.36, tail: "left", tailAt: 0.6 },
-          { text: "몸이 가벼워졌어!", left: 0.2, top: 0.86, maxWidth: 0.36, tail: "top", tailAt: 0.2, shout: true },
+          { text: "묵은 숨 한 번\n고르면 개운해질 게야.", right: 0.02, top: 0.03, maxWidth: 0.38, tail: "left", tailAt: 0.5 },
+          { text: "몸이 가벼워졌어!", left: 0.03, top: 0.86, maxWidth: 0.34, tail: "top", tailAt: 0.3, shout: true },
         ],
       },
       {
-        image: comics.egen4,
-        aspect: 498 / 752,
+        image: comics.moonhill4,
+        aspect: 504 / 760,
         bubbles: [
-          { text: "진달래 화전이야.\n같이 먹고 가~", left: 0.3, top: 0.02, maxWidth: 0.36, tail: "bottom", tailAt: 0.55 },
-          { text: "맛있다!\n우리랑 같이 가자!", left: 0.01, top: 0.84, maxWidth: 0.36, tail: "top", tailAt: 0.25 },
+          { text: "자, 달 밝을 때\n가세.", right: 0.02, top: 0.03, maxWidth: 0.32, tail: "bottom", tailAt: 0.5 },
+          { text: "좋아, 가자!", left: 0.02, top: 0.8, maxWidth: 0.3, tail: "top", tailAt: 0.3, shout: true },
         ],
       },
     ],
@@ -2258,7 +2258,7 @@ export const COMIC_ON_FIRST_CLEAR: Partial<Record<number, ComicId>> = {
   16: "snowpass",
   17: "snowvillage",
   18: "tigerride",
-  19: "egen",
+  19: "moonhill",
   20: "foxpath",
   21: "chiliport",
   22: "samurai",

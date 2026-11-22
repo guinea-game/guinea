@@ -4,7 +4,8 @@ import { Text } from "../components/GameText";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors, fonts } from "../theme";
-import { creamSlices, food, frameImages, icons, images, kit, shardImageForLevel, shopKit, skillImages, statIcons, uiImages } from "../assets";
+import { companionSkillImages, creamSlices, food, frameImages, icons, images, kit, shardImageForLevel, shopKit, skillImages, statIcons, uiImages } from "../assets";
+import { COMPANION_SKILL_NAMES, COMPANION_SKILL_SUMMARIES } from "../state/companionSkills";
 import { EnemySprite } from "../components/EnemySprite";
 import { Panel } from "../components/NineSlice";
 import { PageHeading } from "../components/PageHeading";
@@ -66,7 +67,6 @@ function companionDetail(outfit: Outfit, level = 0) {
         `敵ごとの初撃は通常攻撃の${firstStrike}倍（クリティカルなし）`,
         `对每个敌人的首次攻击为普通攻击的${firstStrike}倍（无暴击）`,
       ),
-      t("수동 공격 불가", "No manual attacking", "手動攻撃不可", "无法手动攻击"),
     );
   if (OUTFIT_SURE_DROPS[outfit]) parts.push(t("재료 드랍 확률 100%", "100% ingredient drop rate", "素材ドロップ率100%", "材料掉落率100%"));
   const cooldownReduction = stats.cooldownSec;
@@ -136,10 +136,7 @@ function companionEffects(outfit: Outfit, level = 0): { icon: number; text: stri
     });
   const firstStrike = stats.firstStrike;
   if (firstStrike)
-    parts.push(
-      { icon: skillImages.execute, text: t(`첫 공격 ×${firstStrike}`, `First hit ×${firstStrike}`, `初撃×${firstStrike}`, `首击×${firstStrike}`) },
-      { icon: skillImages.barrage, text: t("수동 공격 불가", "No manual attack", "手動攻撃不可", "无法手动攻击") },
-    );
+    parts.push({ icon: statIcons.attack, text: t(`첫 공격 ×${firstStrike}`, `First hit ×${firstStrike}`, `初撃×${firstStrike}`, `首击×${firstStrike}`) });
   if (OUTFIT_SURE_DROPS[outfit]) parts.push({ icon: icons.chest, text: t("재료 드랍 100%", "100% ingredient drop", "素材ドロップ100%", "材料掉落100%") });
   const cooldownReduction = stats.cooldownSec;
   if (cooldownReduction)
@@ -203,10 +200,10 @@ export const COMPANIONS: { outfit: Outfit; name: string; blurb: string; detail: 
     detail: companionDetail("assassinGini"),
   },
   {
-    outfit: "egenGini",
-    name: "에겐기니",
-    blurb: "벚꽃 지팡이를 든 다정하고 상냥한 기니. 함께 있으면 마음이 편안해진다.",
-    detail: companionDetail("egenGini"),
+    outfit: "dosaGini",
+    name: "도사기니",
+    blurb: "산속에서 홀로 도를 닦던 기니. 오랜 수행 덕에 스킬 쿨타임을 줄여준다.",
+    detail: companionDetail("dosaGini"),
   },
   {
     outfit: "samuraiGini",
@@ -534,6 +531,11 @@ export function CompanionsScreen({
                     />
                   </View>
                   {!maxed && (
+                    <Text style={styles.nextUpgradeHint} numberOfLines={3}>
+                      {t(OUTFIT_GROWTH_HINT[item.outfit][0], OUTFIT_GROWTH_HINT[item.outfit][1], OUTFIT_GROWTH_HINT[item.outfit][2], OUTFIT_GROWTH_HINT[item.outfit][3])}
+                    </Text>
+                  )}
+                  {!maxed && (
                     <GameButton
                       variant={canUpgrade ? "green" : "gray"}
                       disabled={!canUpgrade}
@@ -576,11 +578,8 @@ export function CompanionsScreen({
                     </View>
                   </IconFact>
                 </InfoTile>
-                <InfoTile label={maxed ? t("최고 레벨", "Max Level") : t("다음 승급", "Next Upgrade")}>
-                  <IconFact
-                    icon={icons.star}
-                    caption={maxed ? t("고유 능력 최대 강화", "Signature ability maxed", "固有能力 最大強化", "专属能力已满级") : t(OUTFIT_GROWTH_HINT[item.outfit][0], OUTFIT_GROWTH_HINT[item.outfit][1], OUTFIT_GROWTH_HINT[item.outfit][2], OUTFIT_GROWTH_HINT[item.outfit][3])}
-                  />
+                <InfoTile label={t("액티브 스킬", "Active Skill")}>
+                  <IconFact icon={companionSkillImages[item.outfit]} caption={`${t(COMPANION_SKILL_NAMES[item.outfit])} · ${t(COMPANION_SKILL_SUMMARIES[item.outfit])}`} />
                 </InfoTile>
               </View>}
             </Panel>
@@ -642,6 +641,7 @@ const styles = StyleSheet.create({
   growthCopy: { flex: 1, gap: 3 },
   growthLevel: { fontSize: 14, fontWeight: "900", fontFamily: fonts.bold, color: colors.ink },
   upgradeButton: { minWidth: 60, minHeight: 40 },
+  nextUpgradeHint: { width: 72, marginRight: 4, fontSize: 10, lineHeight: 12, fontFamily: fonts.light, letterSpacing: -0.3, color: colors.muted, textAlign: "right" },
   swap: { alignItems: "center", justifyContent: "center" },
   puff: { position: "absolute", width: 36, height: 36, borderRadius: 18, backgroundColor: "#f3eee2" },
   breaking: { position: "absolute", right: 0, bottom: 0, width: 24, height: 24 },

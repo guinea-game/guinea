@@ -8,7 +8,7 @@ export const SYSTEMS_DICT: Record<string, string> = {
   "전설의 당근을 찾아 세상을 탐험하는 호기심 많은 기니.": "A curious guinea pig exploring the world in search of the legendary carrot.",
   "멋을 위해 선글라스를 쓴 헬창 기니. 하지만 어두워서 가끔 헛스윙을 한다.": "A gym-rat guinea pig wearing sunglasses for style. Trouble is, it's hard to see, so it sometimes whiffs.",
   "두건으로 얼굴을 가리고 단검을 숨긴 그림자 속의 자객.": "An assassin lurking in the shadows, face hidden behind a hood, daggers concealed.",
-  "벚꽃 지팡이를 든 다정하고 상냥한 기니. 함께 있으면 마음이 편안해진다.": "A warm, gentle guinea pig carrying a cherry blossom staff. Being around it puts your mind at ease.",
+  "산속에서 홀로 도를 닦던 기니. 오랜 수행 덕에 스킬 쿨타임을 줄여준다.": "A guinea pig who trained alone deep in the mountains. Years of practice shortened its skill cooldowns.",
   "벚꽃 해변을 떠도는 과묵한 떠돌이 무사. 칼은 단 한 번 뽑으면 충분하다.": "A quiet wandering swordsman roaming Cherry Blossom Beach. One draw of the blade is all it ever needs.",
   "빵집 골목 주방에서 반죽하던 요리사 기니. 국자 하나면 어떤 요리든 뚝딱이다.": "A chef guinea pig who used to knead dough in the Bakery Alley kitchen. Give it one ladle and it can whip up anything.",
   "수상한 집의 마법을 연구하던 기니. 모든 공격이 마법이라, 제자리에서 불꽃·얼음·독·번개·빛·유령불 등 여러 마법을 쏘아 싸운다.":
@@ -21,7 +21,7 @@ export const SYSTEMS_DICT: Record<string, string> = {
   "탐험기니": "Explorer Gini",
   "테토기니": "Teto Gini",
   "암살기니": "Assassin Gini",
-  "에겐기니": "Egen Gini",
+  "도사기니": "Dosa Gini",
   "사무라이기니": "Samurai Gini",
   "셰프기니": "Chef Gini",
   "복서기니": "Boxer Gini",

@@ -4,6 +4,12 @@ import { getGoldReward } from "./gameMath";
 import { playSfx } from "../sound";
 import { playHaptic } from "../haptics";
 import {
+  COMPANION_IAIDO_MULTIPLIER,
+  COMPANION_UPPERCUT_GAP_MS,
+  COMPANION_UPPERCUT_HITS,
+  COMPANION_UPPERCUT_HIT_RATIO,
+} from "./companionSkills";
+import {
   APPRENTICE_ATTACK_HIT_MS,
   APPRENTICE_ATTACK_INTERVAL_MS,
   APPRENTICE_BEAM_CHANCE,
@@ -92,7 +98,7 @@ export function useAutoBattle({
   // Extra strikes landed per swing (e.g. assassinGini's twin daggers) — each rolls its
   // own miss/crit independently; a kill on an earlier strike skips the rest.
   hitCount?: number;
-  // Shaved off every active skill's cooldown on cast (e.g. egenGini) — never below 0.
+  // Shaved off every active skill's cooldown on cast (e.g. dosaGini) — never below 0.
   cooldownReductionMs?: number;
   // Scales skill effects: steal's gold share, shout's damage bonus and the beam's bite
   // out of a boss (capped at BEAM_BOSS_MAX_RATIO). No outfit currently grants this.
@@ -151,10 +157,11 @@ export function useAutoBattle({
   // Manual taps are never allowed by default — only while one of these short burst skills
   // is actively cast does tapping work, since all three reward landing more hits during
   // their window (난타: the whole point; 훔치기/집중: more taps means more gold scatters /
-  // guaranteed crits). Every other moment (and always for a first-strike-locked outfit like
-  // 사무라이기니) battle runs on auto.
+  // guaranteed crits). Every other moment battle runs on auto, including for a first-strike
+  // outfit like 사무라이기니 (autoLocked) — but a manual-window skill the player chose to equip
+  // and cast still opens its tap window even then, or that skill would just be a dead slot.
   const manualWindowOpen = forcedManual || (equippedSkill !== null && MANUAL_WINDOW_SKILLS.includes(equippedSkill) && isSkillActive(skillTimers, equippedSkill, now));
-  const isAutoBattle = !paused && !autoStunned && (autoLocked || !manualWindowOpen);
+  const isAutoBattle = !paused && !autoStunned && !manualWindowOpen;
   // Bumped on each first-strike draw, so the scene can play its slash.
   const [firstStrikeId, setFirstStrikeId] = useState(0);
   const [enemyId, setEnemyId] = useState(1);
@@ -179,6 +186,7 @@ export function useAutoBattle({
     carrotThrow: 0,
     chiliThrow: 0,
     meteor: 0,
+    harvest: 0,
   });
   // 운석 낙하: bumped per falling meteor (the cast's own, then one per mob of the shower), so
   // the scene drops a fresh rock each time. Charges are the mobs still to come in the shower.
@@ -252,6 +260,11 @@ export function useAutoBattle({
   const loopGenRef = useRef(0);
   // Set while auto-battle runs: empties the cylinder in one burst (카우보이기니's tap).
   const fanRef = useRef<(() => void) | null>(null);
+  // 암살기니's companion skill (암습): forces the very next swing's first strike to crit
+  // (bypassing even missChance) and adds one extra strike to that same swing. Each flag is
+  // consumed the instant it's used, whichever comes first — the auto loop or a manual tap.
+  const ambushCritRef = useRef(false);
+  const ambushExtraRef = useRef(false);
 
   // Every landed hit gets its own floating "-damage" popup, independent of whatever the
   // attack sprite animation is doing — so a burst of taps shows a burst of numbers instead
@@ -398,7 +411,9 @@ export function useAutoBattle({
     const now = Date.now();
     // Gift strikes always land, as a crit big enough to fell anything in one go.
     if (instantKillRef.current) return { isCritical: true, damage: maxHpRef.current * 10, missed: false, firstStrike: false };
-    const missed = Math.random() * 100 < missChanceRef.current;
+    // 암습's guaranteed crit also guarantees the hit lands at all — it pre-empts the miss roll.
+    const ambush = ambushCritRef.current;
+    const missed = !ambush && Math.random() * 100 < missChanceRef.current;
     if (missed) return { isCritical: false, damage: 0, missed: true, firstStrike: false };
     const shout = isSkillActive(skillTimersRef.current, "shout", now) ? 1 + SHOUT_DAMAGE_BONUS * skillPowerRef.current : 1;
     const bossBonus = bossRef.current ? 1 + bossDamageRef.current / 100 : 1;
@@ -408,18 +423,22 @@ export function useAutoBattle({
       const damage = Math.round(attackRef.current * firstStrikeRef.current * shout * bossBonus);
       return { isCritical: false, damage, missed: false, firstStrike: true };
     }
+    if (ambush) ambushCritRef.current = false;
     const isCritical =
+      ambush ||
       isSkillActive(skillTimersRef.current, "focus", now) ||
       Math.random() * 100 < Math.min(100, criticalChanceRef.current);
     const damage = Math.round(attackRef.current * (isCritical ? criticalDamageRef.current / 100 : 1) * shout * bossBonus);
     return { isCritical, damage, missed: false, firstStrike: false };
   }, []);
 
-  // Strikes this swing lands: the outfit's hit count, plus one on a lucky extra-hit roll.
-  const rollStrikes = useCallback(
-    () => hitCountRef.current + (Math.random() * 100 < extraHitChanceRef.current ? 1 : 0),
-    [],
-  );
+  // Strikes this swing lands: the outfit's hit count, plus one on a lucky extra-hit roll,
+  // plus one more if 암습's extra-strike flag is still waiting to be spent.
+  const rollStrikes = useCallback(() => {
+    const ambushExtra = ambushExtraRef.current ? 1 : 0;
+    if (ambushExtra) ambushExtraRef.current = false;
+    return hitCountRef.current + ambushExtra + (Math.random() * 100 < extraHitChanceRef.current ? 1 : 0);
+  }, []);
 
   useEffect(() => {
     if (!isAutoBattle || paused) return;
@@ -756,6 +775,116 @@ export function useAutoBattle({
     setSkillTimers(next);
   }, []);
 
+  // 도사기니's companion skill (가속 코어): shaves a flat amount off the equipped skill's
+  // cooldown, same idea as resetSkillCooldown but partial instead of all the way to zero.
+  const reduceSkillCooldown = useCallback((ms: number) => {
+    const id = equippedSkillRef.current;
+    if (!id) return;
+    const now = Date.now();
+    const next = { ...skillTimersRef.current, [id]: { ...skillTimersRef.current[id], readyAt: Math.max(now, skillTimersRef.current[id].readyAt - ms) } };
+    skillTimersRef.current = next;
+    setSkillTimers(next);
+  }, []);
+
+  // 암살기니's companion skill (암습): just arms the flags rollAttack/rollStrikes consume on
+  // whichever swing comes next (auto or manual, whichever fires first).
+  const flagAmbush = useCallback(() => {
+    ambushCritRef.current = true;
+    ambushExtraRef.current = true;
+  }, []);
+
+  // One immediate strike outside the normal swing cadence — 사무라이기니's 거합 and 마녀기니's
+  // 마력 폭발 (companion skills), both a single hit worth `multiplier` normal attacks landing
+  // right now. Same enemy-gone guard as the thrown skills (carrotThrow, meteor, ...) above.
+  const strikeOnce = useCallback(
+    // `onLand` fires at the exact instant the hit actually lands (same spot dealDamage is
+    // called, in both the posed and un-posed paths) — 거합/마력 폭발 use it to bump the same
+    // finisher VFX counter the Execute passive and first-strike already use, so they get a
+    // real slash/arcane-burst instead of just a bare damage number.
+    (multiplier: number, critical: boolean, onLand?: () => void) => {
+      if (phaseRef.current === "defeated" || phaseRef.current === "entering") return;
+      const damage = Math.round(attackRef.current * multiplier);
+      setLastCritical(critical);
+      // Only play this strike's own pose when nothing else owns the phase right now (idle) —
+      // the auto loop runs its own swing/hit/idle cycle independent of this tap, and stealing
+      // phase mid-swing would fight it and stutter the sprite. Landing without a pose still
+      // lands the damage; it just rides whatever the auto loop is already showing.
+      if (phaseRef.current !== "idle") {
+        onLand?.();
+        dealDamage(damage, critical);
+        return;
+      }
+      phaseRef.current = "attacking";
+      setPhase("attacking");
+      const hitTimer = setTimeout(() => {
+        onLand?.();
+        const killed = dealDamage(damage, critical);
+        if (killed) return;
+        phaseRef.current = "hit";
+        setPhase("hit");
+        const readyTimer = setTimeout(() => {
+          if (phaseRef.current === "hit") {
+            phaseRef.current = "idle";
+            setPhase("idle");
+          }
+        }, 320);
+        eventTimersRef.current.push(readyTimer);
+      }, 260);
+      eventTimersRef.current.push(hitTimer);
+    },
+    [dealDamage],
+  );
+  // 사무라이기니's companion skill (거합): never crits, same rule as its first-strike passive —
+  // and reuses that passive's own finisher slash (firstStrikeId), drawn from where it stands.
+  const strikeIaido = useCallback(
+    () => strikeOnce(COMPANION_IAIDO_MULTIPLIER, false, () => setFirstStrikeId((value) => value + 1)),
+    [strikeOnce],
+  );
+  // 마녀기니's companion skill (마력 폭발): a guaranteed crit, so it scales with criticalDamage
+  // the same way a normal crit would. Reuses Execute's finisher VFX — BattleScene already
+  // swaps it to the arcane-blast version whenever the equipped outfit is witch.
+  const strikeArcaneBurst = useCallback(
+    () => strikeOnce(criticalDamageRef.current / 100, true, () => setExecuteId((value) => value + 1)),
+    [strikeOnce],
+  );
+  // 복서기니's companion skill (어퍼컷): several quick hits instead of one big one — each still
+  // checks the enemy's still there (epoch) before landing, same pattern as chiliThrow's ticks.
+  const strikeUppercut = useCallback(() => {
+    if (phaseRef.current === "defeated" || phaseRef.current === "entering") return;
+    const epoch = enemyEpochRef.current;
+    for (let i = 0; i < COMPANION_UPPERCUT_HITS; i++) {
+      const timer = setTimeout(() => {
+        if (epoch !== enemyEpochRef.current) return;
+        if (phaseRef.current === "defeated" || phaseRef.current === "entering") return;
+        const damage = Math.round(attackRef.current * COMPANION_UPPERCUT_HIT_RATIO);
+        setLastCritical(false);
+        // Same idle-only pose rule as strikeOnce — a hit that lands mid-pose just lands,
+        // no fighting over phase with whatever's already playing (a manual tap, say).
+        if (phaseRef.current !== "idle") {
+          dealDamage(damage, false);
+          return;
+        }
+        phaseRef.current = "attacking";
+        setPhase("attacking");
+        const hitTimer = setTimeout(() => {
+          const killed = dealDamage(damage, false);
+          if (killed) return;
+          phaseRef.current = "hit";
+          setPhase("hit");
+          const readyTimer = setTimeout(() => {
+            if (phaseRef.current === "hit") {
+              phaseRef.current = "idle";
+              setPhase("idle");
+            }
+          }, 320);
+          eventTimersRef.current.push(readyTimer);
+        }, 260);
+        eventTimersRef.current.push(hitTimer);
+      }, i * COMPANION_UPPERCUT_GAP_MS);
+      eventTimersRef.current.push(timer);
+    }
+  }, [dealDamage]);
+
   useEffect(() => {
     if (!isAutoBattle) return;
     clearTimers(manualTimersRef);
@@ -864,8 +993,15 @@ export function useAutoBattle({
     canCastSkill,
     resetSkillCooldown,
     restoreSkillTimers,
+    reduceSkillCooldown,
+    flagAmbush,
+    strikeIaido,
+    strikeArcaneBurst,
+    strikeUppercut,
     firstStrikeId,
-    autoLocked,
+    // The "고정" badge: still locked to auto, except while a manual-window skill the player
+    // equipped is actually open — that overrides it, same as isAutoBattle above.
+    autoLocked: autoLocked && !manualWindowOpen,
     apprenticeAttackId,
     apprenticeAttackKind,
     apprenticeAttackHitMs,

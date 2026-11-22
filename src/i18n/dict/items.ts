@@ -162,7 +162,7 @@ export const ITEMS_DICT: Record<string, string> = {
   "막걸리 해물파전": "Makgeolli Seafood Pancake",
   "주막 단골 메뉴. 막걸리 반죽이라 겉은 바삭, 속은 촉촉.": "The tavern's house special — a makgeolli batter that fries crisp outside, soft inside.",
   "진달래 화전": "Azalea Flower Pancake",
-  "에겐기니가 나눠 준 그 맛. 꽃잎 한 장에 봄이 담겼다.": "The treat Egen Gini shared — spring itself, pressed into a single petal.",
+  "달콤하고 쌉싸름한, 꽃잎 한 장에 봄이 담긴 맛.": "Sweet and a little bitter — spring itself, pressed into a single petal.",
   "떡볶이": "Tteokbokki",
   "고춧가루 대감도 울고 갈 매콤달콤 떡볶이.": "Sweet and spicy enough to make even the chili-powder lord weep.",
   "고등어 무조림": "Braised Mackerel with Radish",

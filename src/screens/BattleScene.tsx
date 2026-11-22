@@ -56,6 +56,8 @@ import type { DropEvent } from "../state/useGameState";
 import { tutorialRef } from "../components/tutorialTargets";
 import { ARROW_H, ARROW_W, GuideArrow } from "../components/GuideArrow";
 import { getUnlocksAtLevel } from "../state/unlocks";
+import { COMPANION_SKILL_CALLOUT_COLOR, COMPANION_SKILL_NAMES } from "../state/companionSkills";
+import { SkillCallout } from "../components/SkillCallout";
 import { FlyingCoin } from "../components/FlyingCoin";
 import { IconCaption } from "../components/IconCaption";
 import type { BattlePhase, EnemyAnimation, EnemyKind, Outfit, PlayerAnimation } from "../types";
@@ -85,7 +87,7 @@ const BOSS_SIZE: Record<EnemyKind, number> = {
   magpie: 160,
   snowRabbit: 160,
   drunkCat: 160,
-  flowerSnake: 160,
+  dokkaebiFire: 160,
   riceSack: 160,
   mackerel: 160,
   blossomCrab: 160,
@@ -153,7 +155,7 @@ const AMBIENCE: Record<EnemyKind, MotePreset> = {
   snowRabbit: "snow",
   magpie: "snow",
   drunkCat: "snow",
-  flowerSnake: "petals",
+  dokkaebiFire: "fireflies",
   riceSack: "dust",
   mackerel: "dust",
   blossomCrab: "petals",
@@ -215,7 +217,7 @@ const BACKGROUND: Record<EnemyKind, number> = {
   magpie: images.battleBackgroundSnowVillage,
   snowRabbit: images.battleBackgroundSnowMountain,
   drunkCat: images.battleBackgroundSnowTavern,
-  flowerSnake: images.battleBackgroundAzaleaPath,
+  dokkaebiFire: images.battleBackgroundMoonlitHill,
   riceSack: images.battleBackgroundJoseonMarket,
   mackerel: images.battleBackgroundFishingPort,
   blossomCrab: images.battleBackgroundBlossomBeach,
@@ -385,6 +387,7 @@ export function BattleScene({
   goldEvents,
   executeId: rawExecuteId,
   firstStrikeId: rawFirstStrikeId,
+  companionSkillCastId: rawCompanionSkillCastId = 0,
   executedKill,
   beamId: rawBeamId,
   stealId: rawStealId,
@@ -487,6 +490,9 @@ export function BattleScene({
   executeId: number;
   // 사무라이기니's first-strike draws — each plays the execute slash, without the dash.
   firstStrikeId: number;
+  // Bumped on every companion skill cast (companionSkills.ts), any outfit — plays its name
+  // as a SkillCallout banner, same as every equipped active skill already does.
+  companionSkillCastId?: number;
   // The kill now playing out was an Execute — crit pose instead of the win pose.
   executedKill: boolean;
   // Bumped on each cast of that skill (0 = never).
@@ -556,6 +562,7 @@ export function BattleScene({
 
   const { id: executeId } = useSkillEvent(rawExecuteId, 0);
   const { id: firstStrikeId } = useSkillEvent(rawFirstStrikeId, 0);
+  const { id: companionSkillCastId } = useSkillEvent(rawCompanionSkillCastId, 0);
   // Every cast/event id below is run through useSkillEvent so a tab switch (BattleScreen's
   // ScrollView is keyed by selectedTab — see GameScreen — so this whole component unmounts
   // and remounts on every visit) can't replay something that already happened before this
@@ -1003,6 +1010,15 @@ export function BattleScene({
               key={`shout-${shout.id}`}
               mouth={{ left: playerCenterLeft + 34, bottom: FIGHTERS_BOTTOM + 48 }}
               enemy={{ left: enemyCenterLeft, bottom: FIGHTERS_BOTTOM + enemySize * 0.45 }}
+            />
+          )}
+          {companionSkillCastId > 0 && (
+            <SkillCallout
+              key={`companion-skill-${companionSkillCastId}`}
+              text={`${tr(COMPANION_SKILL_NAMES[outfit])}!`}
+              color={COMPANION_SKILL_CALLOUT_COLOR[outfit].color}
+              strokeColor={COMPANION_SKILL_CALLOUT_COLOR[outfit].strokeColor}
+              holdMs={420}
             />
           )}
           {fightersWidth > 0 &&

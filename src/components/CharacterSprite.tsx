@@ -58,11 +58,15 @@ const CONFIG: Record<Outfit, Record<PlayerAnimation, { frameCount: number; frame
     critical: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1, offsetY: 7 },
     win: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1, offsetY: -7 },
   },
-  egenGini: {
-    idle: { frameCount: 3, frameSize: FRAME_SIZE, scale: 1.35 },
-    attack: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1.56 },
-    critical: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1.56 },
-    win: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1.11 },
+  // Cropped from an even 4x4 reference grid at one consistent scale, so every animation
+  // already matches idle's on-screen size (measured content height within 1-4%) — the
+  // same ×1.2 lifts all four to the other outfits' common ~126-127px apparent height
+  // (this sheet's own content sat smaller in its cell, at 104px, than those outfits').
+  dosaGini: {
+    idle: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1.2 },
+    attack: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1.2 },
+    critical: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1.2 },
+    win: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1.2 },
   },
   // Frames are lined up on the straw hat and the feet; the sword (attack) and red slash
   // (critical) needed a smaller fit, which these scales undo (idle × 1.25 / 1.37 / 0.95).

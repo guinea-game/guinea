@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BackHandler, ScrollView, StatusBar, StyleSheet, View } from "react-native";
+import { useKeepAwake } from "expo-keep-awake";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { APP_MAX_WIDTH, colors } from "./theme";
 import { FIRST_CLEAR_AD_GEMS, LOOT_COIN_GAP_MS, LOOT_COINS, LOOT_FLIGHT_MS, useGameState } from "./state/useGameState";
@@ -83,6 +84,7 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
   // game.loaded/game.state to compute "is the opening comic showing", which don't exist
   // until after this first useGameState call), rather than read directly here — passing
   // playingComic alone would miss the opening comic.
+  useKeepAwake();
   const [playingComic, setPlayingComic] = useState<ComicId | null>(null);
   const [comicPaused, setComicPaused] = useState(false);
   const game = useGameState({ externallyPaused: comicPaused });

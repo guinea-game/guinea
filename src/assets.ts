@@ -1,5 +1,6 @@
 // Metro requires static require() calls — no dynamic `guinea-${outfit}-idle.png` strings.
 // This file is the one place that enumerates every sprite strip and small icon.
+import type { Outfit } from "./types";
 
 export const spriteSheets = {
   guinea: {
@@ -28,11 +29,11 @@ export const spriteSheets = {
       critical: require("../assets/sprites/guinea-assassin-critical-strip.webp"),
       win: require("../assets/sprites/guinea-assassin-win-strip.webp"),
     },
-    egenGini: {
-      idle: require("../assets/sprites/guinea-egen-idle-strip.webp"),
-      attack: require("../assets/sprites/guinea-egen-attack-strip.webp"),
-      critical: require("../assets/sprites/guinea-egen-critical-strip.webp"),
-      win: require("../assets/sprites/guinea-egen-win-strip.webp"),
+    dosaGini: {
+      idle: require("../assets/sprites/guinea-dosa-idle-strip.webp"),
+      attack: require("../assets/sprites/guinea-dosa-attack-strip.webp"),
+      critical: require("../assets/sprites/guinea-dosa-critical-strip.webp"),
+      win: require("../assets/sprites/guinea-dosa-win-strip.webp"),
     },
     samuraiGini: {
       idle: require("../assets/sprites/guinea-samurai-idle-strip.webp"),
@@ -265,10 +266,10 @@ export const spriteSheets = {
     hit: require("../assets/sprites/boss-tavern-keeper-hit-strip.webp"),
     die: require("../assets/sprites/boss-tavern-keeper-die-strip.webp"),
   },
-  flowerSnake: {
-    idle: require("../assets/sprites/flower-snake-idle-strip.webp"),
-    hit: require("../assets/sprites/flower-snake-hit-strip.webp"),
-    die: require("../assets/sprites/flower-snake-die-strip.webp"),
+  dokkaebiFire: {
+    idle: require("../assets/sprites/dokkaebi-fire-idle-strip.webp"),
+    hit: require("../assets/sprites/dokkaebi-fire-hit-strip.webp"),
+    die: require("../assets/sprites/dokkaebi-fire-die-strip.webp"),
   },
   bossNineTailedFox: {
     idle: require("../assets/sprites/boss-nine-tailed-fox-idle-strip.webp"),
@@ -599,7 +600,7 @@ export const images = {
   battleBackgroundSnowVillage: require("../assets/sprites/battle-snow-village.webp"),
   battleBackgroundSnowMountain: require("../assets/sprites/battle-snow-mountain.webp"),
   battleBackgroundSnowTavern: require("../assets/sprites/battle-snow-tavern.webp"),
-  battleBackgroundAzaleaPath: require("../assets/sprites/battle-azalea-path.webp"),
+  battleBackgroundMoonlitHill: require("../assets/sprites/battle-moonlit-hill.webp"),
   battleBackgroundJoseonMarket: require("../assets/sprites/battle-joseon-market.webp"),
   battleBackgroundFishingPort: require("../assets/sprites/battle-fishing-port.webp"),
   battleBackgroundBlossomBeach: require("../assets/sprites/battle-blossom-beach.webp"),
@@ -800,6 +801,7 @@ export const skillImages = {
   carrotThrow: require("../assets/skills/carrotThrow.webp"),
   chiliThrow: require("../assets/skills/chiliThrow.webp"),
   meteor: require("../assets/skills/meteor.webp"),
+  harvest: require("../assets/skills/harvest.webp"),
 };
 const SQUARE_ICON = 256 / 258;
 export const SKILL_ICON_ASPECT: Record<keyof typeof skillImages, number> = {
@@ -815,6 +817,7 @@ export const SKILL_ICON_ASPECT: Record<keyof typeof skillImages, number> = {
   carrotThrow: 1,
   chiliThrow: 1,
   meteor: 1,
+  harvest: 1,
 };
 
 export const food = {
@@ -1171,10 +1174,10 @@ export const comics = {
   assassin2: require("../assets/comics/assassin-2.webp"),
   assassin3: require("../assets/comics/assassin-3.webp"),
   assassin4: require("../assets/comics/assassin-4.webp"),
-  egen1: require("../assets/comics/egen-1.webp"),
-  egen2: require("../assets/comics/egen-2.webp"),
-  egen3: require("../assets/comics/egen-3.webp"),
-  egen4: require("../assets/comics/egen-4.webp"),
+  moonhill1: require("../assets/comics/moonhill-1.webp"),
+  moonhill2: require("../assets/comics/moonhill-2.webp"),
+  moonhill3: require("../assets/comics/moonhill-3.webp"),
+  moonhill4: require("../assets/comics/moonhill-4.webp"),
   samurai1: require("../assets/comics/samurai-1.webp"),
   samurai2: require("../assets/comics/samurai-2.webp"),
   samurai3: require("../assets/comics/samurai-3.webp"),
@@ -1582,3 +1585,18 @@ export const shardImages = {
 export function shardImageForLevel(level: number) {
   return level >= 10 ? shardImages.purple : level >= 5 ? shardImages.green : shardImages.orange;
 }
+
+// Each companion's own active skill icon (companionSkills.ts) — same square skill-card art
+// style as skillImages above, one per outfit.
+export const companionSkillImages: Record<Outfit, number> = {
+  default: require("../assets/companions/skill-default.webp"),
+  explorerHamster: require("../assets/companions/skill-explorer.webp"),
+  tetoGini: require("../assets/companions/skill-teto.webp"),
+  assassinGini: require("../assets/companions/skill-assassin.webp"),
+  dosaGini: require("../assets/companions/skill-dosa.webp"),
+  samuraiGini: require("../assets/companions/skill-samurai.webp"),
+  chefGini: require("../assets/companions/skill-chef.webp"),
+  witchGini: require("../assets/companions/skill-witch.webp"),
+  cowboyGini: require("../assets/companions/skill-cowboy.webp"),
+  boxerGini: require("../assets/companions/skill-boxer.webp"),
+};

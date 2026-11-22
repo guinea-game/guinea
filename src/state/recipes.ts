@@ -338,7 +338,7 @@ const RECIPE_DEFS: RecipeDef[] = [
   {
     id: "azalea-hwajeon",
     name: "진달래 화전",
-    description: "에겐기니가 나눠 준 그 맛. 꽃잎 한 장에 봄이 담겼다.",
+    description: "달콤하고 쌉싸름한, 꽃잎 한 장에 봄이 담긴 맛.",
     image: food.dishAzaleaHwajeon,
     tier: "rare",
     ingredients: [

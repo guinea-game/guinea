@@ -21,7 +21,7 @@ export const COMPANION_SHARD_STAGE: Record<Outfit, number> = {
   boxerGini: 7, // 킹크랩
   tetoGini: 9, // 용암 슬라임
   assassinGini: 13, // 방울뱀
-  egenGini: 20, // 구미호
+  dosaGini: 20, // 구미호
   samuraiGini: 23, // 벚꽃 상어
   chefGini: 32, // 바게트 기사
   witchGini: 34, // 마녀 기니

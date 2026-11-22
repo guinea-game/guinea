@@ -8,7 +8,7 @@ export const OUTFIT_UNLOCK_STAGE: Record<Outfit, number> = {
   explorerHamster: 5, // 골드 +10%
   tetoGini: 10, // 공격력 +100%, 40% 헛스윙 (평균 약 1.2배)
   assassinGini: 14, // 공격력 -45%, 2연타 (평균 약 1.1배)
-  egenGini: 21, // 스킬 쿨타임 -1분
+  dosaGini: 21, // 스킬 쿨타임 -1분
   samuraiGini: 24, // 적마다 첫 공격 = 일반 공격 ×5 (치명타 없음), 공격 속도 -35%, 수동 공격 불가
   chefGini: 33, // 요리 시간 -50%, 요리 대성공 +20%, 재료 드랍 100%, 공격력 -15%
   // Never reached by stage — bought with gems (OUTFIT_GEM_PRICE) or granted at loop 2/3 (OUTFIT_LOOP_GRANT).
@@ -49,7 +49,9 @@ export function getOutfitGemPrice(outfit: Outfit): number | undefined {
 }
 
 // Skills: utility and short buffs early, the big damage dealers late, spread out so a new
-// one opens every 15-25 levels up to Execute — the strongest passive — at level 200.
+// one opens every 15-25 levels up to Execute — the strongest passive — at level 200. 알찬
+// 수확 follows at 220 as a late-game loop-grinding passive (drop rate, not combat power), so
+// it doesn't crowd the main 15-25 level cadence above.
 // steal is pulled down to 2 on its own — that's about when a fresh player reaches the
 // first boss (see gini_balance_economy memory), so it's the one skill introduced via
 // SkillTutorial right as the player has something to use it on.
@@ -66,6 +68,7 @@ export const SKILL_UNLOCK_LEVEL: Record<SkillId, number> = {
   meteor: 150,
   beam: 175,
   execute: 200,
+  harvest: 220,
 };
 
 // `highestStageNumber`: the furthest stage (0-based) ever reached. `purchasedOutfits`:
