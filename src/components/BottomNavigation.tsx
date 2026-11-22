@@ -3,7 +3,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "./GameText";
 import { colors, fonts } from "../theme";
 import { NineSlice } from "./NineSlice";
-import { food, kit, navIcons } from "../assets";
+import { food, kit, kitImages, navIcons } from "../assets";
 import { tutorialRef } from "./tutorialTargets";
 import { playSfx } from "../sound";
 import { StrokedText } from "./StrokedText";
@@ -38,7 +38,6 @@ const NAV_LABEL_EN: Record<Tab, string> = {
   milestone: "Map",
   grocery: "Grocery",
   recipes: "Recipes",
-  cookbook: "Cookbook",
   comics: "Comics",
   stats: "Stats",
   guide: "Guide",
@@ -46,7 +45,8 @@ const NAV_LABEL_EN: Record<Tab, string> = {
   backup: "Backup",
 };
 
-export function BottomNavigation({ selected, onSelect }: { selected: Tab; onSelect: (tab: Tab) => void }) {
+// `badges`: a red dot on a tab with something new waiting (요리: a newly unlocked recipe).
+export function BottomNavigation({ selected, onSelect, badges = {} }: { selected: Tab; onSelect: (tab: Tab) => void; badges?: Partial<Record<Tab, boolean>> }) {
   // Each tab is a fixed box with padding on every side, so the icon never hugs the top of
   // the green selected-tab art. On phones with a home indicator the bar takes only the part
   // of that inset the indicator bar itself needs (the tabs sink into the rest), so no empty
@@ -76,7 +76,10 @@ export function BottomNavigation({ selected, onSelect }: { selected: Tab; onSele
             style={({ pressed }) => [styles.item, pressed && !active && styles.pressed]}
           >
             {active && <NineSlice slice={kit.tabGreen} scale={0.4} />}
-            <Image source={item.icon} style={[styles.icon, active && styles.iconActive]} />
+            <View>
+              <Image source={item.icon} style={[styles.icon, active && styles.iconActive]} />
+              {badges[item.id] && <Image source={kitImages.dotRed} style={styles.badge} accessibilityLabel={t("새 소식", "New")} />}
+            </View>
             {active ? (
               <Text style={styles.label}>{label}</Text>
             ) : (
@@ -125,6 +128,7 @@ const styles = StyleSheet.create({
   pressed: { transform: [{ scale: 0.92 }] },
   icon: { width: 32, height: 32 },
   iconActive: { width: 32, height: 32 },
+  badge: { position: "absolute", top: -2, right: -6, width: 13, height: 13 },
   caption: { fontSize: 14, fontWeight: "900", fontFamily: fonts.bold, color: colors.cream },
   label: { fontSize: 14, fontWeight: "900", fontFamily: fonts.bold, color: colors.cream },
 });

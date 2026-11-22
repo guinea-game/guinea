@@ -12,7 +12,6 @@ import {
   countStars,
   getCodexGoldBonus,
   getCompanionLevel,
-  getCookbookAttackBonus,
   getShardCompanion,
   SHARDS_PER_BOSS,
   STAR_CLEAR,
@@ -24,6 +23,7 @@ import { applyUpgradeLevels, BOSS_PHASE_TWO_TIME_LIMIT_MS, GEM_STATS, getBossTim
 import { useAutoBattle } from "./useAutoBattle";
 import { clearSave, loadSave, writeSave } from "./storage";
 import { claimHiddenQuest, claimMission, migrateQuestClaims } from "./quests";
+import { deliverOrder, needsNewDaily, startDaily } from "./daily";
 import { getOutfitGemPrice, getOutfitsGrantedByLoop, getOutfitsUnlockedByStage, getUnlocksAtLevel, isOutfitUnlocked, isSkillUnlocked, syncStageUnlockedOutfits } from "./unlocks";
 import { fitItems, getBagCapacity, getBagExpandCost, BAG_MAX_SLOTS, slotsUsed } from "./bag";
 import { BOSS_NAME, getClearedBosses, BOSS_PHASE_TWO_HP_MULTIPLIER, getDifficultyStage, getEffectiveDifficultyStage, getEnemyKind, getEnemyMaxHp, getEnemyRewardHp, getStageLabel, LAST_STAGE_NUMBER, isMiniBossDue, isGoldenMiniBoss, getMiniBossSalt, GOLDEN_GEMS, GOLDEN_GOLD_MULTIPLIER, STRAY_MOB_CHANCE, MINI_BOSS_COUNT, MINI_BOSS_EXP_MULTIPLIER, MINI_BOSS_HP_MULTIPLIER, STAGE_KILL_TARGET } from "./stages";
@@ -54,8 +54,8 @@ import {
 } from "./bossSkills";
 
 export type DropEvent = { id: number; name: string; delay: number };
-type UnlockNoticeItem = { kind: "skill"; id: SkillId } | { kind: "companion"; outfit: Outfit };
-export type UnlockNotice = UnlockNoticeItem & { key: number };
+// How long the "새 스킬 해금!" toast stays on screen, slow fade-out included.
+export const UNLOCK_TOAST_MS = 5000;
 
 // No ad SDK wired up yet — watching one grants this instantly, same as a completed view would.
 const SPEED_BOOST_DURATION_MS = 5 * 60_000; // 5 minutes
@@ -87,7 +87,7 @@ export const LOOT_COIN_GAP_MS = 280;
 // Gems for beating a stage's boss for the very first time — always paid — and the extra the
 // celebration's ad adds on top.
 export const FIRST_CLEAR_GEMS = 25;
-export const FIRST_CLEAR_AD_GEMS = 10;
+export const FIRST_CLEAR_AD_GEMS = 25;
 // A retry after the boss fled (watching an ad) gets this share of the usual time limit: the
 // boss keeps its remaining HP, so a near miss still has plenty, while one far off is better
 // served by getting stronger first.
@@ -258,7 +258,6 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     attack:
       foodBuffs.attack * companionFoodBoost +
       (outfitBuff?.attack ?? 0) +
-      getCookbookAttackBonus(state.cookedRecipes) +
       (bossBuffRemainingMs > 0 ? BOSS_AD_BUFF_ATTACK_PERCENT : 0),
     // The chef's companion skill (불맛) adds a flat window bonus on top, same as food would.
     criticalChance: foodBuffs.criticalChance * companionFoodBoost + (outfitBuff?.criticalChance ?? 0) + companionChefCritBonus,
@@ -481,14 +480,6 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   // `loaded` and previousLevelRef is synced inside the load effect above, so loading a
   // save at a higher level (or an offline-progress jump) never triggers a spurious burst.
   const [levelUpAnnouncement, setLevelUpAnnouncement] = useState<number | null>(null);
-  // A new skill or companion: a full card that holds the battle until it's tapped away
-  // (UnlockNotice). Queued, so a level that opens two skills shows them one after another.
-  const [unlockNotices, setUnlockNotices] = useState<UnlockNotice[]>([]);
-  const noticeKey = useRef(0);
-  const queueNotices = (items: UnlockNoticeItem[]) => {
-    if (items.length === 0) return;
-    setUnlockNotices((current) => [...current, ...items.map((item) => ({ ...item, key: ++noticeKey.current }))]);
-  };
   useEffect(() => {
     if (!loaded) return;
     if (state.level > previousLevelRef.current) {
@@ -499,9 +490,10 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
       // contentOpacity timeline) so the component unmounts only once it's already fully
       // invisible — cutting this too close (tried 1300) unmounted it mid-fade, popping it off
       // abruptly instead of letting it finish dissolving.
-      // A skill opening at this level gets its own tap-to-continue card.
-      queueNotices(getUnlocksAtLevel(state.level).skills.map((id) => ({ kind: "skill" as const, id })));
-      const timer = setTimeout(() => setLevelUpAnnouncement(null), 1500);
+      // A skill opening at this level holds it much longer, so the "새 스킬 해금!" toast
+      // (UNLOCK_TOAST_MS, BattleScene) can be read and then fade out slowly.
+      const holdMs = getUnlocksAtLevel(state.level).skills.length > 0 ? UNLOCK_TOAST_MS + 100 : 1500;
+      const timer = setTimeout(() => setLevelUpAnnouncement(null), holdMs);
       previousLevelRef.current = state.level;
       return () => clearTimeout(timer);
     }
@@ -690,14 +682,6 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
       };
       setFirstClear({ ...pending, key: Date.now() });
       setState((previous) => ({ ...previous, pendingFirstClear: pending }));
-      // Each companion joining gets its own card once the celebration has closed.
-      if ((state.highestStageNumber ?? state.stageNumber) <= state.stageNumber) {
-        queueNotices(
-          getOutfitsUnlockedByStage(state.stageNumber + 1)
-            .filter((outfit) => !(state.purchasedOutfits ?? []).includes(outfit))
-            .map((outfit) => ({ kind: "companion" as const, outfit })),
-        );
-      }
     }
 
     setState((previous) => {
@@ -858,7 +842,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   // kill's loot is being explained. !appActive covers the app/tab being backgrounded — see its
   // declaration above.
   const battlePaused =
-    skillTutorialActive || bossRetryAvailable || bossIntroPending || stageAnnouncement !== null || firstClear !== null || unlockNotices.length > 0 || externallyPaused || !state.tutorialDone || heldLoot !== null || !appActive || adShowing;
+    skillTutorialActive || bossRetryAvailable || bossIntroPending || stageAnnouncement !== null || firstClear !== null || externallyPaused || !state.tutorialDone || heldLoot !== null || !appActive || adShowing;
 
   // The boss clock stands still with the fight: time spent paused (an ad for 2x speed, the app
   // in the background, ...) is added back onto the fight's start. Kept per fight — keyed by
@@ -1231,6 +1215,22 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     });
     setUpgraded(key);
     setTimeout(() => setUpgraded(null), 400);
+  };
+
+  // 일일 의뢰: new customers' orders once the save is loaded and whenever the local day turns
+  // over (checked on the 1s tick, so a midnight passing mid-play resets too) — or as soon as
+  // a fresh player learns their first recipe.
+  const dailyDay = todayKey(new Date(now));
+  useEffect(() => {
+    if (!loaded) return;
+    // Deferred out of the effect body (react-hooks/set-state-in-effect), like the boss clock.
+    const timer = setTimeout(() => setState((previous) => (needsNewDaily(previous, dailyDay) ? { ...previous, daily: startDaily(previous, dailyDay) } : previous)), 0);
+    return () => clearTimeout(timer);
+  }, [loaded, dailyDay, state.knownRecipes]);
+  const deliverDailyOrder = (index: number) => {
+    setState((previous) => deliverOrder(previous, index, priceStage));
+    playSfx("levelup");
+    playHaptic("claim");
   };
 
   const claimQuest = (id: string) =>
@@ -1676,8 +1676,6 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     upgradeCompanion: (outfit: Outfit) => setState((previous) => applyCompanionUpgrade(previous, outfit)),
     claimFirstClearGems,
     levelUpAnnouncement,
-    unlockNotice: unlockNotices[0] ?? null,
-    dismissUnlockNotice: () => setUnlockNotices((current) => current.slice(1)),
     upgradeMode,
     setUpgradeMode,
     upgraded,
@@ -1686,6 +1684,8 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     skillTutorialActive,
     upgradeStat,
     claimQuest,
+    deliverDailyOrder,
+    priceStage,
     catchFlyingCoin,
     attendanceDay: attendance.dayIndex,
     attendanceReady: attendance.ready,

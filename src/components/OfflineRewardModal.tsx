@@ -53,96 +53,96 @@ export function OfflineRewardModal({
     setTimeout(() => setAdOpen(true), 900);
   };
 
-  if (adOpen) {
-    return (
-      <RewardedAdModal
-        message={t(
-          `대신 섭섭하지 않게 골드 2배는 그대로 챙겨드릴게요.\n+${formatGameNumber(summary.goldEarned * 2)} 골드`,
-          `To make up for it, you'll still get double gold.\n+${formatGameNumber(summary.goldEarned * 2)} gold`,
-        )}
-        claimLabel={t("2배 받기", "Claim Double")}
-        onClaim={onClaimDouble}
-        onCancel={() => {
-          setAdOpen(false);
-          setDoubling(false);
-        }}
-      />
-    );
-  }
-
   return (
     <Modal visible animationType="fade" transparent onRequestClose={onClaim}>
-      <Pressable style={styles.backdrop} onPress={onClaim}>
-        <Pressable style={styles.panel} onPress={(event) => event.stopPropagation()}>
-          {/* Wood frame with brass corner bolts — a treasure-chest lid feel. */}
-          <NineSlice slice={panelSlices.woodBolts} scale={0.62} />
+      {/* The ad runs inside this same Modal — see RewardedAdModal's `embedded`. */}
+      {adOpen ? (
+        <RewardedAdModal
+          embedded
+          message={t(
+            `대신 섭섭하지 않게 골드 2배는 그대로 챙겨드릴게요.\n+${formatGameNumber(summary.goldEarned * 2)} 골드`,
+            `To make up for it, you'll still get double gold.\n+${formatGameNumber(summary.goldEarned * 2)} gold`,
+          )}
+          claimLabel={t("2배 받기", "Claim Double")}
+          onClaim={onClaimDouble}
+          onCancel={() => {
+            setAdOpen(false);
+            setDoubling(false);
+          }}
+        />
+      ) : (
+        <Pressable style={styles.backdrop} onPress={onClaim}>
+          <Pressable style={styles.panel} onPress={(event) => event.stopPropagation()}>
+            {/* Wood frame with brass corner bolts — a treasure-chest lid feel. */}
+            <NineSlice slice={panelSlices.woodBolts} scale={0.62} />
 
-          {/* Title on the same red ribbon the boss first-clear uses. */}
-          <TitleRibbon>{t("기니가 혼자 사냥했어요!", "Gini was hunting while you were away!")}</TitleRibbon>
-          {/* The haul on plain cream plates (no frames inside the big wood frame): one cream card, gold / ingredients / level-up split by thin lines. */}
-          <Panel slice={creamSlices.card} scale={0.3} style={styles.card}>
-            <View style={styles.goldRow}>
-              <Image source={uiImages.coins} style={styles.goldPile} />
-              <Animated.View style={goldPopStyle}>
-                <StrokedText style={[styles.goldValue, doubling && styles.goldValueDouble]} strokeColor={colors.line} strokeWidth={2.5}>
-                  +{formatGameNumber(goldShown)}
-                </StrokedText>
-              </Animated.View>
-            </View>
-
-            {summary.items.length > 0 && (
-              <>
-                <View style={styles.divider} />
-                <View style={styles.itemsRow}>
-                  {summary.items.slice(0, MAX_ITEMS).map((item, index) => (
-                    <PopIn key={item.name} delay={ITEMS_AT + index * ITEM_GAP}>
-                      <Panel slice={creamSlices.cell} scale={0.28} style={styles.itemCell}>
-                        {ITEM_IMAGES[item.name] !== undefined && <Image source={ITEM_IMAGES[item.name]} style={styles.itemIcon} />}
-                        <Text style={styles.itemCount}>×{formatGameNumber(item.quantity)}</Text>
-                      </Panel>
-                    </PopIn>
-                  ))}
-                  {summary.items.length > MAX_ITEMS && (
-                    <PopIn delay={ITEMS_AT + MAX_ITEMS * ITEM_GAP}>
-                      <Panel slice={creamSlices.cell} scale={0.28} style={[styles.itemCell, styles.moreCell]}>
-                        <Text style={styles.moreText}>{t(`+${summary.items.length - MAX_ITEMS}종`, `+${summary.items.length - MAX_ITEMS}`)}</Text>
-                      </Panel>
-                    </PopIn>
-                  )}
-                </View>
-                {summary.bagFull && <Text style={styles.bagFull}>{t("가방이 꽉 차서 일부 재료는 두고 왔어요", "The bag was full, so some ingredients got left behind")}</Text>}
-              </>
-            )}
-
-            {summary.levelsGained > 0 && (
-              <>
-                <View style={styles.divider} />
-                <Animated.View style={[styles.levelRow, levelPopStyle]}>
-                  <Image source={icons.star} style={styles.levelStar} />
-                  <Text style={styles.levelText}>
-                    Lv.{formatGameNumber(summary.levelFrom)} → <Text style={styles.levelTo}>Lv.{formatGameNumber(summary.levelTo)}</Text>
-                  </Text>
+            {/* Title on the same red ribbon the boss first-clear uses. */}
+            <TitleRibbon>{t("기니가 혼자 사냥했어요!", "Gini was hunting while you were away!")}</TitleRibbon>
+            {/* The haul on plain cream plates (no frames inside the big wood frame): one cream card, gold / ingredients / level-up split by thin lines. */}
+            <Panel slice={creamSlices.card} scale={0.3} style={styles.card}>
+              <View style={styles.goldRow}>
+                <Image source={uiImages.coins} style={styles.goldPile} />
+                <Animated.View style={goldPopStyle}>
+                  <StrokedText style={[styles.goldValue, doubling && styles.goldValueDouble]} strokeColor={colors.line} strokeWidth={2.5}>
+                    +{formatGameNumber(goldShown)}
+                  </StrokedText>
                 </Animated.View>
-              </>
-            )}
-          </Panel>
-
-          <View style={styles.buttons}>
-            <GameButton variant="beige" onPress={onClaim} style={styles.claimButton} textStyle={styles.claimLabel}>{t("받기", "Claim")}</GameButton>
-            {summary.goldEarned > 0 && (
-              <View>
-                <GameButton variant="green" disabled={doubling} onPress={startDouble} accessibilityLabel={t("광고 보고 골드 2배 받기", "Watch an ad to double gold")} style={styles.claimButton}>
-                  <View style={styles.doubleContent}>
-                    <Text style={styles.doubleSmall}>{t("광고 보고", "Watch Ad")}</Text>
-                    <Text style={styles.doubleLabel}>{t("2배 받기", "Claim Double")}</Text>
-                  </View>
-                </GameButton>
-                <AdBadge />
               </View>
-            )}
-          </View>
+
+              {summary.items.length > 0 && (
+                <>
+                  <View style={styles.divider} />
+                  <View style={styles.itemsRow}>
+                    {summary.items.slice(0, MAX_ITEMS).map((item, index) => (
+                      <PopIn key={item.name} delay={ITEMS_AT + index * ITEM_GAP}>
+                        <Panel slice={creamSlices.cell} scale={0.28} style={styles.itemCell}>
+                          {ITEM_IMAGES[item.name] !== undefined && <Image source={ITEM_IMAGES[item.name]} style={styles.itemIcon} />}
+                          <Text style={styles.itemCount}>×{formatGameNumber(item.quantity)}</Text>
+                        </Panel>
+                      </PopIn>
+                    ))}
+                    {summary.items.length > MAX_ITEMS && (
+                      <PopIn delay={ITEMS_AT + MAX_ITEMS * ITEM_GAP}>
+                        <Panel slice={creamSlices.cell} scale={0.28} style={[styles.itemCell, styles.moreCell]}>
+                          <Text style={styles.moreText}>{t(`+${summary.items.length - MAX_ITEMS}종`, `+${summary.items.length - MAX_ITEMS}`)}</Text>
+                        </Panel>
+                      </PopIn>
+                    )}
+                  </View>
+                  {summary.bagFull && <Text style={styles.bagFull}>{t("가방이 꽉 차서 일부 재료는 두고 왔어요", "The bag was full, so some ingredients got left behind")}</Text>}
+                </>
+              )}
+
+              {summary.levelsGained > 0 && (
+                <>
+                  <View style={styles.divider} />
+                  <Animated.View style={[styles.levelRow, levelPopStyle]}>
+                    <Image source={icons.star} style={styles.levelStar} />
+                    <Text style={styles.levelText}>
+                      Lv.{formatGameNumber(summary.levelFrom)} → <Text style={styles.levelTo}>Lv.{formatGameNumber(summary.levelTo)}</Text>
+                    </Text>
+                  </Animated.View>
+                </>
+              )}
+            </Panel>
+
+            <View style={styles.buttons}>
+              <GameButton variant="beige" onPress={onClaim} style={styles.claimButton} textStyle={styles.claimLabel}>{t("받기", "Claim")}</GameButton>
+              {summary.goldEarned > 0 && (
+                <View>
+                  <GameButton variant="green" disabled={doubling} onPress={startDouble} accessibilityLabel={t("광고 보고 골드 2배 받기", "Watch an ad to double gold")} style={styles.claimButton}>
+                    <View style={styles.doubleContent}>
+                      <Text style={styles.doubleSmall}>{t("광고 보고", "Watch Ad")}</Text>
+                      <Text style={styles.doubleLabel}>{t("2배 받기", "Claim Double")}</Text>
+                    </View>
+                  </GameButton>
+                  <AdBadge />
+                </View>
+              )}
+            </View>
+          </Pressable>
         </Pressable>
-      </Pressable>
+      )}
     </Modal>
   );
 }

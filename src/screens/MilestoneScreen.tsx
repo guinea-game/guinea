@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
   pathSlot: { height: 22 },
   headingRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
   heading: { flex: 1 },
-  toggles: { flexDirection: "row", gap: 2, marginTop: 4 },
+  toggles: { flexDirection: "row", gap: 14, marginTop: 4 },
   toggle: {},
   togglePressed: { transform: [{ scale: 0.92 }] },
   toggleIcon: { width: 46, height: 46 },

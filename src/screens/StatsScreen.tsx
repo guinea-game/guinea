@@ -3,7 +3,7 @@ import { Image, StyleSheet, View } from "react-native";
 import { Text } from "../components/GameText";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from "react-native-reanimated";
 import { colors, fonts } from "../theme";
-import { icons, kit, statIcons, uiImages } from "../assets";
+import { food, icons, kit, statIcons, uiImages } from "../assets";
 import { Panel } from "../components/NineSlice";
 import { PageHeading } from "../components/PageHeading";
 import { CharacterSprite } from "../components/CharacterSprite";
@@ -12,8 +12,6 @@ import { useCountUp } from "../components/motion";
 import { formatGameNumber } from "../state/gameMath";
 import { getPeakAreaStage, LAST_STAGE_NUMBER, STAGES } from "../state/stages";
 import { t } from "../i18n";
-import { getCookbookProgress } from "../state/cookbook";
-import { RECIPES } from "../state/recipes";
 import { OUTFIT_NAMES } from "../state/buffs";
 import { isOutfitUnlocked } from "../state/unlocks";
 import type { GameState, Outfit } from "../types";
@@ -85,7 +83,6 @@ export function StatsScreen({ state }: { state: GameState }) {
   const outfits = Object.keys(OUTFIT_NAMES) as Outfit[];
   const highest = getPeakAreaStage(state);
   const ownedCompanions = outfits.filter((outfit) => isOutfitUnlocked(outfit, highest, state.purchasedOutfits)).length;
-  const cookbookDone = getCookbookProgress(state.cookedRecipes);
   // Read once on opening the page.
   const [openedAt] = useState(() => Date.now());
   const days = state.startedAt ? Math.floor((openedAt - state.startedAt) / 86_400_000) + 1 : 1;
@@ -122,7 +119,7 @@ export function StatsScreen({ state }: { state: GameState }) {
         <StatCard delay={next()} icon={statIcons.attack} label={t("총 처치 수", "Total Kills")} value={state.kills} />
         <StatCard delay={next()} icon={icons.codexMonster} label={t("보스 처치 수", "Bosses Defeated")} value={state.bossKills ?? 0} />
         <StatCard delay={next()} icon={icons.coins} label={t("누적 획득 골드", "Lifetime Gold Earned")} value={state.totalGoldEarned} />
-        <StatCard delay={next()} icon={icons.codexBook} label={t("완성한 요리책", "Cookbook Completed")} text={`${cookbookDone} / ${RECIPES.length}`} />
+        <StatCard delay={next()} icon={food.cookPotTrim} label={t("만든 요리 수", "Dishes Cooked")} value={state.dishesCooked ?? 0} />
         <StatCard delay={next()} icon={icons.codexIngredient} label={t("발견한 식재료", "Ingredients Discovered")} value={(state.discoveredItems ?? []).length} />
         <StatCard delay={next()} icon={icons.trophy} label={t("함께한 동료", "Companions Met")} text={`${ownedCompanions} / ${outfits.length}`} />
         <StatCard delay={next()} icon={icons.questMedal} label={t("출석한 날", "Days Attended")} value={state.attendance?.claimed ?? 0} />

@@ -3,7 +3,7 @@ import { Image, Pressable, StyleSheet, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming, Easing } from "react-native-reanimated";
 import { colors, fonts } from "../theme";
-import { apprenticeSprite, effects, icons, images, kitImages, FRAME_SIZE, uiImages } from "../assets";
+import { apprenticeSprite, effects, icons, images, FRAME_SIZE, uiImages } from "../assets";
 import { StrokedText } from "../components/StrokedText";
 import { MOTE_PRESETS, RisingMotes, type MotePreset } from "../components/RisingMotes";
 import { CharacterSprite } from "../components/CharacterSprite";
@@ -51,7 +51,8 @@ import { SHARDS_PER_BOSS } from "../state/progression";
 import { BOSS_LINES, MOB_LINES } from "../state/monsterLines";
 import { OUTFIT_NAMES } from "../state/buffs";
 import { ITEM_IMAGES } from "../state/recipes";
-import type { DropEvent } from "../state/useGameState";
+import { UNLOCK_TOAST_MS, type DropEvent } from "../state/useGameState";
+import { getUnlocksAtLevel } from "../state/unlocks";
 import { tutorialRef } from "../components/tutorialTargets";
 import { MENU_ICON_BOX, MENU_LEFT, MENU_SIDE } from "../components/BattleMenu";
 import { BUFF_SLOT_SIZE } from "../components/BuffSlots";
@@ -337,8 +338,7 @@ export function BattleScene({
   battleSpeed = 1,
   stageLabel,
   stageKills,
-  questReady,
-  onQuest,
+  onOpenMap,
   outfit,
   apprenticeActive = false,
   apprenticeAttackId = 0,
@@ -424,8 +424,7 @@ export function BattleScene({
   battleSpeed?: number;
   stageLabel: string;
   stageKills: number;
-  questReady: boolean;
-  onQuest: () => void;
+  onOpenMap: () => void;
   outfit: Outfit;
   // From the second loop on (loopsCompleted >= 1): 견습기니 wanders the scene (see ApprenticeFollower).
   // Already false whenever the player has toggled it off (apprenticeHidden) — BattleScreen ANDs
@@ -796,14 +795,13 @@ export function BattleScene({
             </View>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={tr("퀘스트", "Quests")}
-              onPress={onQuest}
+              accessibilityLabel={tr("마일스톤 지도 열기", "Open milestone map")}
+              onPress={onOpenMap}
               hitSlop={6}
               style={({ pressed }) => [styles.questButton, pressed && styles.questPressed]}
             >
-              <WobblingMedal wobble={questReady} />
-              <IconCaption offset={-5}>{tr("퀘스트", "Quests")}</IconCaption>
-              {questReady && <Image source={kitImages.dotRed} style={styles.questDot} accessibilityLabel={tr("받을 보상 있음", "Reward available")} />}
+              <Image source={icons.mapTrim} style={styles.mapIcon} />
+              <IconCaption offset={-5}>{tr("지도", "Map")}</IconCaption>
             </Pressable>
           </LinearGradient>
           )}
@@ -855,6 +853,7 @@ export function BattleScene({
               fannedShot={fannedShot}
             />
             {levelUpAnnouncement !== null && <LevelUpBurst key={levelUpAnnouncement} level={levelUpAnnouncement} />}
+            {levelUpAnnouncement !== null && <UnlockToast key={`unlock-${levelUpAnnouncement}`} level={levelUpAnnouncement} />}
 
             <EnemyFighter
               animation={enemyAnimation}
@@ -1668,20 +1667,48 @@ function EnemySpeech({ speechKey, boss, stray, enemyKind, anchor }: { speechKey:
   return line ? <MonsterSpeechBubble line={line} anchor={anchor} onClose={() => setLine(null)} /> : null;
 }
 
-// The quest medal — rocks back and forth now and then while a reward waits to be claimed.
-function WobblingMedal({ wobble }: { wobble: boolean }) {
-  const r = useSharedValue(0);
+// "새 스킬 해금! ○○" over the scene on a level that opens a skill. Fades in, stays a good
+// while, then fades out slowly; the battle keeps going underneath.
+function UnlockToast({ level }: { level: number }) {
+  const { skills } = getUnlocksAtLevel(level);
+  const opacity = useSharedValue(0);
   useEffect(() => {
-    r.value = wobble
-      ? withRepeat(withSequence(withTiming(-14, { duration: 90 }), withTiming(12, { duration: 120 }), withTiming(-8, { duration: 110 }), withTiming(0, { duration: 90 }), withDelay(1300, withTiming(0, { duration: 0 }))), -1)
-      : withTiming(0, { duration: 100 });
+    const fadeOut = 1600;
+    opacity.value = withSequence(
+      withTiming(1, { duration: 300 }),
+      withDelay(UNLOCK_TOAST_MS - 300 - fadeOut, withTiming(0, { duration: fadeOut, easing: Easing.in(Easing.quad) })),
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wobble]);
-  const style = useAnimatedStyle(() => ({ transform: [{ rotate: `${r.value}deg` }] }));
-  return <Animated.Image source={icons.questMedal} style={[styles.questIcon, style]} />;
+  }, []);
+  const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
+  if (skills.length === 0) return null;
+  return (
+    <Animated.View style={[styles.unlockToast, style]} pointerEvents="none">
+      {skills.map((id) => (
+        <StrokedText key={id} style={styles.unlockText} strokeColor={colors.line}>
+          {tr(`새 스킬 해금! ${getSkill(id).name}`, `New skill unlocked! ${tr(getSkill(id).name)}`)}
+        </StrokedText>
+      ))}
+    </Animated.View>
+  );
 }
 
 const styles = StyleSheet.create({
+  unlockToast: {
+    position: "absolute",
+    top: 62,
+    left: 40,
+    right: 40,
+    alignItems: "center",
+    gap: 2,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backgroundColor: "#14100cb3",
+    borderWidth: 2,
+    borderColor: "#ffd34d",
+    zIndex: 12,
+  },
+  unlockText: { fontSize: 15, fontWeight: "900", fontFamily: fonts.bold, color: "#ffe9a3" },
   // Runs edge to edge across the screen; only its top and bottom keep the dark rim.
   scene: {
     marginTop: 10,
@@ -1720,7 +1747,8 @@ const styles = StyleSheet.create({
   stageBarTrack: { width: "100%", marginTop: 4 },
   questButton: { width: 42, height: 42, alignItems: "center", justifyContent: "center" },
   questPressed: { transform: [{ scale: 0.92 }] },
-  questIcon: { width: 38, height: 38 },
+  // Map art is 669x574.
+  mapIcon: { width: 40, height: 34 },
   // Toggles the wandering 견습기니 on/off — same slot/size as questButton, on the bar's other end.
   apprenticeToggle: { width: 42, height: 42, alignItems: "center", justifyContent: "center" },
   apprenticeToggleOff: { opacity: 0.45 },
@@ -1749,7 +1777,6 @@ const styles = StyleSheet.create({
     zIndex: 12,
   },
   giftText: { fontSize: 15, fontWeight: "900", fontFamily: fonts.bold, color: "#ffe9a3" },
-  questDot: { position: "absolute", right: 3, top: 2, width: 12, height: 12 },
   fighters: {
     position: "absolute",
     zIndex: 4,

@@ -6,7 +6,7 @@ import { kit, icons } from "../assets";
 import { NineSlice } from "./NineSlice";
 import { GameButton } from "./GameButton";
 import { AdBadge } from "./AdBadge";
-import { getLastAdError, showRewardedAd } from "../ads";
+import { cancelRewardedWait, getLastAdError, showRewardedAd } from "../ads";
 import { t } from "../i18n";
 
 type Phase = "prompt" | "loading" | "fallback";
@@ -14,6 +14,11 @@ type Phase = "prompt" | "loading" | "fallback";
 // How long hiding our own Modal is given before the native ad presents (see hideForNativeAd).
 const HIDE_FALLBACK_MS = 400;
 const HIDE_SETTLE_MS = 600;
+// How long after the ad reports closed before anything else moves (handing the reward out,
+// closing the popup that opened this). onAdClosed can arrive while the ad's own full-screen
+// view is still sliding away; dismissing a Modal underneath it in that window is the same
+// overlapping-presentation race that leaves an invisible view eating every touch.
+const AFTER_AD_SETTLE_MS = 500;
 
 // Every "watch an ad for X" button goes through this. It plays a real rewarded ad (src/ads):
 // - watched to the end: onClaim hands the reward out.
@@ -29,6 +34,7 @@ export function RewardedAdModal({
   onCancel,
   autoStart = true,
   secondary,
+  embedded = false,
 }: {
   message: string;
   claimLabel: string;
@@ -38,6 +44,12 @@ export function RewardedAdModal({
   // A no-ad alternative shown beside the ad button on the prompt (e.g. the boss retry's
   // "그냥 다시 도전"), so skipping the ad is a clear choice rather than a hidden dismiss.
   secondary?: { label: string; onPress: () => void };
+  // Drawn inside the caller's own Modal (a plain overlay, no Modal of its own). For popups
+  // that offer an ad themselves (출석 보상, 오프라인 보상): swapping their Modal out for this
+  // one used to dismiss one native modal while presenting another in the same instant — on a
+  // fresh install or a long-idle launch, the only times those popups show, that left the
+  // screen dead to touches after the ad.
+  embedded?: boolean;
 }) {
   const [phase, setPhase] = useState<Phase>(autoStart ? "loading" : "prompt");
   // The real native ad presents its own full-screen view the instant showRewardedAd() calls
@@ -99,8 +111,18 @@ export function RewardedAdModal({
       setPhase("prompt");
     }
   };
+  // The loading screen's 취소: stop waiting and close as if no ad was watched.
+  const cancelled = useRef(false);
+  const cancelLoading = () => {
+    cancelled.current = true;
+    cancelRewardedWait();
+    dismissNoReward();
+  };
   const start = () => {
-    showRewardedAd(hideForNativeAd).then((result) => {
+    cancelled.current = false;
+    showRewardedAd(hideForNativeAd).then(async (result) => {
+      if (cancelled.current) return;
+      if (result !== "failed") await new Promise((resolve) => setTimeout(resolve, AFTER_AD_SETTLE_MS));
       if (!mounted.current) return;
       if (result === "earned") {
         callbacks.current.onClaim();
@@ -130,6 +152,61 @@ export function RewardedAdModal({
 
   const dismiss = phase === "fallback" ? dismissNoReward : phase === "prompt" ? onCancel : undefined;
 
+  const content = (
+    <Pressable style={styles.backdrop} onPress={() => dismiss?.()}>
+      <Pressable style={styles.panel} onPress={(event) => event.stopPropagation()}>
+        <NineSlice slice={kit.panelLarge} />
+        <Image source={icons.energy} style={styles.heroIcon} />
+        <Text style={styles.eyebrow}>{t("광고 안내", "Ad")}</Text>
+        {phase === "loading" && (
+          <>
+            <Text style={styles.title}>{t("광고를 불러오는 중이에요", "Loading the ad")}</Text>
+            <ActivityIndicator color={colors.green} style={styles.spinner} />
+            <GameButton variant="beige" onPress={cancelLoading} style={styles.cancelButton}>
+              {t("취소", "Cancel")}
+            </GameButton>
+          </>
+        )}
+        {phase === "prompt" && (
+          <>
+            <Text style={styles.message}>{message}</Text>
+            {secondary ? (
+              <View style={styles.choiceRow}>
+                <GameButton variant="beige" onPress={secondary.onPress} style={styles.choiceButton} textStyle={styles.choiceLabel}>
+                  {secondary.label}
+                </GameButton>
+                <View>
+                  <GameButton variant="green" onPress={play} style={styles.choiceButton}>
+                    <View style={styles.choiceContent}>
+                      <Text style={styles.choiceSmall}>{t("광고 보고", "Watch Ad")}</Text>
+                      <Text style={styles.choiceLabel}>{claimLabel}</Text>
+                    </View>
+                  </GameButton>
+                  <AdBadge />
+                </View>
+              </View>
+            ) : (
+              <GameButton variant="green" onPress={play} style={styles.claimButton}>{claimLabel}</GameButton>
+            )}
+          </>
+        )}
+        {phase === "fallback" && (
+          <>
+            <Text style={styles.title}>{t("앗, 지금은 보여드릴 광고가 없어요!", "Oops, there's no ad to show right now!")}</Text>
+            <Text style={styles.message}>{t("잠시 후 다시 시도해주세요.", "Please try again in a bit.")}</Text>
+            <GameButton variant="green" onPress={dismissNoReward} style={styles.claimButton}>{t("확인", "OK")}</GameButton>
+            {getLastAdError() !== null && <Text style={styles.errorCode}>{t(`광고 오류: ${getLastAdError()}`, `Ad error: ${getLastAdError()}`)}</Text>}
+          </>
+        )}
+      </Pressable>
+    </Pressable>
+  );
+
+  if (embedded) {
+    // Hidden while the native ad is up; it presents over the caller's Modal.
+    return hiding ? null : <View style={StyleSheet.absoluteFill}>{content}</View>;
+  }
+
   return (
     <Modal
       visible={!hiding}
@@ -138,50 +215,7 @@ export function RewardedAdModal({
       onRequestClose={() => dismiss?.()}
       onDismiss={() => dismissResolver.current?.()}
     >
-      <Pressable style={styles.backdrop} onPress={() => dismiss?.()}>
-        <Pressable style={styles.panel} onPress={(event) => event.stopPropagation()}>
-          <NineSlice slice={kit.panelLarge} />
-          <Image source={icons.energy} style={styles.heroIcon} />
-          <Text style={styles.eyebrow}>{t("광고 안내", "Ad")}</Text>
-          {phase === "loading" && (
-            <>
-              <Text style={styles.title}>{t("광고를 불러오는 중이에요", "Loading the ad")}</Text>
-              <ActivityIndicator color={colors.green} style={styles.spinner} />
-            </>
-          )}
-          {phase === "prompt" && (
-            <>
-              <Text style={styles.message}>{message}</Text>
-              {secondary ? (
-                <View style={styles.choiceRow}>
-                  <GameButton variant="beige" onPress={secondary.onPress} style={styles.choiceButton} textStyle={styles.choiceLabel}>
-                    {secondary.label}
-                  </GameButton>
-                  <View>
-                    <GameButton variant="green" onPress={play} style={styles.choiceButton}>
-                      <View style={styles.choiceContent}>
-                        <Text style={styles.choiceSmall}>{t("광고 보고", "Watch Ad")}</Text>
-                        <Text style={styles.choiceLabel}>{claimLabel}</Text>
-                      </View>
-                    </GameButton>
-                    <AdBadge />
-                  </View>
-                </View>
-              ) : (
-                <GameButton variant="green" onPress={play} style={styles.claimButton}>{claimLabel}</GameButton>
-              )}
-            </>
-          )}
-          {phase === "fallback" && (
-            <>
-              <Text style={styles.title}>{t("앗, 지금은 보여드릴 광고가 없어요!", "Oops, there's no ad to show right now!")}</Text>
-              <Text style={styles.message}>{t("잠시 후 다시 시도해주세요.", "Please try again in a bit.")}</Text>
-              <GameButton variant="green" onPress={dismissNoReward} style={styles.claimButton}>{t("확인", "OK")}</GameButton>
-              {getLastAdError() !== null && <Text style={styles.errorCode}>{t(`광고 오류: ${getLastAdError()}`, `Ad error: ${getLastAdError()}`)}</Text>}
-            </>
-          )}
-        </Pressable>
-      </Pressable>
+      {content}
     </Modal>
   );
 }
@@ -206,6 +240,7 @@ const styles = StyleSheet.create({
   message: { fontFamily: fonts.light, letterSpacing: -0.36, marginTop: 8, fontSize: 12, color: colors.brown, textAlign: "center", lineHeight: 16 },
   spinner: { marginTop: 14, marginBottom: 4 },
   claimButton: { marginTop: 16, minWidth: 140 },
+  cancelButton: { marginTop: 12, minWidth: 110 },
   choiceRow: { marginTop: 16, flexDirection: "row", gap: 8 },
   choiceButton: { minWidth: 124, minHeight: 50 },
   choiceContent: { alignItems: "center" },

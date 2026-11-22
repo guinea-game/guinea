@@ -32,7 +32,11 @@ const INTERSTITIAL_UNIT_ID = Platform.select({
 })!;
 
 // How long a button press waits for a rewarded ad that isn't loaded yet before giving up.
-const LOAD_TIMEOUT_MS = 8000;
+const LOAD_TIMEOUT_MS = 12000;
+// After a failed load (most often "no fill" — no network had an ad for us at that moment),
+// try again on this schedule instead of waiting for the next button press, so an ad is
+// usually already sitting ready by the time the player asks for one.
+const RETRY_DELAYS_MS = [5000, 15000, 30000, 60000];
 
 // How long to wait between retries when iOS silently skips showing the ATT alert (see below).
 const ATT_RETRY_DELAY_MS = 1200;
@@ -144,19 +148,32 @@ const interstitialAd = new LevelPlayInterstitialAd(INTERSTITIAL_UNIT_ID);
 
 // ---- Rewarded ----
 let rewardedLoading = false;
+let rewardedFailures = 0;
+let rewardedRetry: ReturnType<typeof setTimeout> | null = null;
 let pendingRewardedWait: ((ready: boolean) => void) | null = null;
+// Failed loads seen by the button press currently waiting (it gives up after two).
+let waitFailures = 0;
 let pendingRewardedShow: ((result: AdResult) => void) | null = null;
 let rewardEarned = false;
 
 function loadRewarded() {
   if (!initSucceeded || rewardedLoading) return;
+  if (rewardedRetry) {
+    clearTimeout(rewardedRetry);
+    rewardedRetry = null;
+  }
   rewardedLoading = true;
   rewardedAd.loadAd();
+}
+
+function retryDelay(failures: number) {
+  return RETRY_DELAYS_MS[Math.min(failures, RETRY_DELAYS_MS.length) - 1];
 }
 
 async function waitForRewardedReady(timeoutMs: number): Promise<boolean> {
   if (await rewardedAd.isAdReady()) return true;
   if (!initSucceeded) return false;
+  waitFailures = 0;
   loadRewarded();
   return new Promise((resolve) => {
     let settled = false;
@@ -176,12 +193,35 @@ async function waitForRewardedReady(timeoutMs: number): Promise<boolean> {
 // Only ever loaded in the background: if one isn't ready at the moment it's due, that moment is
 // simply skipped (the player is never made to wait for an ad they didn't ask for).
 let interstitialLoading = false;
+let interstitialFailures = 0;
+let interstitialRetry: ReturnType<typeof setTimeout> | null = null;
 let pendingInterstitialShow: ((shown: boolean) => void) | null = null;
 
 function loadInterstitial() {
   if (!initSucceeded || interstitialLoading) return;
+  if (interstitialRetry) {
+    clearTimeout(interstitialRetry);
+    interstitialRetry = null;
+  }
   interstitialLoading = true;
   interstitialAd.loadAd();
+}
+
+// Coming back to the app (and on every launch, via init): a preloaded ad can have expired
+// while the app sat in the background for hours, so make sure a fresh one is on its way.
+let foregroundWatch = false;
+function watchForeground() {
+  if (foregroundWatch) return;
+  foregroundWatch = true;
+  AppState.addEventListener("change", (state) => {
+    if (state !== "active" || !initSucceeded || showing) return;
+    rewardedAd.isAdReady().then((ready) => {
+      if (!ready) loadRewarded();
+    });
+    interstitialAd.isAdReady().then((ready) => {
+      if (!ready) loadInterstitial();
+    });
+  });
 }
 
 export function initAds() {
@@ -189,13 +229,22 @@ export function initAds() {
     rewardedAd.setListener({
       onAdLoaded: () => {
         rewardedLoading = false;
+        rewardedFailures = 0;
         lastAdError = null;
         pendingRewardedWait?.(true);
       },
       onAdLoadFailed: (error) => {
         rewardedLoading = false;
         lastAdError = describeError(error);
-        pendingRewardedWait?.(false);
+        // A button press waiting on this load keeps waiting (up to its own timeout) for the
+        // quick retry, rather than giving up on the first "no fill".
+        rewardedFailures += 1;
+        if (pendingRewardedWait) {
+          waitFailures += 1;
+          if (waitFailures >= 2) pendingRewardedWait(false);
+          else rewardedRetry = setTimeout(loadRewarded, RETRY_DELAYS_MS[0]);
+        }
+        if (!rewardedRetry) rewardedRetry = setTimeout(loadRewarded, retryDelay(rewardedFailures));
       },
       onAdDisplayed: () => {},
       onAdRewarded: () => {
@@ -222,9 +271,12 @@ export function initAds() {
     interstitialAd.setListener({
       onAdLoaded: () => {
         interstitialLoading = false;
+        interstitialFailures = 0;
       },
       onAdLoadFailed: () => {
         interstitialLoading = false;
+        interstitialFailures += 1;
+        interstitialRetry = setTimeout(loadInterstitial, retryDelay(interstitialFailures));
       },
       onAdDisplayed: () => {},
       onAdClosed: () => {
@@ -284,6 +336,7 @@ export function initAds() {
       if (initSucceeded) {
         loadRewarded();
         loadInterstitial();
+        watchForeground();
       }
     });
   }
@@ -300,8 +353,20 @@ export function initAds() {
 // the ad error "Screen is not visible... timeout") — a plain `setState` before calling showAd()
 // isn't enough, since React doesn't flush it to the native side synchronously; the caller has
 // to actually confirm its modal is gone (e.g. via <Modal onDismiss>) before this resolves.
+// Set by cancelRewardedWait(): the player gave up on the "광고를 불러오는 중" screen.
+let waitCancelled = false;
+
+// The loading screen's 취소 button: stops waiting for an ad that hasn't loaded yet, so
+// showRewardedAd() resolves "failed" right away instead of presenting one later. (The load
+// itself keeps going in the background, ready for next time.)
+export function cancelRewardedWait() {
+  waitCancelled = true;
+  pendingRewardedWait?.(false);
+}
+
 export async function showRewardedAd(onAboutToShow?: () => Promise<void>): Promise<AdResult> {
   if (showing) return "failed";
+  waitCancelled = false;
   // Claimed synchronously, before any `await` below, not after — otherwise a second call that
   // starts while this one is still awaiting init/load/onAboutToShow would also read `showing` as
   // false and the two could both reach rewardedAd.showAd(). A double-tap on a "watch ad" button
@@ -310,8 +375,8 @@ export async function showRewardedAd(onAboutToShow?: () => Promise<void>): Promi
   // leaves a dangling invisible view eating every touch afterward.
   showing = true;
   await initAds();
-  const ready = await waitForRewardedReady(LOAD_TIMEOUT_MS);
-  if (!ready) {
+  const ready = !waitCancelled && (await waitForRewardedReady(LOAD_TIMEOUT_MS));
+  if (!ready || waitCancelled) {
     showing = false;
     return "failed";
   }

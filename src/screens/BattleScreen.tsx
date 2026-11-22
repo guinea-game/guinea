@@ -18,6 +18,8 @@ import { ConfirmModal } from "../components/ConfirmModal";
 import { BUFF_SLOT_PRICES } from "../state/buffs";
 import type { EnemyKind } from "../types";
 import { hasClaimableQuest } from "../state/quests";
+import { isDailyAllDone } from "../state/daily";
+import { DailyModal } from "../components/DailyModal";
 import { t } from "../i18n";
 
 export function BattleScreen({ game }: { game: UseGameState }) {
@@ -60,6 +62,10 @@ export function BattleScreen({ game }: { game: UseGameState }) {
     wasDisplayBoss.current = displayBoss;
   }, [displayBoss]);
 
+  // 레벨 보상 / 연구소 / 이벤트 buttons are in the row ahead of their pages; for now a tap says so.
+  const [comingSoon, setComingSoon] = useState<string | null>(null);
+  const [dailyOpen, setDailyOpen] = useState(false);
+
   return (
     <>
       <BattleScene
@@ -95,8 +101,7 @@ export function BattleScreen({ game }: { game: UseGameState }) {
                 : stageLabel
         }
         stageKills={state.stageKills}
-        questReady={hasClaimableQuest(state)}
-        onQuest={() => game.setQuestOpen(true)}
+        onOpenMap={() => game.setState((previous) => ({ ...previous, selectedTab: "milestone" }))}
         outfit={state.equippedOutfit}
         apprenticeActive={(state.loopsCompleted ?? 0) >= 1 && !state.apprenticeHidden}
         apprenticeAttackId={battle.apprenticeAttackId}
@@ -264,8 +269,13 @@ export function BattleScreen({ game }: { game: UseGameState }) {
       )}
       <BattleMenu
         onOpenBag={() => game.setState((previous) => ({ ...previous, selectedTab: "inventory" }))}
-        onOpenKitchen={() => game.setState((previous) => ({ ...previous, selectedTab: "kitchen" }))}
-        onOpenMap={() => game.setState((previous) => ({ ...previous, selectedTab: "milestone" }))}
+        onOpenDaily={() => setDailyOpen(true)}
+        dailyAllDone={isDailyAllDone(state)}
+        onOpenQuest={() => game.setQuestOpen(true)}
+        questReady={hasClaimableQuest(state)}
+        onOpenLevelReward={() => setComingSoon(t("레벨 보상", "Level Rewards"))}
+        onOpenLab={() => setComingSoon(t("연구소", "Lab"))}
+        onOpenEvent={() => setComingSoon(t("이벤트", "Event"))}
         bagFull={slotsUsed(state.inventory) >= getBagCapacity(state.bagExpansions)}
         dropEvents={game.dropEvents}
         trailing={
@@ -276,6 +286,26 @@ export function BattleScreen({ game }: { game: UseGameState }) {
           />
         }
       />
+      {dailyOpen && (
+        <DailyModal
+          state={state}
+          priceStage={game.priceStage}
+          onClose={() => setDailyOpen(false)}
+          onDeliver={game.deliverDailyOrder}
+          onGoCook={() => {
+            setDailyOpen(false);
+            game.setState((previous) => ({ ...previous, selectedTab: "kitchen" }));
+          }}
+        />
+      )}
+      {comingSoon !== null && (
+        <ConfirmModal
+          title={comingSoon}
+          message={t("곧 열려요! 조금만 기다려 주세요.", "Coming soon! Hang tight.")}
+          onConfirm={() => setComingSoon(null)}
+          onCancel={() => setComingSoon(null)}
+        />
+      )}
       <StatUpgradePanel
         state={state}
         upgradeMode={upgradeMode}

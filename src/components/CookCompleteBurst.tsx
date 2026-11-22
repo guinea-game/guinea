@@ -69,7 +69,6 @@ export function CookCompleteBurst({
   great = false,
   grade,
   isNew = false,
-  pageText,
   onDone,
 }: {
   dishName: string;
@@ -79,8 +78,6 @@ export function CookCompleteBurst({
   // "great" (see GRADE_COLOR above).
   grade?: CookGrade;
   isNew?: boolean;
-  // "요리책 13 / 26" — shown under the name when this dish filled a new cookbook page.
-  pageText?: string;
   onDone: () => void;
 }) {
   const glow = useSharedValue(0);
@@ -202,11 +199,6 @@ export function CookCompleteBurst({
         {grade && (
           <StrokedText style={[styles.grade, { color: GRADE_COLOR[grade] }]} strokeColor={colors.line} strokeWidth={1.5}>
             {t(GRADE_LABEL[grade])}
-          </StrokedText>
-        )}
-        {pageText && (
-          <StrokedText style={styles.page} strokeColor={colors.line} strokeWidth={1.5}>
-            {pageText}
           </StrokedText>
         )}
       </Animated.View>
@@ -346,5 +338,4 @@ const styles = StyleSheet.create({
   title: { color: "#fff4bd", fontSize: 32, fontWeight: "800", fontFamily: fonts.bold, letterSpacing: -0.5 },
   name: { marginTop: 2, color: colors.gold, fontSize: 16, fontWeight: "900", fontFamily: fonts.bold },
   grade: { marginTop: 3, fontSize: 13, fontWeight: "900", fontFamily: fonts.bold },
-  page: { marginTop: 4, color: "#fff4bd", fontSize: 12, fontWeight: "900", fontFamily: fonts.bold },
 });

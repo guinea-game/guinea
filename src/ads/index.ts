@@ -39,4 +39,6 @@ export function showRewardedAd(onAboutToShow?: () => Promise<void>): Promise<AdR
   return Promise.resolve("failed");
 }
 
+export function cancelRewardedWait() {}
+
 export function launchAdTestSuite() {}

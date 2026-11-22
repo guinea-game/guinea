@@ -1,6 +1,6 @@
 import type { SkillTimers } from "./state/skills";
 import type { CookGrade } from "./state/buffs";
-export type Tab = "battle" | "companions" | "inventory" | "skills" | "shop" | "milestone" | "kitchen" | "grocery" | "recipes" | "cookbook" | "comics" | "stats" | "guide" | "credits" | "backup";
+export type Tab = "battle" | "companions" | "inventory" | "skills" | "shop" | "milestone" | "kitchen" | "grocery" | "recipes" | "comics" | "stats" | "guide" | "credits" | "backup";
 export type StatKey = "attack" | "criticalDamage" | "criticalChance" | "goldBonus" | "attackSpeed";
 export type BattlePhase = "idle" | "attacking" | "hit" | "defeated" | "entering";
 export type PlayerAnimation = "idle" | "attack" | "critical" | "win";
@@ -99,8 +99,6 @@ export interface GameState {
   inventory: { name: string; quantity: number; type: string }[];
   // Every ingredient ever obtained (ingredient codex); missing on older saves.
   discoveredItems?: string[];
-  // Kitchen recipe layout the player picked (one-column list / two-column cards).
-  kitchenLayout?: "list" | "grid";
   // The wandering 견습기니 (loopsCompleted >= 1) toggled off from the battle screen's own
   // button; missing on older saves = shown.
   apprenticeHidden?: boolean;
@@ -132,9 +130,11 @@ export interface GameState {
   purchasedOutfits?: Outfit[];
   // Furthest stage the map has shown — a newer one gets its path drawn in on the next visit.
   mapSeenStage?: number;
+  // Recipes the player has already seen on sale in the recipe shop. One that went on sale
+  // since (a stage clear) and isn't learned yet puts a red dot on 요리 and the shop button.
+  seenRecipeOffers?: string[];
   codexSeen?: string[];
-  // Recipe ids cooked at least once (the "NEW" badge, and the cookbook goal — see
-  // state/cookbook.ts). Older saves are seeded from the dishes in their bag on load.
+  // Recipe ids cooked at least once (the "NEW" badge). Older saves are seeded from the dishes in their bag on load.
   cookedRecipes?: string[];
   // Legacy quest rows (ladder / first chapter system) — only read to migrate claims.
   quests: Quest[];
@@ -173,6 +173,9 @@ export interface GameState {
   flyingGemAds?: { day: string; count: number };
   // Interstitials shown today and when the last one was (see maybeShowInterstitial).
   interstitialAds?: { day: string; count: number; lastAt: number };
+  // 일일 의뢰 (state/daily.ts): the local day these food orders came in, the orders, and
+  // which of them (by index) were handed over. Missing on older saves.
+  daily?: { day: string; orders: { recipeId: string; count: number; customer: string }[]; delivered: number[] };
   // The day the attendance reward was doubled by an ad (once a day).
   attendanceBonusDay?: string;
   // Quirk counters behind the hidden quests; all missing on older saves.

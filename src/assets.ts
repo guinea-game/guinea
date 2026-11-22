@@ -728,6 +728,13 @@ export const icons = {
   backpackOutlined: require("../assets/icons/icon-backpack-outlined.webp"),
   // Trimmed to their visible art, for the battle scene's fixed-box button row.
   mapTrim: require("../assets/icons/icon-map-trim.webp"),
+  // Battle-row page buttons for the newer contents.
+  levelReward: require("../assets/icons/icon-level-reward.webp"),
+  // 일일 의뢰: plain = today's requests all done; with the "!" bubble = a fresh set waiting.
+  dailyDone: require("../assets/icons/icon-daily-done.webp"),
+  dailyNew: require("../assets/icons/icon-daily-new.webp"),
+  lab: require("../assets/icons/icon-lab.webp"),
+  event: require("../assets/icons/icon-event.webp"),
   backpackTrim: require("../assets/icons/icon-backpack-trim.webp"),
   coins: require("../assets/icons/icon-coins.webp"),
   chest: require("../assets/icons/icon-chest.webp"),
@@ -777,6 +784,11 @@ export const uiImages = {
   gemWinged: require("../assets/ui/gem-winged.webp"),
   // Clapperboard with a play button: marks anything that plays an ad (AdBadge).
   adClapper: require("../assets/ui/ad-clapper.webp"),
+  // Speech bubbles (tail bottom-left), 200 wide: yellow 200x172 (the first clear's ad offer),
+  // plain cream 200x181, cream with a "!" 200x182.
+  bubbleYellow: require("../assets/ui/bubble-yellow.webp"),
+  bubbleBlank: require("../assets/ui/bubble-blank.webp"),
+  bubbleAlert: require("../assets/ui/bubble-alert.webp"),
   // Glossy gold arrow, pointing right in the art; GuideArrow turns it to point where needed.
   guideArrow: require("../assets/ui/guide-arrow.webp"),
   coins: require("../assets/ui/item-coins.webp"),
@@ -1079,6 +1091,11 @@ export const grandma = {
   basket: require("../assets/npc/grandma-basket.webp"),
   menu: require("../assets/npc/grandma-menu.webp"),
   counter: require("../assets/npc/grandma-counter.webp"),
+};
+
+// 일일 의뢰 customers (state/daily.ts CUSTOMERS). 307x320.
+export const npcImages = {
+  customerLady: require("../assets/npc/customer-lady.webp"),
 };
 
 export const statIcons = {

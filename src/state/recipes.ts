@@ -729,6 +729,18 @@ export const RECIPES: Recipe[] = RECIPE_DEFS.map((recipe) => ({
 
 export const STARTER_RECIPES = RECIPES.filter((recipe) => recipe.price === 0).map((recipe) => recipe.id);
 
+// Recipes on sale right now that aren't learned yet.
+export function getRecipeOffers(knownRecipes: string[] | undefined, clearedStages: number[]) {
+  const known = getKnownRecipes(knownRecipes);
+  return RECIPES.filter((recipe) => !known.includes(recipe.id) && isRecipeForSale(recipe, clearedStages)).map((recipe) => recipe.id);
+}
+
+// Whether a recipe went on sale that the player hasn't looked at in the recipe shop yet.
+export function hasNewRecipeOffer(knownRecipes: string[] | undefined, clearedStages: number[], seen: string[] | undefined) {
+  if (!seen) return false;
+  return getRecipeOffers(knownRecipes, clearedStages).some((id) => !seen.includes(id));
+}
+
 export function getKnownRecipes(knownRecipes: string[] | undefined) {
   return knownRecipes ?? STARTER_RECIPES;
 }

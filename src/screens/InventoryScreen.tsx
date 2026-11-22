@@ -70,7 +70,14 @@ export function InventoryScreen({
   const full = used >= capacity;
   // Shows a few empty rows rather than every free slot, so a roomy bag doesn't mean a long scroll.
   const shown = Math.min(capacity, Math.max(12, Math.ceil((used + 1) / COLUMNS) * COLUMNS));
-  const cells = [...stacks, ...Array.from({ length: Math.max(0, shown - used) }, () => null)];
+  // 전체 / 재료 / 요리: the bag's slots are shared, so a filtered view still ends in the same
+  // empty cells — it just leaves out the other kind's stacks.
+  const [kind, setKind] = useState<BagKind>("all");
+  const visible = kind === "all" ? stacks : stacks.filter((item) => (kind === "dish" ? item.type === "dish" : item.type !== "dish"));
+  // Empties pad the last row out to full width, so a filtered view doesn't end ragged.
+  const empties = Math.max(0, shown - used);
+  const padded = Math.ceil((visible.length + empties) / COLUMNS) * COLUMNS - visible.length;
+  const cells = [...visible, ...Array.from({ length: Math.min(capacity - used, padded) }, () => null)];
 
   const [codex, setCodex] = useState(false);
   const [selling, setSelling] = useState<string | null>(null);
@@ -152,6 +159,19 @@ export function InventoryScreen({
           </GameButton>
         )}
       </Panel>
+      <View style={styles.tabs}>
+        {BAG_KINDS.map((item) => (
+          <GameButton
+            key={item.kind}
+            variant={kind === item.kind ? "green" : "beige"}
+            onPress={() => setKind(item.kind)}
+            style={styles.tabButton}
+            textStyle={styles.tabButtonText}
+          >
+            {t(item.label, item.labelEn)}
+          </GameButton>
+        ))}
+      </View>
       <View style={styles.grid}>
         {cells.map((item, index) => (
           // Empty cells remount after an expansion so the new room pops in, one by one.
@@ -201,6 +221,13 @@ export function InventoryScreen({
   );
 }
 
+type BagKind = "all" | "ingredient" | "dish";
+const BAG_KINDS: { kind: BagKind; label: string; labelEn: string }[] = [
+  { kind: "all", label: "전체", labelEn: "All" },
+  { kind: "ingredient", label: "재료", labelEn: "Ingredients" },
+  { kind: "dish", label: "요리", labelEn: "Dishes" },
+];
+
 // Pops in after `delay` ms; a negative delay means it just appears (no animation).
 function PopIn({ delay, style, children }: { delay: number; style: object; children: React.ReactNode }) {
   const t = useSharedValue(delay < 0 ? 1 : 0);
@@ -241,6 +268,9 @@ function ItemShape({ name }: { name: string }) {
 }
 
 const styles = StyleSheet.create({
+  tabs: { flexDirection: "row", gap: 8, marginBottom: 10 },
+  tabButton: { flex: 1 },
+  tabButtonText: { fontSize: 14 },
   tutorialAnchor: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
   newBadge: { position: "absolute", top: 3, left: 3, paddingHorizontal: 4, borderRadius: 5, backgroundColor: colors.red },
   newText: { fontSize: 7, fontWeight: "900", fontFamily: fonts.bold, color: colors.cream },

@@ -3,7 +3,6 @@ import { food, frameImages, icons, navIcons, statIcons, uiImages } from "../asse
 import { formatGameNumber, getStatLevel } from "./gameMath";
 import { getPeakAreaStage, STAGES } from "./stages";
 import { RECIPES, STARTER_RECIPES } from "./recipes";
-import { getCookbookProgress } from "./cookbook";
 import { GROCERY } from "./grocery";
 import { isOutfitUnlocked, OUTFIT_UNLOCK_STAGE } from "./unlocks";
 import { t } from "../i18n";
@@ -22,7 +21,6 @@ type Metric =
   | "cooked"
   | "eaten"
   | "recipes"
-  | "cookbook"
   | "ingredients"
   | "coinsCaught"
   | "foodSlots"
@@ -93,11 +91,6 @@ const METRICS: Record<Metric, { icon: number; title: (target: number) => string;
     icon: icons.scroll,
     title: (n) => t(`레시피 ${n}개 배우기`, `Learn ${n} Recipes`, `レシピを${n}個習得`, `学会${n}个食谱`),
     read: (s) => (s.knownRecipes ?? []).filter((id) => !STARTER_RECIPES.includes(id)).length,
-  },
-  cookbook: {
-    icon: icons.codexBook,
-    title: (n) => t(`요리책 ${n}장 채우기`, `Fill ${n} Cookbook Pages`, `料理帳を${n}ページ埋める`, `填满食谱书${n}页`),
-    read: (s) => getCookbookProgress(s.cookedRecipes),
   },
   ingredients: {
     icon: icons.codexIngredient,
@@ -178,7 +171,7 @@ export const CHAPTERS: Chapter[] = [
       { metric: "stage", target: stage(12), reward: 35 },
       { metric: "bossKills", target: 15, reward: 35 },
       { metric: "critDamageLevel", target: 20, reward: 30 },
-      { metric: "cookbook", target: 12, reward: 35 },
+      { metric: "cooked", target: 60, reward: 35 },
       { metric: "foodSlots", target: 2, reward: 40 },
       { metric: "gold", target: 200000, reward: 30 },
       { metric: "eaten", target: 30, reward: 30 },
@@ -206,7 +199,7 @@ export const CHAPTERS: Chapter[] = [
       { metric: "stage", target: stage(30), reward: 45 },
       { metric: "bossKills", target: 60, reward: 45 },
       { metric: "cooked", target: 300, reward: 45 },
-      { metric: "cookbook", target: 30, reward: 50 },
+      { metric: "recipes", target: 28, reward: 50 },
       { metric: "attackUpgrades", target: 250, reward: 45 },
       { metric: "gold", target: 20000000, reward: 45 },
       { metric: "coinsCaught", target: 50, reward: 45 },

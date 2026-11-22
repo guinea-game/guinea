@@ -46,73 +46,75 @@ export function AttendanceModal({
     setTimeout(() => setStamped(true), STAMP_MS);
   };
 
-  if (adOpen && claimed) {
-    const what = [
-      claimed.gems > 0 ? t(`보석 ${claimed.gems}개`, `${claimed.gems} gems`) : "",
-      claimed.gold > 0 ? t(`골드 ${formatGameNumber(claimed.gold)}`, `${formatGameNumber(claimed.gold)} gold`) : "",
-    ]
-      .filter(Boolean)
-      .join(", ");
-    return (
-      <RewardedAdModal
-        message={t(`대신 섭섭하지 않게 ${what}를 한 번 더 챙겨드릴게요.`, `To make up for it, you'll get ${what} one more time.`)}
-        claimLabel={t("한 번 더 받기", "Claim Once More")}
-        onClaim={() => {
-          onBonus(claimed);
-          onClose();
-        }}
-        onCancel={onClose}
-      />
-    );
-  }
-
+  const what = !claimed
+    ? ""
+    : [
+        claimed.gems > 0 ? t(`보석 ${claimed.gems}개`, `${claimed.gems} gems`) : "",
+        claimed.gold > 0 ? t(`골드 ${formatGameNumber(claimed.gold)}`, `${formatGameNumber(claimed.gold)} gold`) : "",
+      ]
+        .filter(Boolean)
+        .join(", ");
   return (
     <Modal visible animationType="fade" transparent onRequestClose={claimed ? onClose : claim}>
-      <View style={styles.backdrop}>
-        <View style={styles.panel}>
-          <NineSlice slice={panelSlices.leafPlank} scale={0.7} />
-          <View style={styles.plank} pointerEvents="none">
-            <StrokedText style={styles.title} strokeColor="#4a2408" strokeWidth={2.5}>
-              {t("출석 보상", "Attendance Reward")}
-            </StrokedText>
-          </View>
-            <View style={styles.grid}>
-              {ATTENDANCE_REWARDS.map((reward, index) => (
-                <Tile
-                  key={index}
-                  day={index + 1}
-                  reward={reward}
-                  gold={reward.kind === "gold" ? goldFor(reward.mobs) : 0}
-                  state={index < dayIndex || (index === dayIndex && claimed !== null) ? "done" : index === dayIndex ? "today" : "later"}
-                  stamping={index === dayIndex && claimed !== null}
-                  wide={index === ATTENDANCE_REWARDS.length - 1}
-                />
-              ))}
+      {/* The ad runs inside this same Modal — see RewardedAdModal's `embedded`. */}
+      {adOpen && claimed ? (
+        <RewardedAdModal
+          embedded
+          message={t(`대신 섭섭하지 않게 ${what}를 한 번 더 챙겨드릴게요.`, `To make up for it, you'll get ${what} one more time.`)}
+          claimLabel={t("한 번 더 받기", "Claim Once More")}
+          onClaim={() => {
+            onBonus(claimed);
+            onClose();
+          }}
+          onCancel={onClose}
+        />
+      ) : (
+        <View style={styles.backdrop}>
+          <View style={styles.panel}>
+            <NineSlice slice={panelSlices.leafPlank} scale={0.7} />
+            <View style={styles.plank} pointerEvents="none">
+              <StrokedText style={styles.title} strokeColor="#4a2408" strokeWidth={2.5}>
+                {t("출석 보상", "Attendance Reward")}
+              </StrokedText>
             </View>
-          <View style={styles.buttons}>
-            {claimed && stamped ? (
-              <>
-                <GameButton variant="beige" onPress={onClose} style={styles.button} textStyle={styles.buttonLabel}>
-                  {t("닫기", "Close")}
-                </GameButton>
-                <View>
-                  <GameButton variant="green" onPress={() => setAdOpen(true)} accessibilityLabel={t("광고 보고 한 번 더 받기", "Watch an ad to claim once more")} style={styles.button}>
-                    <View style={styles.adContent}>
-                      <Text style={styles.adSmall}>{t("광고 보고", "Watch Ad")}</Text>
-                      <Text style={styles.adLabel}>{t("한 번 더", "One More")}</Text>
-                    </View>
+              <View style={styles.grid}>
+                {ATTENDANCE_REWARDS.map((reward, index) => (
+                  <Tile
+                    key={index}
+                    day={index + 1}
+                    reward={reward}
+                    gold={reward.kind === "gold" ? goldFor(reward.mobs) : 0}
+                    state={index < dayIndex || (index === dayIndex && claimed !== null) ? "done" : index === dayIndex ? "today" : "later"}
+                    stamping={index === dayIndex && claimed !== null}
+                    wide={index === ATTENDANCE_REWARDS.length - 1}
+                  />
+                ))}
+              </View>
+            <View style={styles.buttons}>
+              {claimed && stamped ? (
+                <>
+                  <GameButton variant="beige" onPress={onClose} style={styles.button} textStyle={styles.buttonLabel}>
+                    {t("닫기", "Close")}
                   </GameButton>
-                  <AdBadge />
-                </View>
-              </>
-            ) : (
-              <GameButton variant={claimed ? "gray" : "green"} disabled={claimed !== null} onPress={claim} style={styles.claimButton} textStyle={styles.buttonLabel}>
-                {claimed ? t("받았어요!", "Claimed!") : t("받기", "Claim")}
-              </GameButton>
-            )}
+                  <View>
+                    <GameButton variant="green" onPress={() => setAdOpen(true)} accessibilityLabel={t("광고 보고 한 번 더 받기", "Watch an ad to claim once more")} style={styles.button}>
+                      <View style={styles.adContent}>
+                        <Text style={styles.adSmall}>{t("광고 보고", "Watch Ad")}</Text>
+                        <Text style={styles.adLabel}>{t("한 번 더", "One More")}</Text>
+                      </View>
+                    </GameButton>
+                    <AdBadge />
+                  </View>
+                </>
+              ) : (
+                <GameButton variant={claimed ? "gray" : "green"} disabled={claimed !== null} onPress={claim} style={styles.claimButton} textStyle={styles.buttonLabel}>
+                  {claimed ? t("받았어요!", "Claimed!") : t("받기", "Claim")}
+                </GameButton>
+              )}
+            </View>
           </View>
         </View>
-      </View>
+      )}
     </Modal>
   );
 }

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Image, Pressable, StyleSheet, View } from "react-native";
-import { Text } from "./GameText";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -12,12 +11,11 @@ import Animated, {
 } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 import { colors, fonts } from "../theme";
-import { icons, panelSlices, shopKit, uiImages } from "../assets";
-import { NineSlice, Panel } from "./NineSlice";
+import { icons, panelSlices, uiImages } from "../assets";
+import { NineSlice } from "./NineSlice";
 import { StrokedText } from "./StrokedText";
 import { GameButton } from "./GameButton";
 import { RewardedAdModal } from "./RewardedAdModal";
-import { AdBadge } from "./AdBadge";
 import { t } from "../i18n";
 
 const CONFETTI_COLORS = ["#ffd34d", "#ff7a59", "#7ed957", "#5bc0ff", "#ff9ad5", "#fff3b8"];
@@ -172,7 +170,8 @@ export function FirstClearCelebration({
           ))}
         </>
       )}
-      <View style={styles.center} pointerEvents="none">
+      {/* box-none: taps fall through the frame, but the ad bubble inside still takes them. */}
+      <View style={styles.center} pointerEvents="box-none">
         {/* Trophy frame around the title, the boss and the reward. */}
         <Animated.View style={[styles.frame, kickerStyle]}>
           {/* The frame art is open in the middle — back it so the game doesn't show through. */}
@@ -205,21 +204,29 @@ export function FirstClearCelebration({
               <Image source={uiImages.crystal} style={styles.gem} />
               <GemSparkles />
             </View>
-            <StrokedText style={styles.rewardText} strokeColor={colors.line} strokeWidth={3}>
-              +{gems}
-            </StrokedText>
-            <Pressable
-              onPress={() => setAdOpen(true)}
-              accessibilityRole="button"
-              accessibilityLabel={t(`광고 보고 보석 ${adGems}개 더 받기`, `Watch an ad for ${adGems} more gems`)}
-              style={({ pressed }) => [styles.bubbleWrap, pressed && styles.bubblePressed]}
-            >
-              <Panel slice={shopKit.bubble} scale={0.3} style={styles.bubble}>
-                <AdBadge inline />
-                <Image source={uiImages.crystal} style={styles.bubbleGem} />
-                <Text style={styles.bubbleText}>{`+${adGems}`}</Text>
-              </Panel>
-            </Pressable>
+            {/* The ad bubble hangs off the number's top-right, so the gems stay centred. */}
+            <View style={styles.rewardNumber}>
+              <StrokedText style={styles.rewardText} strokeColor={colors.line} strokeWidth={3}>
+                +{gems}
+              </StrokedText>
+              <Pressable
+                onPress={() => setAdOpen(true)}
+                accessibilityRole="button"
+                accessibilityLabel={t(`광고 보고 보석 ${adGems}개 더 받기`, `Watch an ad for ${adGems} more gems`)}
+                hitSlop={6}
+                style={({ pressed }) => [styles.bubbleWrap, pressed && styles.bubblePressed]}
+              >
+                {/* Yellow bubble art: the ad clapper over the extra gems, in its round body
+                    (above the tail, the bottom ~17% of the art). */}
+                <Image source={uiImages.bubbleYellow} style={styles.bubbleArt} />
+                <View style={styles.bubbleBody}>
+                  <Image source={uiImages.adClapper} style={styles.bubbleAd} />
+                  <StrokedText style={styles.bubbleText} strokeColor="#9c4f0c" strokeWidth={2}>
+                    {`+${adGems}`}
+                  </StrokedText>
+                </View>
+              </Pressable>
+            </View>
           </View>
         </Animated.View>
         {companions.map((name) => (
@@ -285,6 +292,8 @@ function Spark({ x, y, size, delay }: { x: number; y: number; size: number; dela
 }
 
 const FRAME_SCALE = 0.34;
+const BUBBLE_W = 64;
+const BUBBLE_H = (BUBBLE_W * 172) / 200;
 
 const styles = StyleSheet.create({
   overlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 45, overflow: "hidden", alignItems: "center", justifyContent: "center" },
@@ -293,7 +302,9 @@ const styles = StyleSheet.create({
   center: { alignItems: "center", marginTop: -40 },
   // Padded to the frame art's opening (at FRAME_SCALE): 258px of top bar, 175px of bottom bar
   // and 89px side posts in the 1000px-wide source.
-  frameBack: { position: "absolute", left: 26, right: 26, top: 84, bottom: 56, borderRadius: 6, backgroundColor: "#2e1a0c" },
+  // Tucked well under the bars/posts (not just up to their inner edge) so no gap shows
+  // between the backing and the frame's wood.
+  frameBack: { position: "absolute", left: 16, right: 16, top: 72, bottom: 40, backgroundColor: "#2e1a0c" },
   frame: { width: 1000 * FRAME_SCALE, paddingTop: 92, paddingBottom: 70, paddingHorizontal: 34, alignItems: "center" },
   title: { fontSize: 20, fontWeight: "900", fontFamily: fonts.bold, color: "#fff1c4" },
   ribbon: { marginTop: 0, marginBottom: -4, width: RIBBON_W, height: RIBBON_H, alignItems: "center", justifyContent: "center", transform: [{ scale: 0.86 }] },
@@ -306,12 +317,15 @@ const styles = StyleSheet.create({
   // Padded out to the glow's full 96px so it sits inside the row's own bounds — Android clips
   // children that overflow an animated (opacity/scale) parent, which cut the glow off.
   rewardRow: { marginTop: 26, marginBottom: 6, alignItems: "center" },
-  // Hangs off the gems' top-right, its tail (bottom-left of the art) pointing back at them.
-  bubbleWrap: { position: "absolute", left: "100%", bottom: 22, marginLeft: 8 },
+  // Its tail (bottom-left of the art) sits on the number's top-right corner.
+  rewardNumber: { overflow: "visible" },
+  bubbleWrap: { position: "absolute", left: "106%", bottom: "62%", width: BUBBLE_W, height: BUBBLE_H },
   bubblePressed: { transform: [{ scale: 0.95 }] },
-  bubble: { flexDirection: "row", alignItems: "center", gap: 5, paddingLeft: 12, paddingRight: 14, paddingTop: 8, paddingBottom: 16 },
-  bubbleGem: { width: 18, height: 18, resizeMode: "contain" },
-  bubbleText: { fontSize: 17, fontWeight: "900", fontFamily: fonts.bold, color: colors.ink },
+  bubbleArt: { position: "absolute", left: 0, top: 0, width: BUBBLE_W, height: BUBBLE_H },
+  bubbleBody: { position: "absolute", left: 0, right: 0, top: 0, height: BUBBLE_H * 0.83, alignItems: "center", justifyContent: "center", paddingTop: 4 },
+  // Clapper art is 219x256.
+  bubbleAd: { width: 20, height: 23, resizeMode: "contain" },
+  bubbleText: { marginTop: -1, fontSize: 14, fontWeight: "900", fontFamily: fonts.bold, color: "#fffbe8" },
   reward: { flexDirection: "row", alignItems: "center", gap: 6 },
   gem: { width: 42, height: 42, resizeMode: "contain" },
   sparkles: { position: "absolute", left: "50%", top: "50%", width: 0, height: 0 },

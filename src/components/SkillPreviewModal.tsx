@@ -182,8 +182,7 @@ export function SkillPreviewModal({ skillId, enemyKind, outfit, onClose }: { ski
               stageAdvance={null}
               stageLabel=""
               stageKills={0}
-              questReady={false}
-              onQuest={noop}
+              onOpenMap={noop}
               outfit={outfit}
               manualEnabled={false}
               onManualAttack={noop}

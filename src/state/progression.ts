@@ -1,6 +1,4 @@
-import { RECIPES } from "./recipes";
 import { GROCERY } from "./grocery";
-import { getCookbookProgress } from "./cookbook";
 import type { GameState, Outfit } from "../types";
 
 // Long-haul goals that survive each loop back to stage 1. Every bonus here adds on and has a
@@ -73,15 +71,10 @@ export function countStars(mask: number) {
 
 // --- 완성 보상: read straight off how full each book is, so there's nothing to claim. ------
 const TIERS = 4;
-export const COOKBOOK_ATTACK_PER_TIER = 5;
 export const CODEX_GOLD_PER_TIER = 10;
 
 function tierOf(done: number, total: number) {
   return total > 0 ? Math.floor((Math.min(done, total) / total) * TIERS) : 0;
-}
-
-export function getCookbookAttackBonus(cookedRecipes: string[] | undefined) {
-  return tierOf(getCookbookProgress(cookedRecipes), RECIPES.length) * COOKBOOK_ATTACK_PER_TIER;
 }
 
 export function getCodexGoldBonus(discoveredItems: string[] | undefined) {
