@@ -1487,7 +1487,9 @@ export const panelArt = [
 export const panelSlices = {
   // Big wood frame with brass bolts in each corner.
   // No flat centre colour: the art's own parchment stretches to fill, keeping its grain.
-  woodBolts: slice(panelArt[0], 480, 212, [44, 50, 44, 50]),
+  // Insets take in the whole bolted corner blocks (~66px each way), so only the plain
+  // straight rails between them stretch — the corners keep their shape at any height.
+  woodBolts: slice(panelArt[0], 480, 212, [68, 68, 68, 68]),
   goldPill: slice(panelArt[16], 393, 109, [48, 52, 48, 52], "#fde4a6"),
   // Wood frame with a leafy plank sign across the top — the title goes on the plank.
   leafPlank: slice(panelArt[1], 480, 257, [106, 66, 42, 66]),

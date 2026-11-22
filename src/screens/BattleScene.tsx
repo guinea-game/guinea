@@ -1761,10 +1761,12 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     justifyContent: "space-between",
   },
-  foodBar: { position: "absolute", right: ROW_RIGHT, bottom: ROW_BOTTOM + (ICON_BOX.height - BUFF_SLOT_SIZE) / 2 },
+  foodBar: { position: "absolute", right: ROW_RIGHT, bottom: ROW_BOTTOM + (ICON_BOX.height - BUFF_SLOT_SIZE) / 2, zIndex: 7 },
   mapButtonPressed: { transform: [{ scale: 0.92 }] },
   // Bottom-left, mirroring the right-hand button row's inset; sits below the player sprite.
-  skillBar: { position: "absolute", left: ROW_RIGHT, bottom: ROW_BOTTOM + (ICON_BOX.height - SKILL_SLOT_HEIGHT) / 2 },
+  // zIndex 7: above the fighters (4) and the enemy nameplate (5), so the slot's info bubble
+  // pops out in front of Gini — but still under the full-scene banners (8) that dim it.
+  skillBar: { position: "absolute", left: ROW_RIGHT, bottom: ROW_BOTTOM + (ICON_BOX.height - SKILL_SLOT_HEIGHT) / 2, zIndex: 7 },
   effects: { position: "absolute", right: 96, bottom: 30, zIndex: 10 },
   // Below enemyNameplateFixed's zIndex: 5 so a big flash can never cover the HP bar.
   critFlash: { position: "absolute", bottom: 0, alignSelf: "center", zIndex: 4 },
