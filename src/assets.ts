@@ -784,7 +784,6 @@ export const uiImages = {
   gear: require("../assets/ui/item-gear.webp"),
   badgeAlert: require("../assets/ui/badge-alert.webp"),
   carrot: require("../assets/ui/item-carrot.webp"),
-  swords: require("../assets/ui/round-swords.webp"),
 };
 
 // Skill icons, 256px wide; SKILL_ICON_ASPECT is each one's width / height.

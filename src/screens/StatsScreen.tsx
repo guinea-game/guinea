@@ -3,7 +3,7 @@ import { Image, StyleSheet, View } from "react-native";
 import { Text } from "../components/GameText";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from "react-native-reanimated";
 import { colors, fonts } from "../theme";
-import { icons, kit, uiImages } from "../assets";
+import { icons, kit, statIcons, uiImages } from "../assets";
 import { Panel } from "../components/NineSlice";
 import { PageHeading } from "../components/PageHeading";
 import { CharacterSprite } from "../components/CharacterSprite";
@@ -119,7 +119,7 @@ export function StatsScreen({ state }: { state: GameState }) {
       <View style={styles.grid}>
         <StatCard delay={next()} icon={icons.star} label={t("레벨", "Level")} value={state.level} />
         <StatCard delay={next()} icon={icons.compass} label={t("최고 스테이지", "Furthest Stage")} text={stageLabel(highest)} />
-        <StatCard delay={next()} icon={uiImages.swords} label={t("총 처치 수", "Total Kills")} value={state.kills} />
+        <StatCard delay={next()} icon={statIcons.attack} label={t("총 처치 수", "Total Kills")} value={state.kills} />
         <StatCard delay={next()} icon={icons.codexMonster} label={t("보스 처치 수", "Bosses Defeated")} value={state.bossKills ?? 0} />
         <StatCard delay={next()} icon={icons.coins} label={t("누적 획득 골드", "Lifetime Gold Earned")} value={state.totalGoldEarned} />
         <StatCard delay={next()} icon={icons.codexBook} label={t("완성한 요리책", "Cookbook Completed")} text={`${cookbookDone} / ${RECIPES.length}`} />
@@ -134,7 +134,7 @@ export function StatsScreen({ state }: { state: GameState }) {
         <StatCard delay={next()} icon={icons.codexBook} label={t("요리한 횟수", "Dishes Cooked")} value={state.dishesCooked ?? 0} />
         <StatCard delay={next()} icon={icons.codexIngredient} label={t("먹은 요리", "Dishes Eaten")} value={state.dishesEaten ?? 0} />
         <StatCard delay={next()} icon={uiImages.coin} label={t("잡은 날아다니는 동전", "Winged Coins Caught")} value={state.coinsCaught ?? 0} />
-        <StatCard delay={next()} icon={uiImages.swords} label={t("공격력 강화 횟수", "Attack Upgrades")} value={state.attackUpgrades} />
+        <StatCard delay={next()} icon={statIcons.attack} label={t("공격력 강화 횟수", "Attack Upgrades")} value={state.attackUpgrades} />
         <StatCard delay={next()} icon={icons.chest} label={t("가방 확장", "Bag Expansions")} value={state.bagExpansions ?? 0} />
         <StatCard delay={next()} icon={icons.chest} label={t("가방이 꽉 찬 횟수", "Times Bag Was Full")} value={state.bagFullCount ?? 0} />
         <StatCard delay={next()} icon={icons.star} label={t("8시간 넘게 푹 잔 횟수", "Times Slept 8+ Hours")} value={state.longNaps ?? 0} />
@@ -144,7 +144,7 @@ export function StatsScreen({ state }: { state: GameState }) {
       {/* 5. Personal bests (tracked from this update on). */}
       <Section title={t("최고 기록", "Personal Bests")} />
       <View style={styles.grid}>
-        <StatCard delay={next()} icon={uiImages.swords} label={t("가장 센 한 방", "Hardest Hit")} text={state.records?.maxHit ? formatGameNumber(state.records.maxHit) : t("기록 없음", "No record yet")} />
+        <StatCard delay={next()} icon={statIcons.criticalDamage} label={t("가장 센 한 방", "Hardest Hit")} text={state.records?.maxHit ? formatGameNumber(state.records.maxHit) : t("기록 없음", "No record yet")} />
         <StatCard delay={next()} icon={icons.codexMonster} label={t("가장 빨리 잡은 보스", "Fastest Boss Kill")} text={state.records?.fastestBossMs ? formatSeconds(state.records.fastestBossMs) : t("기록 없음", "No record yet")} />
         <StatCard delay={next()} icon={icons.coins} label={t("최대 오프라인 골드", "Best Offline Gold")} text={state.records?.bestOfflineGold ? formatGameNumber(state.records.bestOfflineGold) : t("기록 없음", "No record yet")} />
       </View>

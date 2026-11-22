@@ -127,7 +127,7 @@ function companionEffects(outfit: Outfit, level = 0): { icon: number; text: stri
   if (missChance)
     parts.push({ icon: statIcons.criticalChance, text: t(`${missChance}% 빗나감`, `${missChance}% whiff`, `${missChance}%ミス`, `${missChance}%落空`) });
   const hitCount = stats.hitCount > 1 ? stats.hitCount : 0;
-  if (hitCount) parts.push({ icon: uiImages.swords, text: t(`${hitCount}연타`, `${hitCount}-hit combo`, `${hitCount}連撃`, `${hitCount}连击`) });
+  if (hitCount) parts.push({ icon: skillImages.barrage, text: t(`${hitCount}연타`, `${hitCount}-hit combo`, `${hitCount}連撃`, `${hitCount}连击`) });
   const foodDurationBonus = stats.foodBonusSec;
   if (foodDurationBonus)
     parts.push({
@@ -163,7 +163,7 @@ function companionEffects(outfit: Outfit, level = 0): { icon: number; text: stri
     });
   if (stats.extraHitChance)
     parts.push({
-      icon: uiImages.swords,
+      icon: statIcons.attack,
       text: t(`${stats.extraHitChance}% 추가타`, `${stats.extraHitChance}% extra hit`, `${stats.extraHitChance}%追加打`, `${stats.extraHitChance}%追加打击`),
     });
   return parts.length > 0 ? parts : [{ icon: icons.heart, text: t("동료 없이", "No companion", "一人で", "独自一人") }];

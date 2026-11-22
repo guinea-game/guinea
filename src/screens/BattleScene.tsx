@@ -46,7 +46,7 @@ import {
 } from "../components/SkillAuras";
 import { DROP_ARRIVAL_MS, DropItem } from "../components/DropItem";
 import { MonsterSpeechBubble } from "../components/MonsterSpeechBubble";
-import { BOSS_NAME, BOSS_TAGLINE, ENEMY_NAME, STAGE_KILL_TARGET } from "../state/stages";
+import { BOSS_NAME, ENEMY_NAME, STAGE_KILL_TARGET } from "../state/stages";
 import { t as tr } from "../i18n";
 import { SHARDS_PER_BOSS } from "../state/progression";
 import { BOSS_LINES, MOB_LINES } from "../state/monsterLines";
@@ -840,7 +840,6 @@ export function BattleScene({
             <BossEntranceBanner
               key={bossEntranceKey}
               bossName={BOSS_NAME[enemyKind]}
-              tagline={BOSS_TAGLINE[enemyKind]}
               onStart={onBeginBoss}
               onWatchAd={onWatchBossBuffAd}
               buffActive={bossBuffActive}

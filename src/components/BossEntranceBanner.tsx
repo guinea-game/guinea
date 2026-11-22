@@ -17,14 +17,12 @@ const EXIT_MS = 200;
 // boss itself shows through. Mount fresh via `key` at the call site.
 export function BossEntranceBanner({
   bossName,
-  tagline,
   onStart,
   onWatchAd,
   buffActive = false,
   buffPercent = 0,
 }: {
   bossName: string;
-  tagline: string;
   onStart: () => void;
   // Offers a one-time pre-fight attack buff for an ad; omitted once already active (buffActive).
   onWatchAd?: () => void;
@@ -78,8 +76,8 @@ export function BossEntranceBanner({
           end={{ x: 1, y: 0.5 }}
           style={StyleSheet.absoluteFill}
         />
-        {/* Left-aligned column over the dark side: BOSS tag, name, then the call to fight with
-            the ad buff's speech bubble right beside it. The boss's line sits below as a tip. */}
+        {/* One left-aligned column over the dark side, centred in the scene: BOSS tag and
+            name, then the ad bubble and the call to fight. */}
         <View style={styles.content} pointerEvents="box-none">
           <Animated.View style={[styles.title, punchStyle]} pointerEvents="none">
             <Panel slice={shopKit.pillRed} scale={0.3} style={styles.badge}>
@@ -89,12 +87,9 @@ export function BossEntranceBanner({
               {t(bossName)}
             </StrokedText>
           </Animated.View>
-          <View style={styles.actionRow} pointerEvents="box-none">
-            <Animated.View style={promptStyle} pointerEvents="none">
-              <StrokedText style={styles.promptText} strokeColor={colors.line} strokeWidth={2.5}>
-                {t("터치해서 도전!", "Tap to Fight!")}
-              </StrokedText>
-            </Animated.View>
+          {/* The ad buff bubble sits just above the call to fight, its tail pointing down at
+              it — same column, so it always moves with the prompt. */}
+          <View style={styles.action} pointerEvents="box-none">
             {(buffActive || onWatchAd) && (
               <Pressable
                 style={styles.buffBubble}
@@ -113,11 +108,13 @@ export function BossEntranceBanner({
                 </View>
               </Pressable>
             )}
+            <Animated.View style={promptStyle} pointerEvents="none">
+              <StrokedText style={styles.promptText} strokeColor={colors.line} strokeWidth={2.5}>
+                {t("터치해서 도전!", "Tap to Fight!")}
+              </StrokedText>
+            </Animated.View>
           </View>
         </View>
-        <Text style={styles.tip} pointerEvents="none">
-          {`TIP · ${t(tagline)}`}
-        </Text>
       </Pressable>
     </Animated.View>
   );
@@ -126,18 +123,16 @@ export function BossEntranceBanner({
 const styles = StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFill, zIndex: 8 },
   // Left side of the scene, so the boss on the right stays uncovered.
-  content: { position: "absolute", left: 18, right: 10, top: 0, bottom: 28, alignItems: "flex-start", justifyContent: "center" },
+  content: { position: "absolute", left: 18, right: 10, top: 0, bottom: 0, alignItems: "flex-start", justifyContent: "center" },
+  action: { marginTop: 18, alignItems: "flex-start" },
   title: { alignItems: "flex-start" },
   badge: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 7, alignItems: "center" },
   badgeText: { color: colors.cream, fontSize: 14, fontWeight: "900", fontFamily: fonts.bold, letterSpacing: 3 },
   name: { marginTop: 6, color: "#ffe3d4", fontSize: 28, fontWeight: "800", fontFamily: fonts.bold, letterSpacing: -1 },
-  actionRow: { marginTop: 12, flexDirection: "row", alignItems: "center", gap: 8 },
   promptText: { color: colors.cream, fontSize: 22, fontWeight: "900", fontFamily: fonts.bold },
   // Tail (bottom-left) leans back toward "터치해서 도전!".
-  buffBubble: { marginBottom: 8, paddingLeft: 11, paddingRight: 11, paddingTop: 6, paddingBottom: 15 },
+  buffBubble: { marginBottom: 2, paddingLeft: 11, paddingRight: 11, paddingTop: 6, paddingBottom: 15 },
   buffRow: { flexDirection: "row", alignItems: "center", gap: 5 },
   buffIcon: { width: 18, height: 21, resizeMode: "contain" },
   buffText: { color: colors.ink, fontSize: 12, fontWeight: "900", fontFamily: fonts.bold },
-  // The boss's own line, as a small tip along the bottom.
-  tip: { position: "absolute", left: 18, right: 18, bottom: 10, fontFamily: fonts.light, letterSpacing: -0.36, fontSize: 12, lineHeight: 16, color: "#f5e6cf" },
 });

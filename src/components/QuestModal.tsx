@@ -9,7 +9,7 @@ import { ProgressBar } from "./ProgressBar";
 import { formatGameNumber } from "../state/gameMath";
 import { GameButton } from "./GameButton";
 import type { GameState } from "../types";
-import { CHAPTERS, getAllClaimable, getChapterInfo, getQuestIcon, getRevealedHiddenQuests } from "../state/quests";
+import { CHAPTERS, getChapterInfo, getQuestIcon, getRevealedHiddenQuests } from "../state/quests";
 import { FlightLayer, launchFlight } from "./FlightLayer";
 import { measureTarget, tutorialRef } from "./tutorialTargets";
 import { useBumpOnChange, useRollingNumber } from "./motion";
@@ -28,8 +28,9 @@ export function QuestModal({
   onClose: () => void;
   onClaim: (id: string) => void;
 }) {
-  // Opens on the chapter list (with 모두 받기 for everything ready across chapters); tapping a
-  // chapter opens it, and its arrows flip between chapters, locked ones included.
+  // Opens on the chapter list (a red dot marks chapters with rewards waiting); tapping a
+  // chapter opens it — with its own 모두 받기 — and its arrows flip between chapters,
+  // locked ones included.
   const [view, setView] = useState<"list" | number>("list");
   const chapterIndex = view === "list" ? 0 : view;
   const setChapterIndex = (index: number) => setView(index);
@@ -69,22 +70,22 @@ export function QuestModal({
     );
   };
 
-  // One tap for everything ready across every open chapter (and hidden quests): gems
-  // burst out of the button, then each claim lands.
-  const claimable = getAllClaimable(state);
-  const claimableGems = claimable.reduce((sum, quest) => sum + quest.reward, 0);
+  // One tap for every ready mission in the open chapter: gems burst out of the button, then
+  // each claim lands.
+  const chapterClaimable = chapter.open ? quests.filter((quest) => !quest.claimed && quest.current >= quest.target) : [];
+  const claimableGems = chapterClaimable.reduce((sum, quest) => sum + quest.reward, 0);
   const claimAll = () => {
-    if (claiming || claimable.length === 0) return;
+    if (claiming || chapterClaimable.length === 0) return;
     setClaiming("all");
     measureTarget("quest-claim-all").then((from) =>
       measureTarget("quest-gems").then((to) => {
         if (from && to) {
-          for (let index = 0; index < Math.min(10, 3 + claimable.length); index++) {
+          for (let index = 0; index < Math.min(10, 3 + chapterClaimable.length); index++) {
             launchFlight({ image: uiImages.crystal, from, to, delay: index * 60, size: 18, duration: 520, arc: 50 + index * 5, channel: "quest" });
           }
         }
         setTimeout(() => {
-          claimable.forEach((quest) => onClaim(quest.id));
+          chapterClaimable.forEach((quest) => onClaim(quest.id));
           setClaiming(null);
           playSfx("levelup");
           playHaptic("claim");
@@ -95,10 +96,14 @@ export function QuestModal({
 
   return (
     <Modal visible animationType="fade" transparent onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.panel} onPress={(event) => event.stopPropagation()}>
+      <View style={styles.backdrop}>
+        {/* Tapping outside closes. A sibling behind the panel, not a Pressable wrapped around
+            it — a pressable parent claimed every touch on the panel first, so on a phone only
+            the scrollbar strip would scroll the list. */}
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t("닫기", "Close")} />
+        <View style={styles.panel}>
           <NineSlice slice={kit.panelLarge} />
-          <ScrollView>
+          <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
             <View style={styles.top}>
               <View>
                 <Text style={styles.topEyebrow}>{t("오늘의 할 일", "Today's To-Do")}</Text>
@@ -117,21 +122,6 @@ export function QuestModal({
 
             {view === "list" ? (
               <>
-                {claimable.length > 0 && (
-                  <View ref={tutorialRef("quest-claim-all")} style={styles.claimAllWrap}>
-                    <GameButton variant="green" onPress={claimAll} disabled={claiming !== null} style={styles.claimAll} accessibilityLabel={t(`보상 ${claimable.length}개 모두 받기`, `Claim all ${claimable.length} rewards`)}>
-                      <View style={styles.claimAllContent}>
-                        <Text style={styles.claimAllText}>{t("모두 받기", "Claim All")}</Text>
-                        <RewardLabel gems={claimableGems} />
-                      </View>
-                    </GameButton>
-                    {/* How many are waiting, as a red count badge on the button's corner. */}
-                    <View style={styles.countBadge} pointerEvents="none">
-                      <Text style={styles.countBadgeText}>{claimable.length}</Text>
-                    </View>
-                  </View>
-                )}
-
                 <View style={[styles.list, styles.chapterList]}>
                   {chapters.map((item) => (
                     <Pressable
@@ -231,6 +221,21 @@ export function QuestModal({
                     </Pressable>
                   </View>
                 </Panel>
+                {/* 모두 받기 for just this chapter's ready missions. */}
+                {chapterClaimable.length > 0 && (
+                  <View ref={tutorialRef("quest-claim-all")} style={styles.claimAllWrap}>
+                    <GameButton variant="green" onPress={claimAll} disabled={claiming !== null} style={styles.claimAll} accessibilityLabel={t(`이 장 보상 ${chapterClaimable.length}개 모두 받기`, `Claim all ${chapterClaimable.length} rewards in this chapter`)}>
+                      <View style={styles.claimAllContent}>
+                        <Text style={styles.claimAllText}>{t("모두 받기", "Claim All")}</Text>
+                        <RewardLabel gems={claimableGems} />
+                      </View>
+                    </GameButton>
+                    {/* How many are waiting, as a red count badge on the button's corner. */}
+                    <View style={styles.countBadge} pointerEvents="none">
+                      <Text style={styles.countBadgeText}>{chapterClaimable.length}</Text>
+                    </View>
+                  </View>
+                )}
                 <View style={styles.list}>
                   {quests.map((quest) => {
                     const complete = quest.current >= quest.target;
@@ -275,8 +280,8 @@ export function QuestModal({
             )}
           </ScrollView>
           <FlightLayer channel="quest" />
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -360,8 +365,8 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: "row", alignItems: "center", gap: 5 },
   info: { flex: 1 },
   infoTitle: { fontSize: 12, fontWeight: "800", fontFamily: fonts.bold, color: colors.ink },
-  // The gap under the header stays the same with or without the 모두 받기 button.
-  claimAllWrap: { marginTop: 14 },
+  claimAllWrap: { marginBottom: 10 },
+  scroll: { flexGrow: 0 },
   countBadge: {
     position: "absolute",
     top: -7,

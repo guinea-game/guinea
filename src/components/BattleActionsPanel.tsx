@@ -38,23 +38,25 @@ export function BattleActionsPanel({
           either can show, and the same caption-over-label layout — so the row never shifts
           as the status text changes. */}
       <GameButton variant={reloading ? "red" : isAutoBattle ? "green" : "beige"} style={styles.action} textStyle={styles.actionLabel}>
-        <View style={styles.autoContent}>
-          <Image source={reloading ? uiImages.swords : isAutoBattle ? icons.energy : uiImages.swords} style={styles.autoIcon} />
-          {/* Plain auto battle reads as one word ("자동 전투"); the other states keep their
-              caption-over-label pair. */}
-          {isAutoBattle && !reloading && !autoLocked ? (
+        {isAutoBattle && !reloading && !autoLocked ? (
+          // Plain auto battle: its energy icon and one word ("자동 전투").
+          <View style={styles.autoContent}>
+            <Image source={icons.energy} style={styles.autoIcon} />
             <Text style={[styles.actionLabel, styles.actionLabelOnGreen]}>{t("자동 전투", "Auto Battle")}</Text>
-          ) : (
-            <View style={styles.stack}>
-              <Text style={[styles.actionSmall, isAutoBattle && !reloading && styles.actionSmallOnGreen]}>
-                {reloading ? t("재장전 중", "Reloading", "リロード中", "装填中") : isAutoBattle ? t("자동 전투", "Auto Battle") : t("난타 중", "Flurry Active")}
-              </Text>
-              <Text style={[styles.actionLabel, isAutoBattle && !reloading && styles.actionLabelOnGreen]}>
-                {reloading ? t("잠시만요!", "Hang on!") : autoLocked ? t("고정", "Locked") : t("직접 공격", "Manual Attack")}
-              </Text>
-            </View>
-          )}
-        </View>
+          </View>
+        ) : reloading || autoLocked ? (
+          <View style={styles.stack}>
+            <Text style={[styles.actionSmall, isAutoBattle && !reloading && styles.actionSmallOnGreen]}>
+              {reloading ? t("재장전 중", "Reloading", "リロード中", "装填中") : t("자동 전투", "Auto Battle")}
+            </Text>
+            <Text style={[styles.actionLabel, isAutoBattle && !reloading && styles.actionLabelOnGreen]}>
+              {reloading ? t("잠시만요!", "Hang on!") : t("고정", "Locked")}
+            </Text>
+          </View>
+        ) : (
+          // 난타 is on: just the words, no icon or caption.
+          <Text style={styles.actionLabel}>{t("직접 공격", "Manual Attack")}</Text>
+        )}
       </GameButton>
 
       {/* The ad clapper sits left of the text, inside the button — the same icon-then-text
@@ -78,19 +80,19 @@ export function BattleActionsPanel({
   );
 }
 
-// Fits "직접 공격" beside its icon (the longest label either button shows) with padding.
-const ACTION_WIDTH = 104;
+// Fits "자동 전투" beside its icon (the longest label either button shows), snug.
+const ACTION_WIDTH = 90;
 
 const styles = StyleSheet.create({
   wrap: { marginTop: 8, marginBottom: 2, marginHorizontal: 10, flexDirection: "row", alignItems: "center", gap: 6 },
   spacer: { flex: 1 },
-  action: { width: ACTION_WIDTH, minHeight: 50, paddingHorizontal: 8 },
+  action: { width: ACTION_WIDTH, minHeight: 42, paddingHorizontal: 4, paddingTop: 4, paddingBottom: 6 },
   autoContent: { flexDirection: "row", alignItems: "center", gap: 4 },
   autoIcon: { width: 16, height: 16 },
   // A little more air between the clapper and "2배속" than the auto button's small icon needs.
-  adContent: { gap: 8 },
+  adContent: { gap: 6 },
   // Clapper art is 219x256.
-  adIcon: { width: 22, height: 26, resizeMode: "contain" },
+  adIcon: { width: 19, height: 22, resizeMode: "contain" },
   stack: { alignItems: "center" },
   actionSmall: { fontSize: 12, fontWeight: "800", fontFamily: fonts.bold, color: "#4f463c" },
   actionSmallOnGreen: { color: "#2f4a16" },
