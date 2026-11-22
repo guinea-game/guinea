@@ -973,6 +973,8 @@ export function useAutoBattle({
     enemyHp,
     phase,
     isAutoBattle,
+    // Hand-fighting right now (난타 and the like) — unlike !isAutoBattle, not just paused.
+    manualActive: manualWindowOpen && !autoLocked,
     enemyId,
     lastGoldReward,
     lastCritical,

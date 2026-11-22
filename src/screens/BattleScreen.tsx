@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { DishPicker } from "../components/DishPicker";
 import { BattleActionsPanel } from "../components/BattleActionsPanel";
 import { BuffSlots } from "../components/BuffSlots";
+import { BattleMenu } from "../components/BattleMenu";
 import { SkillSlot } from "../components/SkillSlot";
 import { CompanionSkillSlot } from "../components/CompanionSkillSlot";
 import { View } from "react-native";
@@ -24,7 +25,6 @@ export function BattleScreen({ game }: { game: UseGameState }) {
     state,
     battle,
     upgradeMode,
-    setUpgradeMode,
     upgradeStat,
     upgraded,
     enemyMaxHp,
@@ -106,11 +106,18 @@ export function BattleScreen({ game }: { game: UseGameState }) {
         apprenticeHidden={state.apprenticeHidden ?? false}
         onToggleApprentice={() => game.setState((previous) => ({ ...previous, apprenticeHidden: !previous.apprenticeHidden }))}
         manualEnabled={!battle.isAutoBattle || state.equippedOutfit === "cowboyGini"}
+        autoBattle={!battle.manualActive}
         onManualAttack={battle.manualAttack}
-        onOpenMap={() => game.setState((previous) => ({ ...previous, selectedTab: "milestone" }))}
-        onOpenKitchen={() => game.setState((previous) => ({ ...previous, selectedTab: "kitchen" }))}
-        onOpenBag={() => game.setState((previous) => ({ ...previous, selectedTab: "inventory" }))}
-        bagFull={slotsUsed(state.inventory) >= getBagCapacity(state.bagExpansions)}
+        foodBar={
+          <BuffSlots
+            slots={game.buffSlots}
+            now={game.now}
+            outfit={state.equippedOutfit}
+            unlocked={state.buffSlotsUnlocked ?? 1}
+            onPressSlot={setPickingSlot}
+            onPressLocked={setUnlockingSlot}
+          />
+        }
         onCatchFlyingCoin={game.catchFlyingCoin}
         flyingGemsLeft={game.flyingGemAdsLeft}
         giftKills={state.giftKills ?? 0}
@@ -255,27 +262,23 @@ export function BattleScreen({ game }: { game: UseGameState }) {
           secondary={{ label: t("필드로 가기", "Go to the Field"), onPress: game.leaveBossFight }}
         />
       )}
-      <BattleActionsPanel
-        isAutoBattle={battle.isAutoBattle}
-        autoLocked={battle.autoLocked}
-        speedBoostActive={game.speedMultiplier > 1}
-        speedBoostRemainingMs={game.speedBoostRemainingMs}
-        onWatchAd={() => setAdModalOpen(true)}
-        left={
-          <BuffSlots
-            slots={game.buffSlots}
-            now={game.now}
-            outfit={state.equippedOutfit}
-            unlocked={state.buffSlotsUnlocked ?? 1}
-            onPressSlot={setPickingSlot}
-            onPressLocked={setUnlockingSlot}
+      <BattleMenu
+        onOpenBag={() => game.setState((previous) => ({ ...previous, selectedTab: "inventory" }))}
+        onOpenKitchen={() => game.setState((previous) => ({ ...previous, selectedTab: "kitchen" }))}
+        onOpenMap={() => game.setState((previous) => ({ ...previous, selectedTab: "milestone" }))}
+        bagFull={slotsUsed(state.inventory) >= getBagCapacity(state.bagExpansions)}
+        dropEvents={game.dropEvents}
+        trailing={
+          <BattleActionsPanel
+            speedBoostActive={game.speedMultiplier > 1}
+            speedBoostRemainingMs={game.speedBoostRemainingMs}
+            onWatchAd={() => setAdModalOpen(true)}
           />
         }
       />
       <StatUpgradePanel
         state={state}
         upgradeMode={upgradeMode}
-        onUpgradeModeChange={setUpgradeMode}
         onUpgrade={upgradeStat}
         compact
         upgraded={upgraded}

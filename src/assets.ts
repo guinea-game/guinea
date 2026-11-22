@@ -1028,6 +1028,7 @@ export const kit = {
   buttonBeige: slice(require("../assets/kit2/btn-tan-2.webp"), 145, 48, [16, 22, 18, 22]),
   buttonGray: slice(require("../assets/kit2/btn-gray.webp"), 134, 47, [16, 22, 18, 22]),
   buttonBrown: slice(require("../assets/kit2/plank.webp"), 179, 59, [18, 24, 20, 24]),
+  buttonGold: slice(require("../assets/kit2/btn-gold.webp"), 146, 49, [16, 22, 18, 22]),
   tabGreen: slice(require("../assets/kit2/green-panel.webp"), 204, 95, [26, 28, 30, 28], "#81bd3b"),
   track: slice(require("../assets/ui/kit-track.webp"), 362, 47, [20, 24, 20, 24], "#fcf2d8"),
 };
@@ -1121,6 +1122,8 @@ export const frameKit = {
 
 export const frameImages = {
   slotPlus: require("../assets/frames/slot-wood-plus.webp"),
+  // Gold rim for the skill slot, so it reads apart from the wood food slots beside it.
+  slotPlusGold: require("../assets/frames/slot-gold-plus.webp"),
   ringWood: require("../assets/frames/ring-wood.webp"),
   ringGold: require("../assets/frames/ring-gold.webp"),
 };

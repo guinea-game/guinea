@@ -187,10 +187,6 @@ export function SkillPreviewModal({ skillId, enemyKind, outfit, onClose }: { ski
               outfit={outfit}
               manualEnabled={false}
               onManualAttack={noop}
-              onOpenMap={noop}
-              onOpenKitchen={noop}
-              onOpenBag={noop}
-              bagFull={false}
               onCatchFlyingCoin={noCoin}
               skillBar={null}
               goldEvents={fx.goldEvents}

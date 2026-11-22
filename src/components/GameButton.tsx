@@ -6,7 +6,7 @@ import { tutorialRef } from "./tutorialTargets";
 import { NineSlice } from "./NineSlice";
 import { playSfx } from "../sound";
 
-export type ButtonVariant = "cream" | "green" | "beige" | "gray" | "brown" | "red" | "pillCream" | "pillGray" | "box";
+export type ButtonVariant = "cream" | "green" | "beige" | "gray" | "brown" | "red" | "pillCream" | "pillGray" | "box" | "gold";
 
 const SLICES = {
   cream: kit.buttonCream,
@@ -19,6 +19,8 @@ const SLICES = {
   pillGray: shopKit.pillGray,
   // The plain cream cushion box the 기니 성장 rows sit on.
   box: kit.inset,
+  // Bright gold — for the eye-catching ad offers (2배속).
+  gold: kit.buttonGold,
 } as const;
 
 // Label colour that reads on each button face.
@@ -32,6 +34,7 @@ const LABEL_COLORS: Record<ButtonVariant, string> = {
   pillCream: colors.ink,
   pillGray: "#4f463c",
   box: colors.ink,
+  gold: colors.ink,
 };
 
 export function GameButton({

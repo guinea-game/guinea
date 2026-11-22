@@ -30,6 +30,7 @@ import { CookbookEnding } from "./components/CookbookEnding";
 import { TutorialOverlay } from "./components/TutorialOverlay";
 import { BagFullModal } from "./components/BagFullModal";
 import { FirstClearCelebration } from "./components/FirstClearCelebration";
+import { UnlockNotice } from "./components/UnlockNotice";
 import { RecipeTutorial } from "./components/RecipeTutorial";
 import { SkillTutorial } from "./components/SkillTutorial";
 import { CookCompleteBurst } from "./components/CookCompleteBurst";
@@ -500,7 +501,6 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             bossName={game.firstClear.bossName}
             gems={game.firstClear.gems}
             adGems={FIRST_CLEAR_AD_GEMS}
-            companions={game.firstClear.companions}
             onClaimAd={game.claimFirstClearGems}
             onDone={() => {
               // A story comic waiting on this boss plays once the celebration closes.
@@ -509,6 +509,10 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
               if (comic && !(state.seenComics ?? []).includes(comic)) setPlayingComic(comic);
             }}
           />
+        )}
+        {/* A new skill or companion — after the first-clear celebration and any story comic. */}
+        {game.unlockNotice && !game.firstClear && !playingComic && (
+          <UnlockNotice key={game.unlockNotice.key} notice={game.unlockNotice} onDone={game.dismissUnlockNotice} />
         )}
         {game.bagFullAt !== null && (
           <BagFullModal onOpenBag={() => onSelectTab("inventory")} onClose={game.dismissBagFull} />

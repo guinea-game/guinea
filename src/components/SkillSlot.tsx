@@ -45,7 +45,7 @@ export function SkillSlot({
         hitSlop={6}
         style={({ pressed }) => [styles.empty, pressed && styles.pressed]}
       >
-        <Image source={frameImages.slotPlus} style={styles.slotArt} />
+        <Image source={frameImages.slotPlusGold} style={styles.slotArt} />
       </Pressable>
     );
   }

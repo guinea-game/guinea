@@ -54,6 +54,8 @@ import {
 } from "./bossSkills";
 
 export type DropEvent = { id: number; name: string; delay: number };
+type UnlockNoticeItem = { kind: "skill"; id: SkillId } | { kind: "companion"; outfit: Outfit };
+export type UnlockNotice = UnlockNoticeItem & { key: number };
 
 // No ad SDK wired up yet — watching one grants this instantly, same as a completed view would.
 const SPEED_BOOST_DURATION_MS = 5 * 60_000; // 5 minutes
@@ -479,20 +481,27 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   // `loaded` and previousLevelRef is synced inside the load effect above, so loading a
   // save at a higher level (or an offline-progress jump) never triggers a spurious burst.
   const [levelUpAnnouncement, setLevelUpAnnouncement] = useState<number | null>(null);
+  // A new skill or companion: a full card that holds the battle until it's tapped away
+  // (UnlockNotice). Queued, so a level that opens two skills shows them one after another.
+  const [unlockNotices, setUnlockNotices] = useState<UnlockNotice[]>([]);
+  const noticeKey = useRef(0);
+  const queueNotices = (items: UnlockNoticeItem[]) => {
+    if (items.length === 0) return;
+    setUnlockNotices((current) => [...current, ...items.map((item) => ({ ...item, key: ++noticeKey.current }))]);
+  };
   useEffect(() => {
     if (!loaded) return;
     if (state.level > previousLevelRef.current) {
       setLevelUpAnnouncement(state.level);
       playSfx("levelup");
       playHaptic("claim");
-      // Held longer when something unlocks, so its toast can actually be read. The plain
-      // case holds a bit past when LevelUpBurst's own fade-out finishes (~1.25s in, see
-      // its contentOpacity timeline) so the component unmounts only once it's already
-      // fully invisible — cutting this too close (tried 1300) unmounted it mid-fade,
-      // popping it off abruptly instead of letting it finish dissolving.
-      const unlocks = getUnlocksAtLevel(state.level);
-      const holdMs = unlocks.skills.length > 0 ? 2800 : 1500;
-      const timer = setTimeout(() => setLevelUpAnnouncement(null), holdMs);
+      // Held a bit past when LevelUpBurst's own fade-out finishes (~1.25s in, see its
+      // contentOpacity timeline) so the component unmounts only once it's already fully
+      // invisible — cutting this too close (tried 1300) unmounted it mid-fade, popping it off
+      // abruptly instead of letting it finish dissolving.
+      // A skill opening at this level gets its own tap-to-continue card.
+      queueNotices(getUnlocksAtLevel(state.level).skills.map((id) => ({ kind: "skill" as const, id })));
+      const timer = setTimeout(() => setLevelUpAnnouncement(null), 1500);
       previousLevelRef.current = state.level;
       return () => clearTimeout(timer);
     }
@@ -681,6 +690,14 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
       };
       setFirstClear({ ...pending, key: Date.now() });
       setState((previous) => ({ ...previous, pendingFirstClear: pending }));
+      // Each companion joining gets its own card once the celebration has closed.
+      if ((state.highestStageNumber ?? state.stageNumber) <= state.stageNumber) {
+        queueNotices(
+          getOutfitsUnlockedByStage(state.stageNumber + 1)
+            .filter((outfit) => !(state.purchasedOutfits ?? []).includes(outfit))
+            .map((outfit) => ({ kind: "companion" as const, outfit })),
+        );
+      }
     }
 
     setState((previous) => {
@@ -841,7 +858,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   // kill's loot is being explained. !appActive covers the app/tab being backgrounded — see its
   // declaration above.
   const battlePaused =
-    skillTutorialActive || bossRetryAvailable || bossIntroPending || stageAnnouncement !== null || firstClear !== null || externallyPaused || !state.tutorialDone || heldLoot !== null || !appActive || adShowing;
+    skillTutorialActive || bossRetryAvailable || bossIntroPending || stageAnnouncement !== null || firstClear !== null || unlockNotices.length > 0 || externallyPaused || !state.tutorialDone || heldLoot !== null || !appActive || adShowing;
 
   // The boss clock stands still with the fight: time spent paused (an ad for 2x speed, the app
   // in the background, ...) is added back onto the fight's start. Kept per fight — keyed by
@@ -1659,6 +1676,8 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     upgradeCompanion: (outfit: Outfit) => setState((previous) => applyCompanionUpgrade(previous, outfit)),
     claimFirstClearGems,
     levelUpAnnouncement,
+    unlockNotice: unlockNotices[0] ?? null,
+    dismissUnlockNotice: () => setUnlockNotices((current) => current.slice(1)),
     upgradeMode,
     setUpgradeMode,
     upgraded,

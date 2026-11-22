@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { Image, StyleSheet, View } from "react-native";
 import { Text } from "../components/GameText";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
@@ -7,7 +7,7 @@ import { frameKit, kit, panelSlices, statIcons, uiImages } from "../assets";
 import { GameButton } from "../components/GameButton";
 import { Panel } from "../components/NineSlice";
 import { FloatText, useFlash, useHoldRepeat, useShake } from "../components/motion";
-import { applyUpgradeLevels, formatGameNumber, GEM_STATS, getStatLevel, getStatValue, getUpgradeQuote, getNextUpgradeMode, statInfo, STAT_CAP } from "../state/gameMath";
+import { applyUpgradeLevels, formatGameNumber, GEM_STATS, getStatLevel, getStatValue, getUpgradeQuote, statInfo, STAT_CAP } from "../state/gameMath";
 import { CoinPrice } from "../components/CoinPrice";
 import type { GameState, StatKey, UpgradeMode } from "../types";
 import { t } from "../i18n";
@@ -16,25 +16,19 @@ import { t } from "../i18n";
 export function StatUpgradePanel({
   state,
   upgradeMode,
-  onUpgradeModeChange,
+  headerRight,
   onUpgrade,
   compact = false,
   upgraded,
 }: {
   state: GameState;
   upgradeMode: UpgradeMode;
-  onUpgradeModeChange: (mode: UpgradeMode) => void;
+  // Sits where the title row's right end is (the battle screen puts 자동 전투 / 2배속 there).
+  headerRight?: ReactNode;
   onUpgrade: (key: StatKey) => void;
   compact?: boolean;
   upgraded: StatKey | null;
 }) {
-  const modeLabel =
-    upgradeMode === "max"
-      ? t("구매 가능한 만큼", "As Much as Affordable")
-      : upgradeMode === "next"
-        ? t("다음 10레벨 단위까지", "Up to Next 10-Level Mark")
-        : t(`${upgradeMode}레벨`, `${upgradeMode} Levels`);
-
   return (
     <Panel slice={panelSlices.woodBolts} scale={0.5} style={[styles.panel, compact && styles.panelCompact]}>
       <View style={[styles.heading, compact && styles.headingCompact]}>
@@ -42,17 +36,7 @@ export function StatUpgradePanel({
           <Text style={styles.kicker}>POWER UP</Text>
           <Text style={styles.title}>{t("기니 성장", "Gini's Growth")}</Text>
         </View>
-        <GameButton
-          variant="green"
-          onPress={() => onUpgradeModeChange(getNextUpgradeMode(upgradeMode))}
-          accessibilityLabel={t(`강화 단위 변경, 현재 ${modeLabel}`, `Change upgrade amount, currently ${modeLabel}`)}
-          style={styles.modeButton}
-        >
-          <Text style={styles.modeButtonSmall}>{t("강화 단위", "Upgrade Amount")}</Text>
-          <Text style={styles.modeButtonLabel}>
-            {upgradeMode === "max" ? "MAX" : upgradeMode === "next" ? "NEXT" : t(`${upgradeMode}레벨`, `${upgradeMode}`)}
-          </Text>
-        </GameButton>
+        {headerRight}
       </View>
 
       <View style={styles.list}>
@@ -175,14 +159,10 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   panelCompact: {},
-  heading: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 9 },
+  heading: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 9 },
   headingCompact: { marginBottom: 7 },
   kicker: { color: colors.green, fontWeight: "800", fontFamily: fonts.bold, fontSize: 12, letterSpacing: 1.5, marginBottom: 4 },
   title: { fontSize: 22, fontWeight: "800", fontFamily: fonts.bold, color: colors.ink },
-  // Two-line buttons: a 12pt caption over a clearly bigger main label.
-  modeButton: { minWidth: 92, minHeight: 52, paddingHorizontal: 12 },
-  modeButtonSmall: { fontFamily: fonts.light, letterSpacing: -0.36, color: "white", fontSize: 12, lineHeight: 16, marginBottom: 2 },
-  modeButtonLabel: { color: "white", fontWeight: "900", fontFamily: fonts.bold, fontSize: 17 },
   list: { gap: 6 },
   row: {
     minHeight: 49,

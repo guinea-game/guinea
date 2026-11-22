@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Image, Pressable, StyleSheet, View } from "react-native";
-import { Text } from "../components/GameText";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming, Easing } from "react-native-reanimated";
 import { colors, fonts } from "../theme";
-import { apprenticeSprite, effects, food, icons, images, kitImages, FRAME_SIZE, uiImages } from "../assets";
+import { apprenticeSprite, effects, icons, images, kitImages, FRAME_SIZE, uiImages } from "../assets";
 import { StrokedText } from "../components/StrokedText";
 import { MOTE_PRESETS, RisingMotes, type MotePreset } from "../components/RisingMotes";
 import { CharacterSprite } from "../components/CharacterSprite";
@@ -44,7 +43,7 @@ import {
   TELEPORT_PAD_MS,
   TeleportCastEffect,
 } from "../components/SkillAuras";
-import { DROP_ARRIVAL_MS, DropItem } from "../components/DropItem";
+import { DropItem } from "../components/DropItem";
 import { MonsterSpeechBubble } from "../components/MonsterSpeechBubble";
 import { BOSS_NAME, ENEMY_NAME, STAGE_KILL_TARGET } from "../state/stages";
 import { t as tr } from "../i18n";
@@ -54,8 +53,9 @@ import { OUTFIT_NAMES } from "../state/buffs";
 import { ITEM_IMAGES } from "../state/recipes";
 import type { DropEvent } from "../state/useGameState";
 import { tutorialRef } from "../components/tutorialTargets";
+import { MENU_ICON_BOX, MENU_LEFT, MENU_SIDE } from "../components/BattleMenu";
+import { BUFF_SLOT_SIZE } from "../components/BuffSlots";
 import { ARROW_H, ARROW_W, GuideArrow } from "../components/GuideArrow";
-import { getUnlocksAtLevel } from "../state/unlocks";
 import { COMPANION_SKILL_CALLOUT_COLOR, COMPANION_SKILL_NAMES } from "../state/companionSkills";
 import { SkillCallout } from "../components/SkillCallout";
 import { FlyingCoin } from "../components/FlyingCoin";
@@ -303,40 +303,14 @@ function useSkillEvent(rawId: number, durationMs: number) {
 const CHARACTER_WIDTH = 108;
 const ENEMY_CENTER_RIGHT = 15 + 108 / 2;
 const GROUND_BOTTOM = 68;
-// Bottom-right button row: bag, cook pot, map. Every icon gets the same box; its art
-// (trimmed to the visible pixels) is scaled to fit that box and centred in it, and the
-// boxes sit on one line with equal gaps. Art that would look off when fitted whole
-// declares a `fit` region instead — only that part is fitted, the rest may overflow.
-type RowIcon = { source: number; width: number; height: number; fit?: { x: number; y: number; width: number; height: number } };
-
+// Bottom row inside the scene: the skill slot on the left, the food slots on the right.
 const ICON_BOX = { width: 52, height: 44 };
-const ICON_GAP = 4;
 const ROW_RIGHT = 8;
 const ROW_BOTTOM = 6;
-const BUTTON_ROW_CENTER = ROW_BOTTOM + ICON_BOX.height / 2;
-
-const MAP_ICON: RowIcon = { source: icons.mapTrim, width: 669, height: 574 };
-const BAG_ICON: RowIcon = { source: icons.backpackTrim, width: 349, height: 324 };
-// The spoon pokes up out of the pot, so fitting the whole art makes the pot itself look
-// small — fit the pot body (below the spoon, y >= 62) and let the spoon stick out.
-const POT_ICON: RowIcon = { source: food.cookPotTrim, width: 356, height: 353, fit: { x: 0, y: 62, width: 356, height: 291 } };
-
-// Image size/offset inside an ICON_BOX so the icon's fit region fills it, centred.
-function fitInBox(icon: RowIcon) {
-  const fit = icon.fit ?? { x: 0, y: 0, width: icon.width, height: icon.height };
-  const scale = Math.min(ICON_BOX.width / fit.width, ICON_BOX.height / fit.height);
-  return {
-    position: "absolute" as const,
-    width: icon.width * scale,
-    height: icon.height * scale,
-    left: ICON_BOX.width / 2 - (fit.x + fit.width / 2) * scale,
-    top: ICON_BOX.height / 2 - (fit.y + fit.height / 2) * scale,
-  };
-}
-
-// Right offset of the n-th box from the scene's right edge (0 = map, 1 = pot, 2 = bag).
-const rowRight = (index: number) => ROW_RIGHT + index * (ICON_BOX.width + ICON_GAP);
-const BAG_CENTER = { right: rowRight(2) + ICON_BOX.width / 2, bottom: BUTTON_ROW_CENTER };
+// Loot flies down out of the scene's bottom edge toward the bag button in the battle row
+// below (BattleActionsPanel), lined up over where that button sits.
+// (The scene runs edge to edge; the menu row sits in from the screen edge by MENU_SIDE.)
+const BAG_CENTER_LEFT = MENU_SIDE + MENU_LEFT + MENU_ICON_BOX.width / 2;
 
 export function BattleScene({
   critical,
@@ -374,11 +348,9 @@ export function BattleScene({
   apprenticeHidden = false,
   onToggleApprentice,
   manualEnabled,
+  autoBattle = true,
   onManualAttack,
-  onOpenMap,
-  onOpenKitchen,
-  onOpenBag,
-  bagFull,
+  foodBar,
   onCatchFlyingCoin,
   flyingGemsLeft = 0,
   giftKills = 0,
@@ -470,12 +442,11 @@ export function BattleScene({
   apprenticeHidden?: boolean;
   onToggleApprentice?: () => void;
   manualEnabled: boolean;
+  // Auto battle on (green dot by the stage name) or hand-fighting during 난타 (orange).
+  autoBattle?: boolean;
   onManualAttack: () => void;
-  onOpenMap: () => void;
-  onOpenKitchen: () => void;
-  // A dish is done in a kitchen pot and waiting for its finishing minigame.
-  onOpenBag: () => void;
-  bagFull: boolean;
+  // The food buff slots, pinned to the scene's bottom-right corner.
+  foodBar?: ReactNode;
   onCatchFlyingCoin: (kind: "coin" | "gem", watchAd?: boolean) => { gold: number; gems: number };
   // Winged-gem ads left today — none left, and only coins fly.
   flyingGemsLeft?: number;
@@ -651,7 +622,6 @@ export function BattleScene({
   // compact mob or a sprawling boss without the bubble ever overlapping the sprite.
   // Drops pop out of the enemy's middle and fly into the bag button's centre.
   const dropFrom = { right: ENEMY_CENTER_RIGHT, bottom: FIGHTERS_BOTTOM + enemySize * 0.45 };
-  const dropTo = { dx: ENEMY_CENTER_RIGHT - BAG_CENTER.right, dy: dropFrom.bottom - BAG_CENTER.bottom };
   const stageProgress = (Math.min(stageKills, STAGE_KILL_TARGET) / STAGE_KILL_TARGET) * 100;
 
   // Finishing-blow punch: a quick zoom on both fighters, on every kill (not just
@@ -707,6 +677,7 @@ export function BattleScene({
   // Execute: the guinea pig blinks across to just in front of the enemy and back. The
   // fighters row is measured since the gap between the two depends on screen width.
   const [fightersWidth, setFightersWidth] = useState(0);
+  const dropTo = { dx: ENEMY_CENTER_RIGHT - (fightersWidth + FIGHTERS_SIDE * 2 - BAG_CENTER_LEFT), dy: dropFrom.bottom + 24 };
   const playerCenterLeft = FIGHTERS_SIDE + CHARACTER_WIDTH / 2;
   const enemyCenterLeft = FIGHTERS_SIDE + fightersWidth - CHARACTER_WIDTH / 2;
   const arrivalCenterLeft = Math.max(playerCenterLeft, enemyCenterLeft - enemySize * 0.5 - 22);
@@ -806,9 +777,15 @@ export function BattleScene({
               </Pressable>
             )}
             <View style={styles.stageBarInfo} pointerEvents="none">
-              <StrokedText style={styles.stageBarTitle} strokeColor={colors.line} strokeWidth={1.5}>
-                {stageLabel}
-              </StrokedText>
+              <View style={styles.stageTitleRow}>
+                <View
+                  style={[styles.autoDot, { backgroundColor: autoBattle ? "#6be04f" : "#ff8a2a" }]}
+                  accessibilityLabel={autoBattle ? tr("자동 전투 중", "Auto battle on") : tr("직접 공격 중", "Manual attack")}
+                />
+                <StrokedText style={styles.stageBarTitle} strokeColor={colors.line} strokeWidth={1.5}>
+                  {stageLabel}
+                </StrokedText>
+              </View>
               <ProgressBar
                 progress={boss ? bossTimeProgress : stageProgress}
                 fill={boss ? "red" : "gold"}
@@ -857,7 +834,6 @@ export function BattleScene({
           {goldenReward && <GoldenRewardToast key={goldenReward.id} gold={goldenReward.gold} gems={goldenReward.gems} />}
           {bossReward && <BossRewardToast key={bossReward.id} stars={bossReward.stars} gems={bossReward.gems} companion={bossReward.companion} />}
           {streakMilestone && <KillStreakBanner key={streakMilestone.id} count={streakMilestone.count} />}
-          {levelUpAnnouncement !== null && <UnlockToast key={`unlock-${levelUpAnnouncement}`} level={levelUpAnnouncement} />}
           {/* Same camera layer as the backdrop, so the two zoom as one picture. */}
           <Animated.View style={[StyleSheet.absoluteFill, styles.camLayer, styles.camFighters, camStyle]} pointerEvents="box-none">
           <Animated.View
@@ -916,29 +892,7 @@ export function BattleScene({
 
           {!preview && (
           <>
-          <BagButton onPress={onOpenBag} dropEvents={dropEvents} full={bagFull} />
-
-          <Pressable
-            onPress={onOpenKitchen}
-            accessibilityRole="button"
-            accessibilityLabel={tr("요리 페이지 열기", "Open kitchen page")}
-            hitSlop={8}
-            style={({ pressed }) => [styles.kitchenButton, pressed && styles.mapButtonPressed]}
-          >
-            <Image source={POT_ICON.source} style={fitInBox(POT_ICON)} />
-            <IconCaption>{tr("요리", "Cook")}</IconCaption>
-          </Pressable>
-
-          <Pressable
-            onPress={onOpenMap}
-            accessibilityRole="button"
-            accessibilityLabel={tr("마일스톤 지도 열기", "Open milestone map")}
-            hitSlop={8}
-            style={({ pressed }) => [styles.mapButton, pressed && styles.mapButtonPressed]}
-          >
-            <Image source={MAP_ICON.source} style={fitInBox(MAP_ICON)} />
-            <IconCaption shift={5}>{tr("지도", "Map")}</IconCaption>
-          </Pressable>
+          <View style={styles.foodBar}>{foodBar}</View>
 
           <View style={styles.skillBar}>{skillBar}</View>
           </>
@@ -1082,23 +1036,6 @@ export function BattleScene({
   );
 }
 
-// Opens the bag; bumps each time a dropped ingredient lands in it.
-// Under the stage bar on a level-up that opens a skill — says what just opened.
-function UnlockToast({ level }: { level: number }) {
-  const { skills } = getUnlocksAtLevel(level);
-  const lines = skills.map((id) => tr(`새 스킬 해금! ${getSkill(id).name}`, `New skill unlocked! ${tr(getSkill(id).name)}`));
-  if (lines.length === 0) return null;
-  return (
-    <View style={styles.unlockToast} pointerEvents="none">
-      {lines.map((line) => (
-        <StrokedText key={line} style={styles.unlockText} strokeColor={colors.line}>
-          {line}
-        </StrokedText>
-      ))}
-    </View>
-  );
-}
-
 // The frozen first-kill loot: a little coin pile and the dropped ingredients sitting on the
 // ground, bobbing under a bouncing arrow so they read as "look here". Tagged for the tutorial's
 // arrows and fly-in starting points.
@@ -1134,41 +1071,6 @@ function HeldLoot({ left, bottom, showGold, showItems, items }: { left: number; 
         </View>
       )}
     </View>
-  );
-}
-
-function BagButton({ onPress, dropEvents, full }: { onPress: () => void; dropEvents: DropEvent[]; full: boolean }) {
-  const bump = useSharedValue(1);
-  const lastSeen = useRef(0);
-
-  useEffect(() => {
-    const fresh = dropEvents.filter((event) => event.id > lastSeen.current);
-    if (fresh.length === 0) return;
-    lastSeen.current = Math.max(...fresh.map((event) => event.id));
-    const lastArrival = Math.max(...fresh.map((event) => event.delay)) + DROP_ARRIVAL_MS;
-    bump.value = withDelay(lastArrival, withSequence(withTiming(1.22, { duration: 90 }), withTiming(1, { duration: 160 })));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dropEvents]);
-
-  const style = useAnimatedStyle(() => ({ transform: [{ scale: bump.value }] }));
-
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      ref={tutorialRef("bag")}
-      accessibilityLabel={full ? tr("가방 열기 (가득 참)", "Open bag (full)") : tr("가방 열기", "Open bag")}
-      hitSlop={8}
-      style={({ pressed }) => [styles.bagButton, pressed && styles.mapButtonPressed]}
-    >
-      <Animated.Image source={BAG_ICON.source} style={[fitInBox(BAG_ICON), style]} />
-      <IconCaption>{tr("가방", "Bag")}</IconCaption>
-      {full && (
-        <View style={styles.bagFull} pointerEvents="none">
-          <Text style={styles.bagFullText}>{tr("가득", "Full")}</Text>
-        </View>
-      )}
-    </Pressable>
   );
 }
 
@@ -1780,13 +1682,13 @@ function WobblingMedal({ wobble }: { wobble: boolean }) {
 }
 
 const styles = StyleSheet.create({
+  // Runs edge to edge across the screen; only its top and bottom keep the dark rim.
   scene: {
-    marginHorizontal: 10,
     marginTop: 10,
     marginBottom: 8,
-    borderWidth: 3,
+    borderTopWidth: 3,
+    borderBottomWidth: 3,
     borderColor: colors.line,
-    borderRadius: 15,
     overflow: "hidden",
   },
   sky: { width: "100%", height: SKY_HEIGHT, overflow: "hidden" },
@@ -1812,6 +1714,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   stageBarInfo: { flex: 1, alignItems: "center" },
+  stageTitleRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  autoDot: { width: 12, height: 12, borderRadius: 6, borderWidth: 2, borderColor: colors.line },
   stageBarTitle: { color: colors.cream, fontSize: 19, fontWeight: "900", fontFamily: fonts.bold, letterSpacing: -0.3 },
   stageBarTrack: { width: "100%", marginTop: 4 },
   questButton: { width: 42, height: 42, alignItems: "center", justifyContent: "center" },
@@ -1845,25 +1749,6 @@ const styles = StyleSheet.create({
     zIndex: 12,
   },
   giftText: { fontSize: 15, fontWeight: "900", fontFamily: fonts.bold, color: "#ffe9a3" },
-  unlockToast: {
-    position: "absolute",
-    top: 62,
-    alignSelf: "center",
-    left: 40,
-    right: 40,
-    alignItems: "center",
-    gap: 2,
-    paddingVertical: 6,
-    borderRadius: 12,
-    backgroundColor: "#14100cb3",
-    borderWidth: 2,
-    borderColor: "#ffd34d",
-    zIndex: 12,
-  },
-  unlockText: { fontSize: 15, fontWeight: "900", fontFamily: fonts.bold, color: "#ffe9a3" },
-  // Red tag on the bag's corner while new kinds of drops are being turned away.
-  bagFull: { position: "absolute", top: -4, right: -6, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 7, backgroundColor: colors.red, borderWidth: 1.5, borderColor: colors.line },
-  bagFullText: { fontSize: 12, fontWeight: "900", fontFamily: fonts.bold, color: colors.cream },
   questDot: { position: "absolute", right: 3, top: 2, width: 12, height: 12 },
   fighters: {
     position: "absolute",
@@ -1876,9 +1761,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     justifyContent: "space-between",
   },
-  mapButton: { position: "absolute", right: rowRight(0), bottom: ROW_BOTTOM, ...ICON_BOX },
-  kitchenButton: { position: "absolute", right: rowRight(1), bottom: ROW_BOTTOM, ...ICON_BOX },
-  bagButton: { position: "absolute", right: rowRight(2), bottom: ROW_BOTTOM, ...ICON_BOX },
+  foodBar: { position: "absolute", right: ROW_RIGHT, bottom: ROW_BOTTOM + (ICON_BOX.height - BUFF_SLOT_SIZE) / 2 },
   mapButtonPressed: { transform: [{ scale: 0.92 }] },
   // Bottom-left, mirroring the right-hand button row's inset; sits below the player sprite.
   skillBar: { position: "absolute", left: ROW_RIGHT, bottom: ROW_BOTTOM + (ICON_BOX.height - SKILL_SLOT_HEIGHT) / 2 },

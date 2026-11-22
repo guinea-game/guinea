@@ -54,10 +54,6 @@ function getTopics(): { title: string; lines: string[] }[] {
       title: t("💪 강화", "💪 Upgrades"),
       lines: [
         t("골드로 공격력·치명타 피해·치명타 확률·골드 획득을 강화해요.", "Spend gold to upgrade Attack, Crit Damage, Crit Chance, and Gold Gain."),
-        t(
-          "강화 단위 버튼으로 1레벨, 10레벨, 최대치까지 한 번에 올릴 수 있어요.",
-          "Use the upgrade-count buttons to raise it by 1 level, 10 levels, or all the way to max at once.",
-        ),
       ],
     },
     {
