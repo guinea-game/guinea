@@ -1,6 +1,6 @@
 import type { SkillTimers } from "./state/skills";
 import type { CookGrade } from "./state/buffs";
-export type Tab = "battle" | "companions" | "inventory" | "skills" | "shop" | "milestone" | "kitchen" | "grocery" | "recipes" | "comics" | "stats" | "guide" | "credits" | "backup";
+export type Tab = "battle" | "companions" | "inventory" | "skills" | "shop" | "milestone" | "kitchen" | "grocery" | "recipes" | "daily" | "comics" | "stats" | "guide" | "credits" | "backup";
 export type StatKey = "attack" | "criticalDamage" | "criticalChance" | "goldBonus" | "attackSpeed";
 export type BattlePhase = "idle" | "attacking" | "hit" | "defeated" | "entering";
 export type PlayerAnimation = "idle" | "attack" | "critical" | "win";

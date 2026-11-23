@@ -24,6 +24,7 @@ import { MilestoneScreen } from "./screens/MilestoneScreen";
 import { KitchenScreen } from "./screens/KitchenScreen";
 import { GroceryScreen } from "./screens/GroceryScreen";
 import { RecipeShopScreen } from "./screens/RecipeShopScreen";
+import { DAILY_LOWER_COLOR, DailyScreen } from "./screens/DailyScreen";
 import { TutorialOverlay } from "./components/TutorialOverlay";
 import { BagFullModal } from "./components/BagFullModal";
 import { FirstClearCelebration } from "./components/FirstClearCelebration";
@@ -61,6 +62,7 @@ const GIFT_PAUSE_MS = 2000;
 const TAB_PARENT: Partial<Record<Tab, Tab>> = {
   milestone: "battle",
   inventory: "battle",
+  daily: "battle",
   comics: "milestone",
   recipes: "kitchen",
   grocery: "kitchen",
@@ -362,6 +364,16 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             recipesBadge={newRecipeOffer}
           />
         );
+      case "daily":
+        return (
+          <DailyScreen
+            state={state}
+            priceStage={priceStage}
+            onBack={() => onSelectTab("battle")}
+            onDeliver={game.deliverDailyOrder}
+            header={headerElement}
+          />
+        );
       case "recipes":
         return (
           <RecipeShopScreen
@@ -415,34 +427,43 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
     }
   };
 
+  const headerElement = (
+    <GameHeader
+        state={state}
+        onReset={game.resetSave}
+        onSkipToBoss={game.skipToBoss}
+        onSpawnGoldenMini={() => {
+          game.spawnGoldenMiniBoss();
+          onSelectTab("battle");
+        }}
+        onKillEnemy={game.battle.killEnemy}
+        onAddLevels={() => game.cheatAddLevels(50)}
+        onUnlockAllStages={game.cheatUnlockAllStages}
+        onAddGems={() => game.cheatAddGems(10000)}
+        onUnlockAllOutfits={game.cheatUnlockAllOutfits}
+        onOpenShop={() => onSelectTab("shop")}
+        onOpenStats={() => onSelectTab("stats")}
+        onReplayTutorial={() => setState((previous) => ({ ...previous, selectedTab: "battle", tutorialDone: false }))}
+        onOpenComics={() => onSelectTab("comics")}
+        onUnlockAllComics={() => setState((previous) => ({ ...previous, allComicsUnlocked: true, selectedTab: "comics" }))}
+        onOpenPage={onSelectTab}
+        onOpenWhatsNew={() => setWhatsNewOpen(true)}
+      />
+  );
+
   return (
     <View style={styles.shell}>
       <StatusBar barStyle="light-content" />
       {/* Only the top inset is padded here: the bottom nav runs down into the home-indicator
           area itself (see BottomNavigation), so no strip of bare background shows under it. */}
       <SafeAreaView style={styles.frame} edges={["top"]}>
-        <GameHeader
-          state={state}
-          onReset={game.resetSave}
-          onSkipToBoss={game.skipToBoss}
-          onSpawnGoldenMini={() => {
-            game.spawnGoldenMiniBoss();
-            onSelectTab("battle");
-          }}
-          onKillEnemy={game.battle.killEnemy}
-          onAddLevels={() => game.cheatAddLevels(50)}
-          onUnlockAllStages={game.cheatUnlockAllStages}
-          onAddGems={() => game.cheatAddGems(10000)}
-          onUnlockAllOutfits={game.cheatUnlockAllOutfits}
-          onOpenShop={() => onSelectTab("shop")}
-          onOpenStats={() => onSelectTab("stats")}
-          onReplayTutorial={() => setState((previous) => ({ ...previous, selectedTab: "battle", tutorialDone: false }))}
-          onOpenComics={() => onSelectTab("comics")}
-          onUnlockAllComics={() => setState((previous) => ({ ...previous, allComicsUnlocked: true, selectedTab: "comics" }))}
-          onOpenPage={onSelectTab}
-          onOpenWhatsNew={() => setWhatsNewOpen(true)}
-        />
-        <ScrollView key={state.selectedTab} style={styles.content} contentContainerStyle={styles.contentContainer}>
+        {/* 일일 의뢰 draws the header inside its own page, over the restaurant (see below). */}
+        {state.selectedTab !== "daily" && headerElement}
+        <ScrollView
+          key={state.selectedTab}
+          style={[styles.content, state.selectedTab === "daily" && { backgroundColor: DAILY_LOWER_COLOR }]}
+          contentContainerStyle={styles.contentContainer}
+        >
           {renderContent()}
         </ScrollView>
         <BottomNavigation selected={state.selectedTab} onSelect={onSelectTab} badges={{ kitchen: newRecipeOffer }} />

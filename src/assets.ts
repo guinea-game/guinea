@@ -724,8 +724,6 @@ export const effects = {
 
 export const icons = {
   map: require("../assets/icons/icon-map.webp"),
-  backpack: require("../assets/icons/icon-backpack.webp"),
-  backpackOutlined: require("../assets/icons/icon-backpack-outlined.webp"),
   // Trimmed to their visible art, for the battle scene's fixed-box button row.
   mapTrim: require("../assets/icons/icon-map-trim.webp"),
   // Battle-row page buttons for the newer contents.
@@ -1093,9 +1091,26 @@ export const grandma = {
   counter: require("../assets/npc/grandma-counter.webp"),
 };
 
-// 일일 의뢰 customers (state/daily.ts CUSTOMERS). 307x320.
+// 일일 의뢰 scene: the restaurant hall (1008x564) and the order counter in front of it
+// (900x398, transparent; its wooden top's front edge sits ~36% down, props stand above).
+export const dailyImages = {
+  restaurant: require("../assets/daily/restaurant.webp"),
+  counter: require("../assets/daily/counter.webp"),
+  // Caramel wallpaper with chef hats and forks (780x1386), under the counter.
+  pattern: require("../assets/daily/pattern.webp"),
+  // Gold frame for the order tickets (300x328, transparent inside).
+  ticketFrame: require("../assets/daily/ticket-frame.webp"),
+};
+
+// 일일 의뢰 customers (state/daily.ts CUSTOMERS), all 320 tall: lady 307, farmer 297,
+// scholar 288, noble 302, gentleman 285, auntie 303 wide.
 export const npcImages = {
   customerLady: require("../assets/npc/customer-lady.webp"),
+  customerFarmer: require("../assets/npc/customer-farmer.webp"),
+  customerScholar: require("../assets/npc/customer-scholar.webp"),
+  customerNoble: require("../assets/npc/customer-noble.webp"),
+  customerGentleman: require("../assets/npc/customer-gentleman.webp"),
+  customerAuntie: require("../assets/npc/customer-auntie.webp"),
 };
 
 export const statIcons = {

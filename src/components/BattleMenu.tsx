@@ -38,7 +38,7 @@ const EVENT_ICON: RowIcon = { source: icons.event, width: 256, height: 247, zoom
 // whether or not the "!" bubble pokes out above-right.
 const DAILY_DONE_ICON: RowIcon = { source: icons.dailyDone, width: 323, height: 256 };
 const DAILY_NEW_ICON: RowIcon = { source: icons.dailyNew, width: 338, height: 317, fit: { x: 0, y: 62, width: 323, height: 256 } };
-const BAG_ICON: RowIcon = { source: icons.backpackTrim, width: 349, height: 324 };
+const BAG_ICON: RowIcon = { source: icons.backpackTrim, width: 360, height: 345 };
 
 function fitInBox(icon: RowIcon) {
   const fit = icon.fit ?? { x: 0, y: 0, width: icon.width, height: icon.height };

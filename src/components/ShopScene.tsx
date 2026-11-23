@@ -39,6 +39,8 @@ export function ShopTopBar({
   onBack,
   backLabel,
   other,
+  dark = false,
+  showGold = true,
 }: {
   kicker: string;
   title: string;
@@ -47,6 +49,10 @@ export function ShopTopBar({
   backLabel: string;
   // The sister shop, so a shopping trip can hop between both without going back.
   other?: { label: string; keeper: number; onPress: () => void; accessibilityLabel: string };
+  // Light text, for a page that lays the bar over a dark backdrop (일일 의뢰).
+  dark?: boolean;
+  // Off where the header's own gold chip is already in view right above (일일 의뢰).
+  showGold?: boolean;
 }) {
   return (
     <View style={styles.topRow}>
@@ -54,14 +60,16 @@ export function ShopTopBar({
         {({ pressed }) => <Image source={shopImages.arrowBack} style={[styles.back, pressed && styles.pressed]} />}
       </Pressable>
       <View style={styles.titleCopy}>
-        <Text style={styles.kicker}>{kicker}</Text>
-        <Text style={styles.title}>{title}</Text>
+        <Text style={[styles.kicker, dark && styles.kickerDark]}>{kicker}</Text>
+        <Text style={[styles.title, dark && styles.titleDark]}>{title}</Text>
       </View>
-      <Panel slice={shopKit.coinPill} scale={0.36} style={styles.goldPill}>
-        {/* The pill's art has an older coin baked into its socket — the current one sits over it. */}
-        <Image source={uiImages.coin} style={styles.goldPillCoin} />
-        <Text style={styles.goldText} numberOfLines={1}>{formatGameNumber(gold)}</Text>
-      </Panel>
+      {showGold && (
+        <Panel slice={shopKit.coinPill} scale={0.36} style={styles.goldPill}>
+          {/* The pill's art has an older coin baked into its socket — the current one sits over it. */}
+          <Image source={uiImages.coin} style={styles.goldPillCoin} />
+          <Text style={styles.goldText} numberOfLines={1}>{formatGameNumber(gold)}</Text>
+        </Panel>
+      )}
       {other && (
         <GameButton variant="red" onPress={other.onPress} accessibilityLabel={other.accessibilityLabel} style={styles.otherButton}>
           <View style={styles.otherContent}>
@@ -121,6 +129,8 @@ const styles = StyleSheet.create({
   pressed: { transform: [{ scale: 0.94 }] },
   titleCopy: { flex: 1 },
   kicker: { color: colors.red, fontWeight: "800", fontFamily: fonts.bold, fontSize: 12, letterSpacing: 1.5 },
+  kickerDark: { color: "#ffcf7a" },
+  titleDark: { color: colors.cream },
   title: { fontSize: 20, fontWeight: "800", fontFamily: fonts.bold, color: colors.ink, letterSpacing: -0.5 },
   // Text starts past the coin baked into the pill's left end.
   goldPill: { height: 36, minWidth: 92, paddingLeft: 38, paddingRight: 12, justifyContent: "center" },

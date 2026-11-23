@@ -19,7 +19,6 @@ import { BUFF_SLOT_PRICES } from "../state/buffs";
 import type { EnemyKind } from "../types";
 import { hasClaimableQuest } from "../state/quests";
 import { isDailyAllDone } from "../state/daily";
-import { DailyModal } from "../components/DailyModal";
 import { t } from "../i18n";
 
 export function BattleScreen({ game }: { game: UseGameState }) {
@@ -64,7 +63,6 @@ export function BattleScreen({ game }: { game: UseGameState }) {
 
   // 레벨 보상 / 연구소 / 이벤트 buttons are in the row ahead of their pages; for now a tap says so.
   const [comingSoon, setComingSoon] = useState<string | null>(null);
-  const [dailyOpen, setDailyOpen] = useState(false);
 
   return (
     <>
@@ -269,7 +267,7 @@ export function BattleScreen({ game }: { game: UseGameState }) {
       )}
       <BattleMenu
         onOpenBag={() => game.setState((previous) => ({ ...previous, selectedTab: "inventory" }))}
-        onOpenDaily={() => setDailyOpen(true)}
+        onOpenDaily={() => game.setState((previous) => ({ ...previous, selectedTab: "daily" }))}
         dailyAllDone={isDailyAllDone(state)}
         onOpenQuest={() => game.setQuestOpen(true)}
         questReady={hasClaimableQuest(state)}
@@ -286,18 +284,6 @@ export function BattleScreen({ game }: { game: UseGameState }) {
           />
         }
       />
-      {dailyOpen && (
-        <DailyModal
-          state={state}
-          priceStage={game.priceStage}
-          onClose={() => setDailyOpen(false)}
-          onDeliver={game.deliverDailyOrder}
-          onGoCook={() => {
-            setDailyOpen(false);
-            game.setState((previous) => ({ ...previous, selectedTab: "kitchen" }));
-          }}
-        />
-      )}
       {comingSoon !== null && (
         <ConfirmModal
           title={comingSoon}

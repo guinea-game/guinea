@@ -36,6 +36,7 @@ const NAV_LABEL_EN: Record<Tab, string> = {
   // Tabs not reachable from this bar — never actually looked up, but keeps the Record total.
   inventory: "Bag",
   milestone: "Map",
+  daily: "Daily Orders",
   grocery: "Grocery",
   recipes: "Recipes",
   comics: "Comics",
