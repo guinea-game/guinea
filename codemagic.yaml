@@ -17,6 +17,8 @@ workflows:
         script: npm ci
       - name: Generate iOS project
         script: npx expo prebuild --platform ios --non-interactive
+      - name: Add Unity Ads adapter pod
+        script: bash scripts/patch-ios-podfile.sh
       - name: Install CocoaPods dependencies
         script: cd ios && pod install
       - name: Apply App Store signing profiles
