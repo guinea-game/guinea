@@ -101,11 +101,11 @@ export const BESTIARY_DICT: Record<string, string> = {
   "술독 애착": "Attached to Its Liquor Jar",
   "눈 쌓인 산길 주막에 죽치고 앉아 대낮부터 술독을 끌어안는 뚱냥이. 비틀거리면서도 술 한 방울 안 흘리는 게 유일한 재주다. 취기가 오르면 꼬리까지 휘청거려서 걷는 건지 구르는 건지 분간이 안 간다.":
     "A tubby cat parked at the tavern on the snowy mountain path, hugging a liquor jar from broad daylight on. Its only real talent is not spilling a single drop while staggering around. Once it's properly drunk, even its tail wobbles, until you can't tell if it's walking or rolling.",
-  "나그네 홀리기": "Lures Travelers Astray",
-  "밤에만 나타남": "Appears Only at Night",
-  "잡으면 흩어짐": "Scatters When Caught",
-  "달맞이고개 억새밭 위를 둥둥 떠다니는 푸른 불빛. 나그네를 홀려 길을 잃게 만드는 게 특기라, 밤에 이 고갯길을 넘는 이들은 다들 한 번씩 홀려본 적이 있다고 한다. 붙잡으려 들면 장난스럽게 웃으며 흩어졌다가 금세 다시 모인다.":
-    "A blue flame that drifts over the silver grass of Moon-Viewing Hill. Its specialty is luring travelers off the path, and anyone who crosses this hill at night has supposedly been led astray by it at least once. If you try to grab it, it scatters with a mischievous grin and quickly gathers itself back together.",
+  "꽃 속에 위장": "Camouflaged in Flowers",
+  "혀로 꽃가루 맛봄": "Tastes Pollen with Its Tongue",
+  "똬리 전문": "Coiling Expert",
+  "진달래길 꽃송이 사이에 똬리를 틀고 숨어있는 뱀. 혀를 날름거리며 꽃가루 맛을 보는 게 취미라, 몸에 늘 분홍빛 가루가 묻어있다. 길 가던 나그네가 꽃인 줄 알고 밟을 뻔했다는 소문이 자자하다.":
+    "A snake coiled up and hidden among the blossoms on Azalea Trail. Flicking its tongue to taste the pollen is its favorite pastime, so it's always dusted pink. There's a well-known story about a traveler who nearly stepped on it, mistaking it for a flower.",
   "팔려 가기 싫음": "Doesn't Want to Be Sold",
   "쌀알 흘리고 다님": "Spills Rice Everywhere",
   "툭하면 씩씩댐": "Huffs at the Slightest Thing",
@@ -124,8 +124,8 @@ export const BESTIARY_DICT: Record<string, string> = {
   "구미호 가문": "From the Nine-Tailed Fox's Family",
   "여우불 소환": "Summons Fox-Fire",
   "꼬리 세기가 취미": "Counts Its Tails for Fun",
-  "신사 돌계단을 지키는 흰 여우. 달맞이고개 정자의 구미호와 한 핏줄로, 이 신사가 바로 여우 일가의 본가다. 언젠가 자기도 꼬리가 아홉 개가 될 거라며 밤마다 꼬리 수를 세어 보는데, 아직 한참 모자라다. 공물로 올라온 유부초밥은 절대 안 먹는 척하지만, 밤이 되면 제일 먼저 사라진다.":
-    "A white fox guarding the shrine's stone steps. It shares blood with the nine-tailed fox of the pavilion on Moon-Viewing Hill — this shrine is the fox family's actual home. It insists it'll grow nine tails of its own someday, and counts them every night to check, but it's still got a long way to go. It always pretends it would never eat the inari sushi left as an offering, but it's the first thing to vanish once night falls.",
+  "신사 돌계단을 지키는 흰 여우. 진달래길 정자의 구미호와 한 핏줄로, 이 신사가 바로 여우 일가의 본가다. 언젠가 자기도 꼬리가 아홉 개가 될 거라며 밤마다 꼬리 수를 세어 보는데, 아직 한참 모자라다. 공물로 올라온 유부초밥은 절대 안 먹는 척하지만, 밤이 되면 제일 먼저 사라진다.":
+    "A white fox guarding the shrine's stone steps. It shares blood with the nine-tailed fox of the pavilion on Azalea Trail — this shrine is the fox family's actual home. It insists it'll grow nine tails of its own someday, and counts them every night to check, but it's still got a long way to go. It always pretends it would never eat the inari sushi left as an offering, but it's the first thing to vanish once night falls.",
   "뿔 투구": "Horn Helmet",
   "목검 수련생": "Wooden-Sword Trainee",
   "곤충 젤리 애호가": "Loves Insect Jelly",
@@ -315,8 +315,8 @@ export const BESTIARY_DICT: Record<string, string> = {
   "아홉 개의 꼬리": "Nine Tails",
   "둔갑술 능숙": "Skilled Shapeshifter",
   "정자의 주인": "Mistress of the Pavilion",
-  "달맞이고개 정자를 지키는 구미호. 꼬리 아홉 개를 흔들 때마다 달빛이 일렁인다고 전해진다. 바다 건너 여우 신사가 본가인데, 꼬리 아홉 개를 다 채운 날 홀로 정자로 떠나와 지금은 신사의 어린 여우들이 동경하는 집안 어른이 되었다. 나그네로 둔갑해 말을 거는 걸 좋아하지만, 정체를 들키면 금세 토라져서 꼬리를 부풀리며 으르렁댄다.":
-    "The nine-tailed fox who watches over the pavilion on Moon-Viewing Hill. Moonlight is said to ripple every time she sways her nine tails. Her true home is the fox shrine across the sea — she left alone for this pavilion the day her ninth tail finally grew in, and is now the family elder the shrine's young foxes all look up to. She loves disguising herself as a traveler to strike up conversation, but if her true form is discovered, she sulks instantly, puffing up her tails with a growl.",
+  "진달래길 정자를 지키는 구미호. 꼬리 아홉 개를 흔들 때마다 꽃잎이 흩날린다고 전해진다. 바다 건너 여우 신사가 본가인데, 꼬리 아홉 개를 다 채운 날 홀로 정자로 떠나와 지금은 신사의 어린 여우들이 동경하는 집안 어른이 되었다. 나그네로 둔갑해 말을 거는 걸 좋아하지만, 정체를 들키면 금세 토라져서 꼬리를 부풀리며 으르렁댄다.":
+    "The nine-tailed fox who watches over the pavilion on Azalea Trail. Petals are said to scatter every time she sways her nine tails. Her true home is the fox shrine across the sea — she left alone for this pavilion the day her ninth tail finally grew in, and is now the family elder the shrine's young foxes all look up to. She loves disguising herself as a traveler to strike up conversation, but if her true form is discovered, she sulks instantly, puffing up her tails with a growl.",
   "장터의 큰손": "Market Big Shot",
   "고추 장식 주렁주렁": "Draped in Chili Decorations",
   "성질도 매움": "Temper as Hot as It Looks",

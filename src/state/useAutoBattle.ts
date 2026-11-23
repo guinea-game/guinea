@@ -93,7 +93,7 @@ export function useAutoBattle({
   // Extra strikes landed per swing (e.g. assassinGini's twin daggers) — each rolls its
   // own miss/crit independently; a kill on an earlier strike skips the rest.
   hitCount?: number;
-  // Shaved off every active skill's cooldown on cast (e.g. dosaGini) — never below 0.
+  // Shaved off every active skill's cooldown on cast (e.g. egenGini) — never below 0.
   cooldownReductionMs?: number;
   // Scales skill effects: steal's gold share, shout's damage bonus and the beam's bite
   // out of a boss (capped at BEAM_BOSS_MAX_RATIO). No outfit currently grants this.
@@ -767,7 +767,7 @@ export function useAutoBattle({
     setSkillTimers(next);
   }, []);
 
-  // 도사기니's companion skill (가속 코어): shaves a flat amount off the equipped skill's
+  // 에겐기니's companion skill (가속 코어): shaves a flat amount off the equipped skill's
   // cooldown, same idea as resetSkillCooldown but partial instead of all the way to zero.
   const reduceSkillCooldown = useCallback((ms: number) => {
     const id = equippedSkillRef.current;

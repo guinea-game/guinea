@@ -23,7 +23,7 @@ export const STAGES_DICT: Record<string, string> = {
   "설산": "Snowy Mountain",
   "설화골": "Snowflake Valley",
   "주막": "The Tavern",
-  "달맞이고개": "Moon-Viewing Hill",
+  "진달래길": "Azalea Trail",
   "궁궐 앞 장터": "Market Before the Palace",
   "수군 포구": "Naval Harbor",
   "벚꽃 해변": "Cherry Blossom Beach",
@@ -67,7 +67,7 @@ export const STAGES_DICT: Record<string, string> = {
   "감서리 까치": "Persimmon-Thief Magpie",
   "설산토끼": "Snow Mountain Rabbit",
   "술주정 뚱뚱냥": "Drunken Tubby Cat",
-  "도깨비불": "Will-o'-the-Wisp",
+  "꽃 뱀": "Flower Snake",
   "심술 쌀가마": "Grumpy Rice Sack",
   "뚱한 고등어": "Sulky Mackerel",
   "벚꽃 게": "Cherry Blossom Crab",
@@ -219,8 +219,8 @@ export const STAGES_DICT: Record<string, string> = {
     "A mountain village of snow-capped thatched roofs and stone bridges, where persimmon-thief magpies steal dried persimmons from the eaves and flee.",
   "눈 쌓인 산길의 주막, 거나하게 취한 뚱뚱냥이들이 술독을 끌어안고 비틀대는 곳.":
     "A tavern on a snowy mountain path, where thoroughly drunk tubby cats stagger about clutching their liquor jars.",
-  "보름달이 휘영청 뜬 고갯길, 억새 사이를 홀리며 떠도는 도깨비불 너머로 구미호가 사는 정자가 보인다.":
-    "A hill path under a bright full moon, where will-o'-the-wisps drift and beckon among the silver grass, and beyond them stands the pavilion where the nine-tailed fox lives.",
+  "진달래가 흐드러지게 핀 산길, 꽃 사이에 똬리를 튼 꽃뱀 너머로 구미호가 사는 정자가 보인다.":
+    "A mountain trail in full bloom with azaleas, where a flower snake coils among the blossoms, and beyond it stands the pavilion where the nine-tailed fox lives.",
   "궁궐 문 앞 너른 마당에 장이 선 날, 팔려 가기 싫은 쌀가마들이 씩씩대며 좌판 사이를 돌아다닌다.":
     "Market day in the broad yard before the palace gate, where rice sacks that don't want to be sold huff and puff between the stalls.",
   "돛배가 드나드는 성곽 아래 포구, 그물을 빠져나온 고등어들이 부둣가를 뚱한 얼굴로 어슬렁거린다.":

@@ -217,7 +217,7 @@ export const DISH_PARTNERS: Record<string, Outfit> = {
   "salmon-steak": "tetoGini",
   "fire-skewer": "tetoGini",
   octopus: "assassinGini",
-  "lamb-rib": "dosaGini",
+  "lamb-rib": "egenGini",
   "tuna-sashimi": "samuraiGini",
   "squid-ink-risotto": "chefGini",
   "slime-potion": "witchGini",
@@ -230,7 +230,7 @@ export const OUTFIT_NAMES: Record<Outfit, string> = {
   explorerHamster: "탐험기니",
   tetoGini: "테토기니",
   assassinGini: "암살기니",
-  dosaGini: "도사기니",
+  egenGini: "에겐기니",
   samuraiGini: "사무라이기니",
   chefGini: "셰프기니",
   boxerGini: "복서기니",
@@ -322,7 +322,7 @@ export const OUTFIT_FOOD_DURATION_BONUS_SEC: Partial<Record<Outfit, number>> = {
 
 // Seconds shaved off every active skill's cooldown while this outfit is equipped.
 export const OUTFIT_COOLDOWN_REDUCTION_SEC: Partial<Record<Outfit, number>> = {
-  dosaGini: 60,
+  egenGini: 60,
 };
 
 // Multiplies skill effects while this outfit is equipped (see useAutoBattle's skillPower).
@@ -392,7 +392,7 @@ export function getOutfitStats(outfit: Outfit, level = 0): OutfitStats {
       stats.firstStrike = round1(stats.firstStrike + L * 0.3);
       buff.attackSpeed = (buff.attackSpeed ?? 0) + L * 2;
       break;
-    case "dosaGini": // 스킬 쿨 -60초 → -105초
+    case "egenGini": // 스킬 쿨 -60초 → -105초
       stats.cooldownSec += L * 4.5;
       break;
     case "chefGini": // 대성공 +20% → +40%, 공격 -15% → 0%
@@ -421,7 +421,7 @@ export const OUTFIT_GROWTH_HINT: Record<Outfit, [string, string, string, string]
   tetoGini: ["헛스윙 -2.5%", "Whiff -2.5%", "空振り -2.5%", "落空 -2.5%"],
   assassinGini: ["공격 페널티 -3% (Lv10 3연타)", "Attack penalty -3% (Lv10: triple hit)", "攻撃ペナルティ -3%（Lv10 3連撃）", "攻击惩罚 -3%（Lv10 三连击）"],
   samuraiGini: ["첫 타 +0.3배 · 공속 +2%", "First hit +0.3× · Speed +2%", "初撃 +0.3倍・攻速 +2%", "首击 +0.3倍 · 攻速 +2%"],
-  dosaGini: ["스킬 쿨 -4.5초", "Skill cooldown -4.5s", "スキルクール -4.5秒", "技能冷却 -4.5秒"],
+  egenGini: ["스킬 쿨 -4.5초", "Skill cooldown -4.5s", "スキルクール -4.5秒", "技能冷却 -4.5秒"],
   chefGini: ["대성공 +2% · 공격 페널티 -1.5%", "Great success +2% · Attack penalty -1.5%", "大成功 +2%・攻撃ペナルティ -1.5%", "大成功 +2% · 攻击惩罚 -1.5%"],
   witchGini: ["치명 피해 +3 (Lv10 치명 확률 +5)", "Crit damage +3 (Lv10: +5 crit chance)", "クリダメ +3（Lv10 クリ率 +5）", "暴伤 +3（Lv10 暴击率 +5）"],
   boxerGini: ["공격력 +5%", "Attack +5%", "攻撃力 +5%", "攻击力 +5%"],

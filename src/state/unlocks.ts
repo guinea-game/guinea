@@ -8,7 +8,7 @@ export const OUTFIT_UNLOCK_STAGE: Record<Outfit, number> = {
   explorerHamster: 5, // 골드 +10%
   tetoGini: 10, // 공격력 +100%, 40% 헛스윙 (평균 약 1.2배)
   assassinGini: 14, // 공격력 -45%, 2연타 (평균 약 1.1배)
-  dosaGini: 21, // 스킬 쿨타임 -1분
+  egenGini: 21, // 스킬 쿨타임 -1분
   samuraiGini: 24, // 적마다 첫 공격 = 일반 공격 ×5 (치명타 없음), 공격 속도 -35%, 수동 공격 불가
   chefGini: 33, // 요리 시간 -50%, 요리 대성공 +20%, 재료 드랍 100%, 공격력 -15%
   // Never reached by stage — bought with gems (OUTFIT_GEM_PRICE) or granted at loop 2/3 (OUTFIT_LOOP_GRANT).

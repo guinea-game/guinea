@@ -227,7 +227,7 @@ const CONFIG: Record<EnemyKind | "bossSlime" | "bossMushroom" | "bossCarrotGiant
     hit: { frameCount: 4, durationMs: 310, mode: "once" },
     die: { frameCount: 4, durationMs: 480, mode: "once" },
   },
-  dokkaebiFire: {
+  flowerSnake: {
     idle: { frameCount: 4, durationMs: 650, mode: "loop" },
     hit: { frameCount: 4, durationMs: 310, mode: "once" },
     die: { frameCount: 4, durationMs: 480, mode: "once" },
@@ -551,7 +551,7 @@ const BOSS_SHEET_FOR: Record<EnemyKind, "bossSlime" | "bossMushroom" | "bossCarr
   magpie: "bossTigerSpirit",
   snowRabbit: "bossIceGolem",
   drunkCat: "bossTavernKeeper",
-  dokkaebiFire: "bossNineTailedFox",
+  flowerSnake: "bossNineTailedFox",
   riceSack: "bossChiliSack",
   mackerel: "bossPirateOctopus",
   blossomCrab: "bossBlossomShark",

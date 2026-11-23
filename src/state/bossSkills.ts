@@ -70,7 +70,7 @@ export const BOSS_SKILLS: Record<EnemyKind, BossSkill> = {
   snowRabbit: { kind: "stun", variant: "stunned", name: "얼음창" },
   magpie: { kind: "stun", variant: "confused", name: "깃털 흩날리기" },
   drunkCat: { kind: "stun", variant: "confused", name: "술기운" },
-  dokkaebiFire: { kind: "heal", variant: "holyAoe", name: "달빛 기원" },
+  flowerSnake: { kind: "heal", variant: "bloom", name: "꽃잎 모으기" },
   riceSack: { kind: "stun", variant: "stunned", name: "데굴데굴" },
   mackerel: { kind: "stun", variant: "confused", name: "물첨벙" },
   blossomCrab: { kind: "heal", variant: "bloom", name: "벚꽃잎 모으기" },

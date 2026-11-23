@@ -280,11 +280,12 @@ const DROPS: Record<EnemyKind, { mob: DropEntry[]; boss: DropEntry[] }> = {
       { name: "밤", chance: 0.5 },
     ],
   },
-  // 달맞이고개: 도깨비불에 홀려 넘어진 나그네의 봇짐에서 나물이 쏟아진다; 구미호는 정자에서
-  // 나그네들에게 대접하던 귀한 고기와 과실을 품고 있다.
-  dokkaebiFire: {
+  // 진달래길: 꽃뱀이 꽃가루와 함께 핥고 다니는 봄나물; 구미호는 정자에서 나그네들에게
+  // 대접하던 귀한 고기와 과실을 품고 있다.
+  flowerSnake: {
     mob: [
       { name: "딜", chance: 0.3 },
+      { name: "진달래꽃", chance: 0.25 },
       { name: "산딸기", chance: 0.15 },
     ],
     boss: [

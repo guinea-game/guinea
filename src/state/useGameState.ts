@@ -315,7 +315,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
       if (save) {
         // Guards against a save written before an outfit was retired (e.g. "forest") —
         // falls back to default rather than crashing when looking up its sprite sheet.
-        const validOutfits = ["default", "explorerHamster", "tetoGini", "assassinGini", "dosaGini", "samuraiGini", "chefGini", "boxerGini", "witchGini", "cowboyGini"];
+        const validOutfits = ["default", "explorerHamster", "tetoGini", "assassinGini", "egenGini", "samuraiGini", "chefGini", "boxerGini", "witchGini", "cowboyGini"];
         const equippedOutfit = validOutfits.includes(save.state.equippedOutfit)
           ? save.state.equippedOutfit
           : "default";
@@ -936,7 +936,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
       case "assassinGini":
         battle.flagAmbush();
         break;
-      case "dosaGini":
+      case "egenGini":
         battle.reduceSkillCooldown(COMPANION_REDUCE_COOLDOWN_MS);
         break;
       case "samuraiGini":

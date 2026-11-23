@@ -23,7 +23,7 @@ export const COMPANION_CHEF_CRIT_BONUS = 30;
 // 셰프기니는 이미 OUTFIT_SURE_DROPS로 모든 드롭이 상시 확정이라 "드롭 1회 보장"은 의미가 없어서,
 // 대신 그 3초 동안 드롭 2배(곱) 확률을 올려준다.
 export const COMPANION_CHEF_DROP_DOUBLE_BONUS = 25;
-// 도사기니 가속 코어: shaved straight off the equipped skill's cooldown, once.
+// 에겐기니 가속 코어: shaved straight off the equipped skill's cooldown, once.
 export const COMPANION_REDUCE_COOLDOWN_MS = 3_000;
 // 모험기니 든든한 한 끼: food-buff-derived numbers (not the outfit's own bonus) run this much
 // stronger while the window's up.
@@ -34,7 +34,7 @@ export const COMPANION_SKILL_NAMES: Record<Outfit, string> = {
   explorerHamster: "보물 탐지",
   tetoGini: "전력 질주",
   assassinGini: "암습",
-  dosaGini: "가속 코어",
+  egenGini: "가속 코어",
   samuraiGini: "거합",
   chefGini: "불맛",
   witchGini: "마력 폭발",
@@ -49,7 +49,7 @@ export const COMPANION_SKILL_CALLOUT_COLOR: Record<Outfit, { color: string; stro
   explorerHamster: { color: "#ffe07a", strokeColor: "#5a4a00" },
   tetoGini: { color: "#7af0ff", strokeColor: "#063a40" },
   assassinGini: { color: "#c9a0ff", strokeColor: "#2a1040" },
-  dosaGini: { color: "#8ac4ff", strokeColor: "#0a2a4a" },
+  egenGini: { color: "#8ac4ff", strokeColor: "#0a2a4a" },
   samuraiGini: { color: "#ff6b5a", strokeColor: "#4a0a06" },
   chefGini: { color: "#ff9a4a", strokeColor: "#4a1a00" },
   witchGini: { color: "#d6a0ff", strokeColor: "#2a0a40" },
@@ -62,7 +62,7 @@ export const COMPANION_SKILL_SUMMARIES: Record<Outfit, string> = {
   explorerHamster: "다음 처치 1회 골드 2배 (보스 제외)",
   tetoGini: `${COMPANION_SKILL_WINDOW_MS / 1000}초간 헛스윙 확률 0%`,
   assassinGini: "다음 공격 무조건 치명타 + 1타 추가",
-  dosaGini: `장착 스킬 쿨타임 ${COMPANION_REDUCE_COOLDOWN_MS / 1000}초 차감`,
+  egenGini: `장착 스킬 쿨타임 ${COMPANION_REDUCE_COOLDOWN_MS / 1000}초 차감`,
   samuraiGini: `즉시 베기 1회, 평타의 ${COMPANION_IAIDO_MULTIPLIER}배 피해`,
   chefGini: `${COMPANION_SKILL_WINDOW_MS / 1000}초간 치명타 확률 +${COMPANION_CHEF_CRIT_BONUS}%p, 드롭 2배 확률 +${COMPANION_CHEF_DROP_DOUBLE_BONUS}%p`,
   witchGini: "즉시 마법 공격 1회, 치명타로 적용",

@@ -200,10 +200,10 @@ export const COMPANIONS: { outfit: Outfit; name: string; blurb: string; detail: 
     detail: companionDetail("assassinGini"),
   },
   {
-    outfit: "dosaGini",
-    name: "도사기니",
-    blurb: "산속에서 홀로 도를 닦던 기니. 오랜 수행 덕에 스킬 쿨타임을 줄여준다.",
-    detail: companionDetail("dosaGini"),
+    outfit: "egenGini",
+    name: "에겐기니",
+    blurb: "벚꽃 지팡이를 든 다정하고 상냥한 기니. 함께 있으면 마음이 편안해진다.",
+    detail: companionDetail("egenGini"),
   },
   {
     outfit: "samuraiGini",

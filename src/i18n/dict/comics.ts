@@ -53,14 +53,15 @@ export const COMICS_DICT: Record<string, string> = {
   "...배고파?": "...hungry?",
   "...이 요리,\n먹어보고 싶어.": "...I want to try\nthis dish.",
 
-  // moonhill
-  "달빛 고개의 노스승": "The Old Master of Moonlit Hill",
+  // egen
+  "진달래길의 꽃바람": "A Flower Breeze on Azalea Trail",
   "주막에서\n너무 놀았어...": "We partied too hard\nat the tavern...",
   "다리가\n안 움직여...": "My legs...\nwon't move...",
-  "허허,\n다들 고생이 많구먼.": "Heh heh,\nyou've all had quite a time.",
-  "묵은 숨 한 번\n고르면 개운해질 게야.": "Settle your breath once,\nand you'll feel refreshed.",
+  "어머,\n다들 많이 지쳤구나.": "Oh my,\nyou're all worn out.",
+  "꽃바람 한 번이면\n괜찮아질 거야.": "One gust of flower wind\nand you'll be just fine.",
   "몸이 가벼워졌어!": "My body feels so light!",
-  "자, 달 밝을 때\n가세.": "Now then, let's go\nwhile the moon is bright.",
+  "진달래 화전이야.\n같이 먹고 가~": "It's azalea pancake.\nHave some with us~",
+  "맛있다!\n우리랑 같이 가자!": "Delicious!\nCome along with us!",
 
   // samurai
   "벚꽃 해변의 떠돌이 무사": "The Wandering Swordsman of Cherry Blossom Beach",
