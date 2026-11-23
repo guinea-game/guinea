@@ -58,7 +58,7 @@ export type DropEvent = { id: number; name: string; delay: number };
 export const UNLOCK_TOAST_MS = 5000;
 
 // No ad SDK wired up yet — watching one grants this instantly, same as a completed view would.
-const SPEED_BOOST_DURATION_MS = 5 * 60_000; // 5 minutes
+const SPEED_BOOST_DURATION_MS = 15 * 60_000; // 15 minutes
 // The shop's "광고 보고 보석 받기" button.
 export const AD_GEMS_REWARD = 10;
 // No boss gets a second (enraged) phase at or before this stage — see startBossFight.
