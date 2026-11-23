@@ -905,9 +905,6 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     autoStunned: now < bossStunnedUntil,
     reviveHpRatio: boss && getEnemyKind(state.stageNumber) === GHOST_GOAT_REVIVE_KIND ? GHOST_GOAT_REVIVE_HP_RATIO : undefined,
     instantKill: (state.giftKills ?? 0) > 0 && !boss && now >= (state.giftStartsAt ?? 0) && heldLoot === null,
-    // 견습기니 joined at the second loop (see the apprenticeGini comic) — from then on it
-    // throws in its own attacks on its own clock, independent of the player's.
-    apprenticeActive: (state.loopsCompleted ?? 0) >= 1,
   });
 
   // Whether the companion skill button can be tapped right now — off cooldown, and not

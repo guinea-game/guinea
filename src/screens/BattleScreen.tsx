@@ -101,13 +101,6 @@ export function BattleScreen({ game }: { game: UseGameState }) {
         stageKills={state.stageKills}
         onOpenMap={() => game.setState((previous) => ({ ...previous, selectedTab: "milestone" }))}
         outfit={state.equippedOutfit}
-        apprenticeActive={(state.loopsCompleted ?? 0) >= 1 && !state.apprenticeHidden}
-        apprenticeAttackId={battle.apprenticeAttackId}
-        apprenticeAttackKind={battle.apprenticeAttackKind}
-        apprenticeAttackHitMs={battle.apprenticeAttackHitMs}
-        apprenticeUnlocked={(state.loopsCompleted ?? 0) >= 1}
-        apprenticeHidden={state.apprenticeHidden ?? false}
-        onToggleApprentice={() => game.setState((previous) => ({ ...previous, apprenticeHidden: !previous.apprenticeHidden }))}
         manualEnabled={!battle.isAutoBattle || state.equippedOutfit === "cowboyGini"}
         autoBattle={!battle.manualActive}
         onManualAttack={battle.manualAttack}

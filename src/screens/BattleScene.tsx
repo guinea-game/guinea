@@ -3,7 +3,7 @@ import { Image, Pressable, StyleSheet, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming, Easing } from "react-native-reanimated";
 import { colors, fonts } from "../theme";
-import { apprenticeSprite, effects, icons, images, FRAME_SIZE, uiImages } from "../assets";
+import { effects, icons, images, FRAME_SIZE, uiImages } from "../assets";
 import { StrokedText } from "../components/StrokedText";
 import { MOTE_PRESETS, RisingMotes, type MotePreset } from "../components/RisingMotes";
 import { CharacterSprite } from "../components/CharacterSprite";
@@ -340,13 +340,6 @@ export function BattleScene({
   stageKills,
   onOpenMap,
   outfit,
-  apprenticeActive = false,
-  apprenticeAttackId = 0,
-  apprenticeAttackKind = "slam",
-  apprenticeAttackHitMs = 500,
-  apprenticeUnlocked = false,
-  apprenticeHidden = false,
-  onToggleApprentice,
   manualEnabled,
   autoBattle = true,
   onManualAttack,
@@ -426,20 +419,6 @@ export function BattleScene({
   stageKills: number;
   onOpenMap: () => void;
   outfit: Outfit;
-  // From the second loop on (loopsCompleted >= 1): 견습기니 wanders the scene (see ApprenticeFollower).
-  // Already false whenever the player has toggled it off (apprenticeHidden) — BattleScreen ANDs
-  // that into this before it ever reaches here.
-  apprenticeActive?: boolean;
-  // Bumped each time it attacks on its own clock (see useAutoBattle's own fields of the same name).
-  apprenticeAttackId?: number;
-  apprenticeAttackKind?: "slam" | "beam";
-  apprenticeAttackHitMs?: number;
-  // Whether the toggle button itself should show at all (independent of apprenticeActive, which
-  // also goes false while hidden) — true once loopsCompleted >= 1, same gate apprenticeActive
-  // used before the hide toggle existed.
-  apprenticeUnlocked?: boolean;
-  apprenticeHidden?: boolean;
-  onToggleApprentice?: () => void;
   manualEnabled: boolean;
   // Auto battle on (green dot by the stage name) or hand-fighting during 난타 (orange).
   autoBattle?: boolean;
@@ -755,26 +734,6 @@ export function BattleScene({
             style={styles.stageBar}
             pointerEvents="box-none"
           >
-            {apprenticeUnlocked && (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={apprenticeHidden ? tr("견습기니 보이기", "Show the apprentice") : tr("견습기니 숨기기", "Hide the apprentice")}
-                onPress={onToggleApprentice}
-                hitSlop={6}
-                style={({ pressed }) => [styles.apprenticeToggle, apprenticeHidden && styles.apprenticeToggleOff, pressed && styles.questPressed]}
-              >
-                <SpriteStrip
-                  source={apprenticeSprite.idle}
-                  frameSize={500}
-                  frameCount={4}
-                  displaySize={34}
-                  durationMs={1800}
-                  mode="loop"
-                  tintColor={apprenticeHidden ? "#000" : undefined}
-                />
-                <IconCaption offset={-5}>{tr("견습기니", "Apprentice")}</IconCaption>
-              </Pressable>
-            )}
             <View style={styles.stageBarInfo} pointerEvents="none">
               <View style={styles.stageTitleRow}>
                 <View
@@ -807,9 +766,6 @@ export function BattleScene({
           )}
 
           {!preview && <FlyingCoin onCatch={onCatchFlyingCoin} gemFlights={flyingGemsLeft > 0} />}
-          {!preview && apprenticeActive && (
-            <ApprenticeFollower attackId={apprenticeAttackId} attackKind={apprenticeAttackKind} attackHitMs={apprenticeAttackHitMs} />
-          )}
           {!preview && giftKills > 0 && (
             <View style={styles.giftBanner} pointerEvents="none">
               <StrokedText style={styles.giftText} strokeColor={colors.line} strokeWidth={2}>
@@ -1263,85 +1219,6 @@ function PlayerFighter({
   );
 }
 
-// 견습기니, riding its bubble — joined in the "apprenticeGini" comic (state/comics.ts) at the
-// start of the second loop. Not tied to the player: it drifts on its own around the scene's
-// top-left corner (above the fighters' zIndex so it reads as passing in front, not behind,
-// whenever it floats over one or the enemy), idling in place most of the time — except every
-// APPRENTICE_ATTACK_INTERVAL_MS (see useAutoBattle), when it zips over to the enemy, lands its
-// own hit, and drifts back. The damage itself (and its floating number) comes from the same
-// dealDamage/DamageNumber path every other hit uses — this just plays the matching visual,
-// timed to attackHitMs so the punch lands exactly when the hit actually does.
-function ApprenticeFollower({ attackId, attackKind, attackHitMs }: { attackId: number; attackKind: "slam" | "beam"; attackHitMs: number }) {
-  const [size, setSize] = useState({ width: 0, height: 0 });
-  const x = useSharedValue(0);
-  const y = useSharedValue(0);
-  const bob = useSharedValue(0);
-  const flash = useSharedValue(0);
-  // The attackId this component has already played the flight/impact for — starts at
-  // whatever attackId already was on mount, so remounting mid-game doesn't replay an old hit.
-  const lastHandledAttackId = useRef(attackId);
-
-  useEffect(() => {
-    bob.value = withRepeat(withSequence(withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.sin) }), withTiming(0, { duration: 1100, easing: Easing.inOut(Easing.sin) })), -1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // The one place x/y ever get set: ambient wandering normally, or — the moment attackId
-  // bumps — a detour to the enemy, a flash (beam only) timed to attackHitMs (matching
-  // useAutoBattle's own scheduled dealDamage), then straight back into wandering from there —
-  // no pause sitting next to the enemy first, which used to read as a second, separate hit.
-  useEffect(() => {
-    if (size.width === 0 || size.height === 0) return;
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout>;
-
-    const wander = () => {
-      if (cancelled) return;
-      const duration = 3200 + Math.random() * 2600;
-      x.value = withTiming(Math.random() * size.width * 0.5, { duration, easing: Easing.inOut(Easing.quad) });
-      y.value = withTiming(Math.random() * size.height * 0.4, { duration, easing: Easing.inOut(Easing.quad) });
-      timer = setTimeout(wander, duration);
-    };
-
-    if (attackId !== lastHandledAttackId.current) {
-      lastHandledAttackId.current = attackId;
-      const travel = Math.max(150, attackHitMs - 60);
-      x.value = withTiming(size.width * 0.74, { duration: travel, easing: Easing.out(Easing.quad) });
-      y.value = withTiming(size.height * 0.5, { duration: travel, easing: Easing.out(Easing.quad) });
-      timer = setTimeout(() => {
-        if (attackKind === "beam") flash.value = withSequence(withTiming(1, { duration: 60 }), withTiming(0, { duration: 220 }));
-        wander();
-      }, attackHitMs);
-    } else {
-      wander();
-    }
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [size.width, size.height, attackId]);
-
-  const style = useAnimatedStyle(() => ({
-    transform: [{ translateX: x.value }, { translateY: y.value - bob.value * 6 }],
-  }));
-  const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
-
-  return (
-    <View
-      style={styles.apprenticeLayer}
-      pointerEvents="none"
-      onLayout={(event) => setSize({ width: event.nativeEvent.layout.width, height: event.nativeEvent.layout.height })}
-    >
-      <Animated.View style={style}>
-        <SpriteStrip source={apprenticeSprite.idle} frameSize={500} frameCount={4} displaySize={76} durationMs={1800} mode="loop" />
-        <Animated.View style={[styles.apprenticeBeamFlash, flashStyle]} />
-      </Animated.View>
-    </View>
-  );
-}
-
 function EnemyFighter({
   animation,
   boss,
@@ -1722,11 +1599,6 @@ const styles = StyleSheet.create({
   camLayer: { transformOrigin: "0% 0%" },
   // Where the fighters always sat in the stacking order (styles.fighters' own zIndex).
   camFighters: { zIndex: 4 },
-  // Above camFighters, so the wandering follower reads as passing in front of either
-  // fighter whenever it happens to float over one.
-  apprenticeLayer: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 12 },
-  // A quick white zap over the sprite itself on the rare magic-bolt hit.
-  apprenticeBeamFlash: { position: "absolute", top: -6, left: -6, right: -6, bottom: -6, borderRadius: 999, backgroundColor: "#ffffff" },
   skyImage: { width: "100%", height: "100%" },
   stageBar: {
     position: "absolute",
@@ -1749,9 +1621,6 @@ const styles = StyleSheet.create({
   questPressed: { transform: [{ scale: 0.92 }] },
   // Map art is 669x574.
   mapIcon: { width: 40, height: 34 },
-  // Toggles the wandering 견습기니 on/off — same slot/size as questButton, on the bar's other end.
-  apprenticeToggle: { width: 42, height: 42, alignItems: "center", justifyContent: "center" },
-  apprenticeToggleOff: { opacity: 0.45 },
   // Just a dot — whether there's something to claim, not how many.
   heldLoot: { position: "absolute", width: 140, flexDirection: "row", justifyContent: "center", alignItems: "flex-end", gap: 18, zIndex: 13 },
   heldGoldSpot: { width: 50, height: 50, alignItems: "center", justifyContent: "center" },

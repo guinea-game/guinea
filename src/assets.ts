@@ -568,13 +568,6 @@ export const spriteSheets = {
   },
 };
 
-// 견습기니: the bubble-riding follower that tags along from the second loop on (see
-// state/comics.ts's apprenticeGini and BattleScene's own ApprenticeFollower). Not an Outfit
-// — it isn't equippable, just a trailing sprite — so it sits outside spriteSheets.
-export const apprenticeSprite = {
-  idle: require("../assets/sprites/guinea-apprentice-idle-strip.webp"),
-};
-
 export const images = {
   titleScreen: require("../assets/sprites/title-screen.webp"),
   // Same scene and framing as titleScreen, at sunset and at night (see TitleScreen's TIME_OF_DAY).
