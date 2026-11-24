@@ -1094,7 +1094,7 @@ export const dailyImages = {
 };
 
 // 일일 의뢰 customers (state/daily.ts CUSTOMERS), all 320 tall: lady 307, farmer 297,
-// scholar 288, noble 302, gentleman 285, auntie 303 wide.
+// scholar 288, noble 313, gentleman 285, auntie 297 wide.
 export const npcImages = {
   customerLady: require("../assets/npc/customer-lady.webp"),
   customerFarmer: require("../assets/npc/customer-farmer.webp"),

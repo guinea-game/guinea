@@ -26,8 +26,8 @@ const COUNTER_LIFT = 10;
 // Inside the ticket frames: cream, under a clear warm apricot fade at the top.
 const TICKET_FILL = "#fbe6c2";
 const PATTERN_ASPECT = 1386 / 780;
-// The pattern art's base caramel — fills in below the picture on a very tall screen.
-export const DAILY_LOWER_COLOR = "#d59154";
+// The pattern art's base (between cream and caramel) — fills in below the picture on a very tall screen.
+export const DAILY_LOWER_COLOR = "#e9b882";
 const COUNTER_ASPECT = 398 / 900;
 // The counter art's wooden top (front edge) sits this far down the picture.
 const COUNTER_TOP = 0.36;
@@ -95,7 +95,7 @@ export function DailyScreen({
             pointerEvents="none"
           />
           <LinearGradient colors={[colors.paper, "rgba(245, 237, 218, 0)"]} style={[styles.headerBlend, { height: headerHeight + 16 }]} pointerEvents="none" />
-          <LinearGradient colors={["rgba(213, 145, 84, 0)", DAILY_LOWER_COLOR]} style={styles.bottomFade} pointerEvents="none" />
+          <LinearGradient colors={["rgba(233, 184, 130, 0)", DAILY_LOWER_COLOR]} style={styles.bottomFade} pointerEvents="none" />
           {header && (
             <View style={styles.header} onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}>
               {header}
