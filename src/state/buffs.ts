@@ -1,4 +1,4 @@
-import type { Outfit } from "../types";
+import type { GameState, Outfit } from "../types";
 import { RECIPES } from "./recipes";
 import type { RecipeTier } from "./recipeTiers";
 import { t } from "../i18n";
@@ -267,13 +267,31 @@ export const OUTFIT_NAMES: Record<Outfit, string> = {
   explorerHamster: "탐험기니",
   tetoGini: "테토기니",
   assassinGini: "암살기니",
-  egenGini: "구미호",
+  egenGini: "꽃잎기니",
   samuraiGini: "사무라이기니",
   chefGini: "셰프기니",
   boxerGini: "복서기니",
   witchGini: "마녀기니",
   cowboyGini: "카우보이기니",
 };
+
+// egenGini travels in disguise as "꽃잎기니" — a dormant 벚꽃 지팡이 기니 — until the player
+// actually beats 진달래길's own boss (stage 21, 0-based index 20, same stage she joins at and
+// is secretly the boss of). Only then does her real name show, the same moment the
+// "foxpath" comic's reveal plays. 20 matches progression.ts's COMPANION_SHARD_STAGE.egenGini.
+const GUMIHO_REVEAL_STAGE_INDEX = 20;
+export function isGumihoRevealed(state: Pick<GameState, "bossesCleared">): boolean {
+  return (state.bossesCleared ?? []).includes(GUMIHO_REVEAL_STAGE_INDEX);
+}
+
+// Every other outfit's name is static; egenGini's depends on isGumihoRevealed above. Routes
+// every on-screen companion name through here (BattleScene's header, StatsScreen, the
+// level-up/boss-reward toasts, and CompanionsScreen's own getCompanionName) so the reveal
+// can't show up in one place before another.
+export function getOutfitName(outfit: Outfit, state: Pick<GameState, "bossesCleared">): string {
+  if (outfit === "egenGini") return isGumihoRevealed(state) ? "구미호기니" : "꽃잎기니";
+  return OUTFIT_NAMES[outfit];
+}
 
 // "세트: 바다 한 상", "궁합: 테토기니" — the set a dish belongs to and its partner companion.
 export function describeDishLinks(recipeId: string) {

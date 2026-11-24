@@ -38,7 +38,7 @@ import {
   COMPANION_SKILL_COOLDOWN_MS,
   COMPANION_SKILL_WINDOW_MS,
 } from "./companionSkills";
-import { BUFF_SLOT_PRICES, BUFFS, GRADE_DURATION_MS, GRADE_GOLD_MULTIPLIER, INSTANT_DISHES, OUTFIT_FORCED_MANUAL, OUTFIT_NAMES, OUTFIT_SKILL_POWER, OUTFIT_SURE_DROPS, emptyBuffSlots, getOutfitStats, getBuffTotals, peekGrade, pushGrade, shiftGrade, type CookGrade } from "./buffs";
+import { BUFF_SLOT_PRICES, BUFFS, getOutfitName, GRADE_DURATION_MS, GRADE_GOLD_MULTIPLIER, INSTANT_DISHES, OUTFIT_FORCED_MANUAL, OUTFIT_NAMES, OUTFIT_SKILL_POWER, OUTFIT_SURE_DROPS, emptyBuffSlots, getOutfitStats, getBuffTotals, peekGrade, pushGrade, shiftGrade, type CookGrade } from "./buffs";
 import { GROCERY, applyDiscount, getSellPrice, getShortfall } from "./grocery";
 import { canCook, consumeIngredients, getKnownRecipes, isRecipeForSale, RECIPES } from "./recipes";
 import { playSfx } from "../sound";
@@ -609,7 +609,12 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
       const stars = countStars(earnedStars & ~(state.stageStars?.[String(state.stageNumber)] ?? 0));
       const shardCompanion = getShardCompanion(state.stageNumber);
       if (stars > 0 || shardCompanion) {
-        setBossReward((previous) => ({ id: (previous?.id ?? 0) + 1, stars, gems: stars * STAR_GEMS, companion: shardCompanion ? OUTFIT_NAMES[shardCompanion] : null }));
+        setBossReward((previous) => ({
+          id: (previous?.id ?? 0) + 1,
+          stars,
+          gems: stars * STAR_GEMS,
+          companion: shardCompanion ? getOutfitName(shardCompanion, { bossesCleared: state.bossesCleared }) : null,
+        }));
       }
     }
     if (boss) endBossFight();
@@ -686,7 +691,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
             : getOutfitsUnlockedByStage(state.stageNumber + 1)
                 // Already brought along early with gems — nothing new to announce.
                 .filter((outfit) => !(state.purchasedOutfits ?? []).includes(outfit))
-                .map((outfit) => OUTFIT_NAMES[outfit]),
+                .map((outfit) => getOutfitName(outfit, { bossesCleared: state.bossesCleared })),
       };
       setFirstClear({ ...pending, key: Date.now() });
       setState((previous) => ({ ...previous, pendingFirstClear: pending }));

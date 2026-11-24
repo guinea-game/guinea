@@ -12,7 +12,7 @@ import { useCountUp } from "../components/motion";
 import { formatGameNumber } from "../state/gameMath";
 import { getPeakAreaStage, LAST_STAGE_NUMBER, STAGES } from "../state/stages";
 import { t } from "../i18n";
-import { OUTFIT_NAMES } from "../state/buffs";
+import { getOutfitName, OUTFIT_NAMES } from "../state/buffs";
 import { isOutfitUnlocked } from "../state/unlocks";
 import type { GameState, Outfit } from "../types";
 
@@ -102,7 +102,7 @@ export function StatsScreen({ state }: { state: GameState }) {
           </View>
           <View style={styles.heroCopy}>
             <Text style={styles.heroName}>
-              Lv.{formatGameNumber(state.level)} {t(OUTFIT_NAMES[state.equippedOutfit])}
+              Lv.{formatGameNumber(state.level)} {t(getOutfitName(state.equippedOutfit, state))}
             </Text>
             <Text style={styles.heroStage}>{t(`${stageLabel(state.stageNumber)}에서 모험 중`, `Adventuring in ${stageLabel(state.stageNumber)}`)}</Text>
             <Text style={styles.heroMeta}>

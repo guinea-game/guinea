@@ -2,7 +2,7 @@ import type { GameState, Outfit } from "../types";
 import { npcImages } from "../assets";
 import { getKnownRecipes, getItemQuantity, RECIPES, type Recipe } from "./recipes";
 import { getGroceryPrice } from "./grocery";
-import { OUTFIT_NAMES, shiftGrade } from "./buffs";
+import { getOutfitName, shiftGrade } from "./buffs";
 import { isOutfitUnlocked } from "./unlocks";
 import { roundPrice } from "./gameMath";
 import { t } from "../i18n";
@@ -178,7 +178,7 @@ export function getDailyOrders(state: GameState, priceStage: number): DailyOrder
         ...order,
         index,
         recipe,
-        customerName: t(companion ? OUTFIT_NAMES[companion] : customer.name),
+        customerName: t(companion ? getOutfitName(companion, state) : customer.name),
         customerImage: companion ? null : customer.image,
         companion,
         line: (companionLine ?? customer.line)(recipe.name, order.count),

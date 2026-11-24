@@ -40,7 +40,7 @@ import { ComicViewer } from "./components/ComicViewer";
 import { COMIC_ON_FIRST_CLEAR, LOOP_COMICS, type ComicId } from "./state/comics";
 import { ComicsScreen } from "./screens/ComicsScreen";
 import { measureTarget } from "./components/tutorialTargets";
-import type { CookGrade } from "./state/buffs";
+import { getOutfitName, type CookGrade } from "./state/buffs";
 import { canCook, getKnownRecipes, getRecipeOffers, hasNewRecipeOffer, RECIPES, ITEM_IMAGES } from "./state/recipes";
 import { isOutfitUnlocked } from "./state/unlocks";
 import { BGM_GROUP, getDifficultyStage, getEnemyKind, getPeakAreaStage } from "./state/stages";
@@ -363,6 +363,7 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             now={game.now}
             enemyKind={getEnemyKind(state.stageNumber)}
             outfit={state.equippedOutfit}
+            playerName={getOutfitName(state.equippedOutfit, state)}
           />
         );
       case "shop":

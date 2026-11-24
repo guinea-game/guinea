@@ -37,7 +37,19 @@ const INITIAL: Fx = { phase: "idle", enemyHp: MAX_HP, enemyId: 1, critical: fals
 // A looping, scripted mini fight in the real BattleScene (preview mode: no HUD) that acts
 // out one skill: the guinea pig against the current stage's mob, the skill's own cast VFX,
 // and the hits it causes. Nothing here touches the game state.
-export function SkillPreviewModal({ skillId, enemyKind, outfit, onClose }: { skillId: SkillId; enemyKind: EnemyKind; outfit: Outfit; onClose: () => void }) {
+export function SkillPreviewModal({
+  skillId,
+  enemyKind,
+  outfit,
+  playerName,
+  onClose,
+}: {
+  skillId: SkillId;
+  enemyKind: EnemyKind;
+  outfit: Outfit;
+  playerName: string;
+  onClose: () => void;
+}) {
   const skill = getSkill(skillId);
   const [fx, setFx] = useState<Fx>(INITIAL);
   const nextId = useRef(1);
@@ -184,6 +196,7 @@ export function SkillPreviewModal({ skillId, enemyKind, outfit, onClose }: { ski
               stageKills={0}
               onOpenMap={noop}
               outfit={outfit}
+              playerName={playerName}
               manualEnabled={false}
               onManualAttack={noop}
               onCatchFlyingCoin={noCoin}

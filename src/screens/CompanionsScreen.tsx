@@ -13,7 +13,9 @@ import { GameButton } from "../components/GameButton";
 import { ProgressBar } from "../components/ProgressBar";
 import { CharacterSprite } from "../components/CharacterSprite";
 import {
+  getOutfitName,
   getOutfitStats,
+  isGumihoRevealed,
   OUTFIT_GROWTH_HINT,
   OUTFIT_FORCED_MANUAL,
   OUTFIT_NO_OFFLINE,
@@ -180,7 +182,7 @@ function IconFact({ icon, caption, children }: { icon?: number; caption: string;
 // `detail` isn't translated here (module-scope, evaluated once at import — baking in
 // whatever language was active then) — call companionDetail(outfit) fresh at display time
 // instead (see the preview panel below), which is what every other reader of this array uses.
-export const COMPANIONS: { outfit: Outfit; name: string; blurb: string; detail: string }[] = [
+export const COMPANIONS: { outfit: Outfit; name: string; blurb: string; detail: string; revealedName?: string; revealedBlurb?: string }[] = [
   { outfit: "default", name: "모험기니", blurb: "건초에 지쳐 새로운 끼니를 찾아 세상을 모험하는 기니.", detail: companionDetail("default") },
   {
     outfit: "explorerHamster",
@@ -202,8 +204,10 @@ export const COMPANIONS: { outfit: Outfit; name: string; blurb: string; detail: 
   },
   {
     outfit: "egenGini",
-    name: "구미호",
-    blurb: "사실은 기니가 아니라 둔갑한 구미호. 다정한 얼굴 뒤에 아홉 개의 꼬리를 숨기고 있다.",
+    name: "꽃잎기니",
+    blurb: "벚꽃 지팡이를 든 다정하고 상냥한 기니. 함께 있으면 마음이 편안해진다.",
+    revealedName: "구미호기니",
+    revealedBlurb: "사실은 기니가 아니라 둔갑한 구미호. 다정한 얼굴 뒤에 아홉 개의 꼬리를 숨기고 있다.",
     detail: companionDetail("egenGini"),
   },
   {
@@ -358,9 +362,8 @@ function unlockCondition(outfit: Outfit) {
   );
 }
 
-export function getCompanionName(outfit: Outfit) {
-  const name = COMPANIONS.find((item) => item.outfit === outfit)?.name;
-  return name ? t(name) : outfit;
+export function getCompanionName(outfit: Outfit, state: Pick<GameState, "bossesCleared">) {
+  return t(getOutfitName(outfit, state));
 }
 
 export function CompanionsScreen({
@@ -376,8 +379,9 @@ export function CompanionsScreen({
   progress,
   onUpgrade,
 }: {
-  // 동료 승급 (state/progression.ts); labUnlocked for the 연구소-gated cap past Lv.5.
-  progress: Pick<GameState, "companionLevels" | "companionShards" | "labUnlocked">;
+  // 동료 승급 (state/progression.ts); labUnlocked for the 연구소-gated cap past Lv.5;
+  // bossesCleared for egenGini's 꽃잎기니→구미호기니 name/blurb reveal (getCompanionInfo).
+  progress: Pick<GameState, "companionLevels" | "companionShards" | "labUnlocked" | "bossesCleared">;
   onUpgrade: (outfit: Outfit) => void;
   equippedOutfit: Outfit;
   // Furthest stage reached (0-based) — companions join on arriving at their stage.
@@ -393,6 +397,9 @@ export function CompanionsScreen({
   onOpenShop: () => void;
 }) {
   const equippedItem = COMPANIONS.find((item) => item.outfit === equippedOutfit) ?? COMPANIONS[0];
+  // egenGini shows as "꽃잎기니" until her own stage's boss falls, then "구미호기니" — see buffs.ts's getOutfitName.
+  const companionDisplay = (item: (typeof COMPANIONS)[number]) =>
+    item.revealedName && isGumihoRevealed(progress) ? { name: item.revealedName, blurb: item.revealedBlurb ?? item.blurb } : { name: item.name, blurb: item.blurb };
   const [previewWidth, setPreviewWidth] = useState(0);
   // A locked companion whose gem button was tapped: confirm before spending.
   const [buying, setBuying] = useState<Outfit | null>(null);
@@ -430,8 +437,8 @@ export function CompanionsScreen({
             pointerEvents="none"
           />
           <View style={styles.previewCopy}>
-            <Text style={styles.previewTitle}>{t(equippedItem.name)}</Text>
-            <Text style={styles.previewBlurb}>{t(equippedItem.blurb)}</Text>
+            <Text style={styles.previewTitle}>{t(companionDisplay(equippedItem).name)}</Text>
+            <Text style={styles.previewBlurb}>{t(companionDisplay(equippedItem).blurb)}</Text>
             <Text style={styles.previewSub}>
               {equippedItem.outfit === "witchGini" ? `${companionDetail(equippedItem.outfit, getCompanionLevel(progress, equippedItem.outfit))} · ${t(WITCH_EXTRA_DETAIL, "Every attack is magic")}` : companionDetail(equippedItem.outfit, getCompanionLevel(progress, equippedItem.outfit))}
             </Text>
@@ -477,12 +484,12 @@ export function CompanionsScreen({
                 {freshlyUnlocked.includes(item.outfit) && <BreakingLock />}
               </View>
               <View style={styles.cardCopy}>
-                <Text style={styles.cardStrong}>{locked ? "???" : t(item.name)}</Text>
+                <Text style={styles.cardStrong}>{locked ? "???" : t(companionDisplay(item).name)}</Text>
                 {locked ? (
                   // The one thing a locked companion does say: how to get it.
                   <Text style={styles.cardBlurb}>{unlockCondition(item.outfit)}</Text>
                 ) : (
-                  <Text style={styles.cardBlurb}>{t(item.blurb)}</Text>
+                  <Text style={styles.cardBlurb}>{t(companionDisplay(item).blurb)}</Text>
                 )}
               </View>
               {locked && gemPrice !== undefined ? (
@@ -549,7 +556,12 @@ export function CompanionsScreen({
                       onPress={() => onUpgrade(item.outfit)}
                       style={styles.upgradeButton}
                       textStyle={styles.equipButtonText}
-                      accessibilityLabel={t(`${item.name} 승급`, `Upgrade ${t(item.name)}`, `${t(item.name)}を昇格`, `升级${t(item.name)}`)}
+                      accessibilityLabel={t(
+                        `${companionDisplay(item).name} 승급`,
+                        `Upgrade ${t(companionDisplay(item).name)}`,
+                        `${t(companionDisplay(item).name)}を昇格`,
+                        `升级${t(companionDisplay(item).name)}`,
+                      )}
                     >
                       {t("승급", "Upgrade")}
                     </GameButton>

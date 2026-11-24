@@ -49,7 +49,6 @@ import { BOSS_NAME, ENEMY_NAME, STAGE_KILL_TARGET } from "../state/stages";
 import { t as tr } from "../i18n";
 import { SHARDS_PER_BOSS } from "../state/progression";
 import { BOSS_LINES, MOB_LINES } from "../state/monsterLines";
-import { OUTFIT_NAMES } from "../state/buffs";
 import { ITEM_IMAGES } from "../state/recipes";
 import { UNLOCK_TOAST_MS, type DropEvent } from "../state/useGameState";
 import { getUnlocksAtLevel } from "../state/unlocks";
@@ -340,6 +339,7 @@ export function BattleScene({
   stageKills,
   onOpenMap,
   outfit,
+  playerName,
   manualEnabled,
   autoBattle = true,
   onManualAttack,
@@ -419,6 +419,9 @@ export function BattleScene({
   stageKills: number;
   onOpenMap: () => void;
   outfit: Outfit;
+  // state/buffs.ts's getOutfitName(outfit, state) — egenGini shows "꽃잎기니" or "구미호기니"
+  // depending on whether her own stage's boss has been beaten yet.
+  playerName: string;
   manualEnabled: boolean;
   // Auto battle on (green dot by the stage name) or hand-fighting during 난타 (orange).
   autoBattle?: boolean;
@@ -797,6 +800,7 @@ export function BattleScene({
             <PlayerFighter
               animation={playerAnimation}
               outfit={outfit}
+              playerName={playerName}
               boss={boss}
               executeId={executeId}
               beamId={beamId}
@@ -1057,6 +1061,7 @@ function BulletTracer({ length }: { length: number }) {
 function PlayerFighter({
   animation,
   outfit,
+  playerName,
   boss,
   executeId,
   beamId,
@@ -1069,6 +1074,7 @@ function PlayerFighter({
   fannedShot,
 }: {
   animation: PlayerAnimation;
+  playerName: string;
   outfit: Outfit;
   boss: boolean;
   executeId: number;
@@ -1197,7 +1203,7 @@ function PlayerFighter({
       {/* Same see-through plate and outlined name as the enemy's. */}
       <View style={[styles.unitLabel, styles.unitLabelClear]}>
         <StrokedText style={styles.unitLabelText} strokeColor={colors.line} strokeWidth={1.5}>
-          {OUTFIT_NAMES[outfit]}
+          {playerName}
         </StrokedText>
       </View>
       <View>

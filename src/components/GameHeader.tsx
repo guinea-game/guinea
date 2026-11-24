@@ -74,7 +74,7 @@ export function GameHeader({
             <View style={styles.profileCopy}>
               <View style={styles.nameRow}>
                 <Text style={styles.levelText}>Lv.{formatGameNumber(state.level)}</Text>
-                <Text style={styles.nickname} numberOfLines={1}>{getCompanionName(state.equippedOutfit)}</Text>
+                <Text style={styles.nickname} numberOfLines={1}>{getCompanionName(state.equippedOutfit, state)}</Text>
               </View>
               <ProgressBar
                 progress={(state.experience / getExpToLevel(state.level)) * 100}

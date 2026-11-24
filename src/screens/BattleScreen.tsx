@@ -16,7 +16,7 @@ import { getBagCapacity, slotsUsed } from "../state/bag";
 import { playSfx } from "../sound";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { EventModal } from "../components/EventModal";
-import { BUFF_SLOT_PRICES } from "../state/buffs";
+import { BUFF_SLOT_PRICES, getOutfitName } from "../state/buffs";
 import type { EnemyKind } from "../types";
 import { hasClaimableQuest } from "../state/quests";
 import { hasClaimableLevelReward } from "../state/levelRewards";
@@ -103,6 +103,7 @@ export function BattleScreen({ game }: { game: UseGameState }) {
         stageKills={state.stageKills}
         onOpenMap={() => game.setState((previous) => ({ ...previous, selectedTab: "milestone" }))}
         outfit={state.equippedOutfit}
+        playerName={getOutfitName(state.equippedOutfit, state)}
         manualEnabled={!battle.isAutoBattle || state.equippedOutfit === "cowboyGini"}
         autoBattle={!battle.manualActive}
         onManualAttack={battle.manualAttack}
