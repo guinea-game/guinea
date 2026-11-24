@@ -24,7 +24,7 @@ import { useAutoBattle } from "./useAutoBattle";
 import { clearSave, loadSave, writeSave } from "./storage";
 import { claimHiddenQuest, claimMission, migrateQuestClaims } from "./quests";
 import { claimLevelReward as payLevelReward } from "./levelRewards";
-import { completeLabResearch, getEffectiveStatCap, getLabBagStackSize, getLabCookSpeedBonus, getLabBossDoubleBonus, getLabBossTimeBonusMs, getLabMobHpScale, getLabGoldenChance, getLabSkillCooldownSec, getOfflineCapMs, startLabResearch, applyLabBoost, type LabResearchId } from "./lab";
+import { completeLabResearch, getEffectiveStatCap, getLabBagStackSize, getLabCookSpeedBonus, getLabBossDoubleBonus, getLabBossTimeBonusMs, getLabMobHpScale, getLabGoldenChance, getLabSkillCooldownSec, getOfflineCapMs, startLabResearch, type LabResearchId } from "./lab";
 import { deliverOrder, needsNewDaily, startDaily } from "./daily";
 import { getOutfitGemPrice, getOutfitsGrantedByLoop, getOutfitsUnlockedByStage, getUnlocksAtLevel, isOutfitUnlocked, isSkillUnlocked, syncStageUnlockedOutfits } from "./unlocks";
 import { fitItems, getBagCapacity, getBagExpandCost, BAG_MAX_SLOTS, slotsUsed } from "./bag";
@@ -1258,8 +1258,6 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   // prices are counted in these, so they stay steady while a buff runs.
   const labMobGold = getGoldReward(state.attack, state.goldBonus, getEnemyRewardHp(difficultyStage, false), false);
   const startResearch = (id: LabResearchId) => setState((previous) => startLabResearch(previous, id, labMobGold));
-  // 시간 가속권: 5 hours off the running research; the lab-completion effect lands it if that finishes it.
-  const boostResearch = () => setState((previous) => applyLabBoost(previous));
   // Ticks alongside the once-a-second `now` clock (see above) — the moment a research's
   // readyAt passes, this lands it (open or not; it's an absolute timestamp, not a simulation).
   useEffect(() => {
@@ -1668,7 +1666,6 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     labOpen,
     setLabOpen,
     startResearch,
-    boostResearch,
     labMobGold,
     boss,
     defeatedBoss,

@@ -192,8 +192,6 @@ export interface GameState {
   labUnlocked?: ("companionCap" | "critCap")[];
   // The one research in progress, if any — paid up front, applied once readyAt passes.
   labResearch?: { id: string; readyAt: number };
-  // 시간 가속권 held: each takes LAB_BOOST_MS off the running research (state/lab.ts).
-  labBoosts?: number;
   kills: number;
   totalGoldEarned: number;
   attackUpgrades: number;

@@ -314,19 +314,6 @@ export function startLabResearch(previous: GameState, id: LabResearchId, mobGold
   };
 }
 
-// 시간 가속권: one takes 5 hours off the research running now (never past finishing it).
-export const LAB_BOOST_MS = 5 * HOUR;
-
-export function applyLabBoost(previous: GameState, now = Date.now()): GameState {
-  const research = previous.labResearch;
-  if (!research || research.readyAt <= now || (previous.labBoosts ?? 0) <= 0) return previous;
-  return {
-    ...previous,
-    labBoosts: (previous.labBoosts ?? 0) - 1,
-    labResearch: { ...research, readyAt: Math.max(now, research.readyAt - LAB_BOOST_MS) },
-  };
-}
-
 // Applies a finished step (once its readyAt has passed) and clears the slot — called every tick
 // from useGameState so it lands the moment the timer's up, app open or not.
 export function completeLabResearch(state: GameState, now = Date.now()): GameState {

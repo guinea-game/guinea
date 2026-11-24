@@ -125,14 +125,12 @@ export function LabModal({
   mobGold,
   onClose,
   onStartResearch,
-  onBoost,
 }: {
   state: GameState;
   now: number;
   mobGold: number;
   onClose: () => void;
   onStartResearch: (id: LabResearchId) => void;
-  onBoost: () => void;
 }) {
   const busy = isLabBusy(state, now);
   const active = state.labResearch && state.labResearch.readyAt > now ? state.labResearch : undefined;
@@ -279,7 +277,6 @@ export function LabModal({
             busy={busy}
             researching={activeNode?.id === selected.id ? active!.readyAt : undefined}
             onStart={() => onStartResearch(selected.research)}
-            onBoost={onBoost}
           />
         </View>
       </View>
@@ -297,7 +294,6 @@ function NodeCard({
   busy,
   researching,
   onStart,
-  onBoost,
 }: {
   state: GameState;
   node: LabNode;
@@ -306,7 +302,6 @@ function NodeCard({
   busy: boolean;
   researching?: number;
   onStart: () => void;
-  onBoost: () => void;
 }) {
   const done = isLabNodeDone(state, node);
   const cost = nodeCost(state, node, mobGold);
@@ -350,25 +345,9 @@ function NodeCard({
               {t("완료", "Done")}
             </GameButton>
           ) : researching !== undefined ? (
-            <>
-              <GameButton variant="gray" disabled style={styles.actionButton} textStyle={styles.actionButtonText}>
-                {formatCountdown(researching - now)}
-              </GameButton>
-              {/* 시간 가속권: 5 hours off, while any are held. */}
-              <GameButton
-                variant={(state.labBoosts ?? 0) > 0 ? "gold" : "gray"}
-                disabled={(state.labBoosts ?? 0) <= 0}
-                onPress={onBoost}
-                style={[styles.actionButton, styles.boostButton]}
-                textStyle={styles.actionButtonText}
-                accessibilityLabel={t(`시간 가속권 사용, ${state.labBoosts ?? 0}개 남음`, `Use a time boost, ${state.labBoosts ?? 0} left`)}
-              >
-                <View style={styles.costLabel}>
-                  <Text style={styles.boostText}>{t("5시간 가속", "-5h")}</Text>
-                  <Text style={styles.boostCount}>{t(`가속권 ${state.labBoosts ?? 0}개`, `${state.labBoosts ?? 0} left`)}</Text>
-                </View>
-              </GameButton>
-            </>
+            <GameButton variant="gray" disabled style={styles.actionButton} textStyle={styles.actionButtonText}>
+              {formatCountdown(researching - now)}
+            </GameButton>
           ) : cost ? (
             <GameButton
               variant={busy || !affordable ? "gray" : "green"}
@@ -465,9 +444,6 @@ const styles = StyleSheet.create({
   actionButton: { minWidth: 72, paddingHorizontal: 8 },
   actionButtonText: { fontSize: 12 },
   costLabel: { alignItems: "center" },
-  boostButton: {},
-  boostText: { fontSize: 13, fontWeight: "900", fontFamily: fonts.bold, color: colors.ink },
-  boostCount: { fontSize: 12, fontWeight: "800", fontFamily: fonts.bold, color: colors.ink, opacity: 0.8 },
   costGemRow: { flexDirection: "row", alignItems: "center", gap: 3 },
   costGemIcon: { width: 14, height: 14, resizeMode: "contain" },
   costGemText: { fontSize: 13, fontWeight: "900", fontFamily: fonts.bold, color: colors.cream },

@@ -75,8 +75,8 @@ export function InventoryScreen({
   const shown = Math.min(capacity, Math.max(12, Math.ceil((used + 1) / COLUMNS) * COLUMNS));
   // 전체 / 재료 / 요리: the bag's slots are shared, so a filtered view still ends in the same
   // empty cells — it just leaves out the other kind's stacks.
-  const [kind, setKind] = useState<BagKind>("all");
-  const visible = kind === "all" ? stacks : stacks.filter((item) => (kind === "dish" ? item.type === "dish" : item.type !== "dish"));
+  const [kind, setKind] = useState<BagKind>("ingredient");
+  const visible = stacks.filter((item) => (kind === "dish" ? item.type === "dish" : item.type !== "dish"));
   // Empties pad the last row out to full width, so a filtered view doesn't end ragged.
   const empties = Math.max(0, shown - used);
   const padded = Math.ceil((visible.length + empties) / COLUMNS) * COLUMNS - visible.length;
@@ -234,9 +234,9 @@ export function InventoryScreen({
   );
 }
 
-type BagKind = "all" | "ingredient" | "dish";
+// The bag is split in two — ingredients and dishes — with no mixed "all" view.
+type BagKind = "ingredient" | "dish";
 const BAG_KINDS: { kind: BagKind; label: string; labelEn: string }[] = [
-  { kind: "all", label: "전체", labelEn: "All" },
   { kind: "ingredient", label: "재료", labelEn: "Ingredients" },
   { kind: "dish", label: "요리", labelEn: "Dishes" },
 ];

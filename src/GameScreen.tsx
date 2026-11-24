@@ -90,7 +90,7 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
   const [playingComic, setPlayingComic] = useState<ComicId | null>(null);
   const [comicPaused, setComicPaused] = useState(false);
   const game = useGameState({ externallyPaused: comicPaused });
-  const { state, setState, questOpen, setQuestOpen, claimQuest, levelRewardOpen, setLevelRewardOpen, claimLevelReward, labOpen, setLabOpen, startResearch, boostResearch } = game;
+  const { state, setState, questOpen, setQuestOpen, claimQuest, levelRewardOpen, setLevelRewardOpen, claimLevelReward, labOpen, setLabOpen, startResearch } = game;
   // Grocery/recipe/sell prices (see useGameState's own priceStage) keyed off the furthest
   // stage of this loop, so prices stay put across a loop instead of resetting cheap.
   const priceStage = getDifficultyStage(state.highestStageNumber ?? state.stageNumber, state.loopsCompleted ?? 0);
@@ -511,7 +511,7 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
           <LevelRewardModal state={state} onClose={() => setLevelRewardOpen(false)} onClaim={claimLevelReward} />
         )}
         {labOpen && (
-          <LabModal state={state} now={game.now} mobGold={game.labMobGold} onClose={() => setLabOpen(false)} onStartResearch={startResearch} onBoost={boostResearch} />
+          <LabModal state={state} now={game.now} mobGold={game.labMobGold} onClose={() => setLabOpen(false)} onStartResearch={startResearch} />
         )}
         {game.offlineSummary && (
           <OfflineRewardModal
