@@ -913,14 +913,15 @@ export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = 
         aspect: 500 / 768,
         sfx: "hit",
         bubbles: [
-          { text: "흥, 들켰네.", right: 0.03, top: 0.04, maxWidth: 0.26, tail: "bottom", tailAt: 0.4 },
+          { text: "흥, 들켰네.\n그래도 제법인데?", right: 0.03, top: 0.04, maxWidth: 0.3, tail: "bottom", tailAt: 0.4 },
         ],
       },
       {
         image: comics.foxpath2,
         aspect: 500 / 768,
         bubbles: [
-          { text: "역시...\n너였구나!", right: 0.02, top: 0.8, maxWidth: 0.26, tail: "top", tailAt: 0.5 },
+          { text: "역시...\n너였구나!", left: 0.02, top: 0.18, maxWidth: 0.28, tail: "bottom", tailAt: 0.4 },
+          { text: "내키진 않지만...\n뭐라도 건지겠지.", right: 0.03, top: 0.02, maxWidth: 0.4, tail: "bottom", tailAt: 0.55 },
         ],
       },
       {
@@ -928,6 +929,7 @@ export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = 
         aspect: 505 / 768,
         bubbles: [
           { text: "여우불이\n길을 비춰 줘...", left: 0.02, top: 0.12, maxWidth: 0.32, tail: "bottom", tailAt: 0.3 },
+          { text: "다치지나 마.\n다음엔 안 고쳐 줄 거야.", right: 0.03, top: 0.03, maxWidth: 0.32, tail: "right", tailAt: 0.5 },
         ],
       },
       {

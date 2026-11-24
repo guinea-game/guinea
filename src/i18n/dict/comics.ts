@@ -205,9 +205,11 @@ export const COMICS_DICT: Record<string, string> = {
 
   // foxpath
   "구미호의 지름길": "The Nine-Tailed Fox's Shortcut",
-  "흥, 들켰네.": "Hmph, caught in the act.",
+  "흥, 들켰네.\n그래도 제법인데?": "Hmph, caught in the act.\nStill, not bad.",
   "역시...\n너였구나!": "I knew it...\nit was you!",
+  "내키진 않지만...\n뭐라도 건지겠지.": "Not that I want to...\nbut I'll get something out of it.",
   "여우불이\n길을 비춰 줘...": "The fox-fire\nlights the way...",
+  "다치지나 마.\n다음엔 안 고쳐 줄 거야.": "Just don't get hurt.\nI won't patch you up next time.",
   "궁궐 앞 장터야!": "It's the market before the palace!",
   "쌀가마가\n많다.": "So many\nrice sacks.",
 
