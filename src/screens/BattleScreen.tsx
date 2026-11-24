@@ -15,6 +15,7 @@ import { getEnemyKind, getStageLabel } from "../state/stages";
 import { getBagCapacity, slotsUsed } from "../state/bag";
 import { playSfx } from "../sound";
 import { ConfirmModal } from "../components/ConfirmModal";
+import { EventModal } from "../components/EventModal";
 import { BUFF_SLOT_PRICES } from "../state/buffs";
 import type { EnemyKind } from "../types";
 import { hasClaimableQuest } from "../state/quests";
@@ -62,8 +63,7 @@ export function BattleScreen({ game }: { game: UseGameState }) {
     wasDisplayBoss.current = displayBoss;
   }, [displayBoss]);
 
-  // 이벤트 button is in the row ahead of its page; for now a tap says so.
-  const [comingSoon, setComingSoon] = useState<string | null>(null);
+  const [eventOpen, setEventOpen] = useState(false);
 
   return (
     <>
@@ -268,7 +268,7 @@ export function BattleScreen({ game }: { game: UseGameState }) {
         onOpenLevelReward={() => game.setLevelRewardOpen(true)}
         levelRewardReady={hasClaimableLevelReward(state)}
         onOpenLab={() => game.setLabOpen(true)}
-        onOpenEvent={() => setComingSoon(t("이벤트", "Event"))}
+        onOpenEvent={() => setEventOpen(true)}
         bagFull={slotsUsed(state.inventory, game.bagStackSize) >= getBagCapacity(state.bagExpansions)}
         dropEvents={game.dropEvents}
         trailing={
@@ -279,14 +279,7 @@ export function BattleScreen({ game }: { game: UseGameState }) {
           />
         }
       />
-      {comingSoon !== null && (
-        <ConfirmModal
-          title={comingSoon}
-          message={t("곧 열려요! 조금만 기다려 주세요.", "Coming soon! Hang tight.")}
-          onConfirm={() => setComingSoon(null)}
-          onCancel={() => setComingSoon(null)}
-        />
-      )}
+      {eventOpen && <EventModal onClose={() => setEventOpen(false)} />}
       <StatUpgradePanel
         state={state}
         upgradeMode={upgradeMode}
