@@ -51,6 +51,12 @@ export const CUSTOMERS: { id: string; name: string; image: number; line: Line }[
     image: npcImages.customerAuntie,
     line: (dish, n) => t(`우리 애들 먹이게 ${dish} ${n}개만 줘요~`, `${n} ${t(dish)} for my little ones, dear~`),
   },
+  {
+    id: "girl",
+    name: "소녀기니",
+    image: npcImages.customerGirl,
+    line: (dish, n) => t(`꽃구경 가기 전에 ${dish} ${n}개 챙겨 갈래요!`, `${n} ${t(dish)} to take along on my flower walk!`),
+  },
 ];
 
 const ORDERS_PER_DAY = 3;

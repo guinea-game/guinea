@@ -1102,6 +1102,7 @@ export const npcImages = {
   customerNoble: require("../assets/npc/customer-noble.webp"),
   customerGentleman: require("../assets/npc/customer-gentleman.webp"),
   customerAuntie: require("../assets/npc/customer-auntie.webp"),
+  customerGirl: require("../assets/npc/customer-girl.webp"),
 };
 
 export const statIcons = {

@@ -430,7 +430,6 @@ export function CompanionsScreen({
             pointerEvents="none"
           />
           <View style={styles.previewCopy}>
-            <Text style={styles.previewLabel}>{t("함께하는 중", "Traveling With")}</Text>
             <Text style={styles.previewTitle}>{t(equippedItem.name)}</Text>
             <Text style={styles.previewBlurb}>{t(equippedItem.blurb)}</Text>
             <Text style={styles.previewSub}>
@@ -478,7 +477,6 @@ export function CompanionsScreen({
                 {freshlyUnlocked.includes(item.outfit) && <BreakingLock />}
               </View>
               <View style={styles.cardCopy}>
-                {!locked && <Text style={styles.cardSmall}>{equipped ? t("함께하는 중", "Traveling With") : t("같이 다닐 수 있음", "Available")}</Text>}
                 <Text style={styles.cardStrong}>{locked ? "???" : t(item.name)}</Text>
                 {locked ? (
                   // The one thing a locked companion does say: how to get it.
@@ -511,12 +509,12 @@ export function CompanionsScreen({
                   textStyle={styles.equipButtonText}
                 >
                   {equipped
-                    ? t("함께 중", "Traveling")
+                    ? t("모험 중", "On the Journey")
                     : locked
                       ? loopGrant !== undefined
                         ? t(`${loopGrant}회차 완료`, `Loop ${loopGrant} Complete`)
                         : t(`${unlockStage}스테이지`, `Stage ${unlockStage}`)
-                      : t("함께하기", "Travel Together")}
+                      : t("모험 합류", "Join the Journey")}
                 </GameButton>
               )}
               </View>
@@ -639,7 +637,6 @@ const styles = StyleSheet.create({
   previewScrim: { position: "absolute", top: 0, left: 0, bottom: 0, right: 0 },
   // Copy takes the left part; the companion gets the rest and is centred inside it.
   previewCopy: { width: "58%", paddingLeft: 16, paddingRight: 4 },
-  previewLabel: { color: "#d7dfab", fontSize: 12, fontWeight: "900", fontFamily: fonts.bold, letterSpacing: 1.5 },
   previewTitle: { marginTop: 4, fontSize: 22, fontWeight: "800", fontFamily: fonts.bold, color: colors.cream },
   previewBlurb: { fontFamily: fonts.light, letterSpacing: -0.36, marginTop: 4, color: "#efe7d4", fontSize: 12, fontStyle: "italic", lineHeight: 16 },
   previewSub: { marginTop: 5, color: "#f3d993", fontSize: 12, fontWeight: "800", fontFamily: fonts.bold },
@@ -682,7 +679,6 @@ const styles = StyleSheet.create({
   // Squeezed inside the ring's opening — one of the few labels kept under 12pt.
   avatarStageLabel: { fontSize: 8, lineHeight: 9, fontWeight: "800", fontFamily: fonts.bold, color: colors.muted },
   cardCopy: { flex: 1 },
-  cardSmall: { color: colors.green, fontSize: 12, fontWeight: "900", fontFamily: fonts.bold },
   cardStrong: { marginVertical: 2, fontSize: 14, fontWeight: "800", fontFamily: fonts.bold, color: colors.ink },
   cardBlurb: { fontFamily: fonts.light, letterSpacing: -0.36, color: colors.muted, fontSize: 12, lineHeight: 16, fontStyle: "italic", marginBottom: 2 },
   equipButton: { minWidth: 70 },

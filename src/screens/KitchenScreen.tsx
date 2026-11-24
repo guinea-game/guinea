@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Image, Pressable, StyleSheet, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "../components/GameText";
 import { SearchBox } from "../components/SearchBox";
 import { matchesSearch } from "../state/search";
@@ -7,7 +7,7 @@ import { colors, fonts } from "../theme";
 import { chef, grandma, kit, kitImages } from "../assets";
 import { CookingMinigame } from "../components/CookingMinigame";
 import { SEALED_RECIPE } from "../state/recipeTiers";
-import { describeDish, type CookGrade } from "../state/buffs";
+import { describeDish, getDishCategories, type CookGrade, type DishCategory } from "../state/buffs";
 import { RecipeInfoModal } from "../components/RecipeInfoModal";
 import { BalancedRows, estimateTextWidth } from "../components/BalancedLines";
 import { PageHeading } from "../components/PageHeading";
@@ -82,7 +82,13 @@ export function KitchenScreen({
   // The recipe whose "!" details are open.
   const [infoRecipeId, setInfoRecipeId] = useState<string | null>(null);
   const infoRecipe = RECIPES.find((recipe) => recipe.id === infoRecipeId);
-  const shown = recipes.filter((recipe) => matchesSearch(query, recipe.name, ...recipe.ingredients.map((ingredient) => ingredient.name)));
+  // 전체 or one effect category. Typing a search looks through everything, whatever tab is on.
+  const [category, setCategory] = useState<"all" | DishCategory>("all");
+  const shown = recipes.filter((recipe) =>
+    query.trim()
+      ? matchesSearch(query, recipe.name, ...recipe.ingredients.map((ingredient) => ingredient.name))
+      : category === "all" || getDishCategories(recipe.id).includes(category),
+  );
 
   return (
     <View style={styles.page}>
@@ -112,7 +118,22 @@ export function KitchenScreen({
         <Text style={styles.toolbarText}>{t(`아는 레시피 ${recipes.length}개`, `${recipes.length} Known Recipes`)}</Text>
       </View>
 
+      {/* Effect tabs, the same green/beige buttons as the bag's and skills' tabs. Scrolls
+          sideways if they don't fit. */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScroll} contentContainerStyle={styles.tabs}>
+        {CATEGORY_TABS.map((tab) => {
+          const active = tab.id === category;
+          return (
+            <GameButton key={tab.id} variant={active ? "green" : "beige"} onPress={() => setCategory(tab.id)} style={styles.tab} textStyle={styles.tabText}>
+              {t(tab.label, tab.labelEn)}
+            </GameButton>
+          );
+        })}
+      </ScrollView>
       <SearchBox value={query} onChange={setQuery} placeholder={t("요리나 재료 이름으로 찾기", "Search by dish or ingredient name")} resultCount={shown.length} />
+      {shown.length === 0 && !query.trim() && (
+        <Text style={styles.emptyTab}>{t("이 효과의 요리는 아직 배우지 않았어요.", "You haven't learned a dish with this effect yet.")}</Text>
+      )}
       <View style={styles.grid}>
         {shown.map((recipe) => {
           const ready = canCook(inventory, recipe);
@@ -188,16 +209,15 @@ export function KitchenScreen({
               </View>
             </Pressable>
           );
+          // One effect per line, always — so a two-effect dish reads the same on every screen width.
           const effect = (
-            <BalancedRows
-              items={effectParts}
-              widths={effectParts.map((part) => estimateTextWidth(part, EFFECT_FONT))}
-              gap={estimateTextWidth(" · ", EFFECT_FONT)}
-              rowGap={0}
-              align="center"
-              style={styles.effectBox}
-              renderRow={(row) => <Text style={styles.effect}>{row.map((index) => effectParts[index]).join(" · ")}</Text>}
-            />
+            <View style={styles.effectBox}>
+              {effectParts.map((part) => (
+                <Text key={part} style={styles.effect}>
+                  {part}
+                </Text>
+              ))}
+            </View>
           );
 
           return (
@@ -238,7 +258,22 @@ export function KitchenScreen({
   );
 }
 
+const CATEGORY_TABS: { id: "all" | DishCategory; label: string; labelEn: string }[] = [
+  { id: "all", label: "전체", labelEn: "All" },
+  { id: "attack", label: "공격", labelEn: "Attack" },
+  { id: "critical", label: "치명타", labelEn: "Crit" },
+  { id: "speed", label: "속도", labelEn: "Speed" },
+  { id: "gold", label: "골드", labelEn: "Gold" },
+  { id: "drop", label: "재료", labelEn: "Drops" },
+  { id: "cooking", label: "요리", labelEn: "Cooking" },
+];
+
 const styles = StyleSheet.create({
+  tabScroll: { marginBottom: 10, marginHorizontal: -16 },
+  tabs: { gap: 6, paddingHorizontal: 16, paddingBottom: 4 },
+  tab: { minWidth: 58, minHeight: 38, paddingHorizontal: 10 },
+  tabText: { fontSize: 13 },
+  emptyTab: { marginTop: 4, marginBottom: 12, fontFamily: fonts.light, letterSpacing: -0.42, fontSize: 14, color: colors.brown, textAlign: "center" },
   page: { backgroundColor: "#e8dcc4", paddingHorizontal: 16, paddingTop: 20, paddingBottom: 25 },
   headingRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
   heading: { flex: 1 },
@@ -259,14 +294,15 @@ const styles = StyleSheet.create({
   gridName: { marginTop: 4, fontSize: 14, fontWeight: "900", fontFamily: fonts.bold, color: colors.ink },
   gridDescription: { fontFamily: fonts.light, letterSpacing: -0.36, marginTop: 2, minHeight: 34, fontSize: 12, lineHeight: 16, color: colors.muted, textAlign: "center" },
   gridIngredients: { justifyContent: "center", marginBottom: 8 },
-  gridCookButton: { alignSelf: "stretch" },
+  // Pinned to the card's bottom: cards in a row stretch to the tallest, so the buttons line up.
+  gridCookButton: { alignSelf: "stretch", marginTop: "auto" },
   // The "i" info button on each card's top-right corner: a soft ⓘ in the card's muted ink,
   // ringed so it reads as something to tap without shouting over the card.
   infoButton: { position: "absolute", top: 8, right: 9, zIndex: 1 },
   infoRing: { width: 19, height: 19, borderRadius: 10, borderWidth: 1.5, borderColor: "#b9a487", alignItems: "center", justifyContent: "center" },
   infoText: { fontSize: 12, lineHeight: 14, fontWeight: "900", fontFamily: fonts.bold, color: "#a48d6c" },
-  effectBox: { marginTop: 3 },
-  effect: { fontSize: EFFECT_FONT, lineHeight: 17, fontWeight: "900", fontFamily: fonts.bold, color: "#b0632a" },
+  effectBox: { marginTop: 3, alignItems: "center" },
+  effect: { fontSize: EFFECT_FONT, lineHeight: 17, fontWeight: "900", fontFamily: fonts.bold, color: "#b0632a", textAlign: "center" },
   // Missing ingredients: the dish goes black-and-white (faded too, where filters aren't supported).
   dishShort: { filter: "grayscale(1)", opacity: 0.6 },
   ingredients: { marginTop: 5, alignSelf: "stretch" },

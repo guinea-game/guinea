@@ -136,6 +136,43 @@ export function hasOwnEffect(recipeId: string) {
 }
 
 // Every recipe has an entry, so lookups never come up empty.
+// The kitchen's effect tabs. A dish files under every category one of its (positive)
+// effects belongs to, so a two-effect dish shows up in both tabs; a drawback (a negative
+// number, e.g. less attack) never files it anywhere.
+export type DishCategory = "attack" | "critical" | "speed" | "gold" | "drop" | "cooking";
+const CATEGORY_OF: Record<keyof BuffEffect, DishCategory> = {
+  attack: "attack",
+  extraHit: "attack",
+  bossDamage: "attack",
+  missReduction: "attack",
+  execute: "attack",
+  criticalChance: "critical",
+  criticalDamage: "critical",
+  attackSpeed: "speed",
+  skillCooldown: "speed",
+  skillReset: "speed",
+  gold: "gold",
+  exp: "gold",
+  offlineGold: "gold",
+  offlineBuffs: "gold",
+  dropRate: "drop",
+  dropDouble: "drop",
+  vegetableDrop: "drop",
+  seafoodDrop: "drop",
+  bossDropSure: "drop",
+  groceryDiscount: "drop",
+  cookSpeed: "cooking",
+  greatSuccess: "cooking",
+  ingredientSave: "cooking",
+};
+
+export function getDishCategories(recipeId: string): DishCategory[] {
+  if (INSTANT_DISHES[recipeId]) return ["gold"];
+  const effect = BUFFS[recipeId]?.effect ?? {};
+  const found = (Object.keys(effect) as (keyof BuffEffect)[]).filter((key) => (effect[key] ?? 0) > 0).map((key) => CATEGORY_OF[key]);
+  return [...new Set(found)];
+}
+
 export const BUFFS: Record<string, { effect: BuffEffect; tint: string }> = Object.fromEntries(
   RECIPES.map((recipe) => [recipe.id, EFFECTS[recipe.id] ?? { effect: DEFAULT_EFFECT[recipe.tier], tint: "#e8d5b0" }]),
 );
