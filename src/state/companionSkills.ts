@@ -23,7 +23,7 @@ export const COMPANION_CHEF_CRIT_BONUS = 30;
 // 셰프기니는 이미 OUTFIT_SURE_DROPS로 모든 드롭이 상시 확정이라 "드롭 1회 보장"은 의미가 없어서,
 // 대신 그 3초 동안 드롭 2배(곱) 확률을 올려준다.
 export const COMPANION_CHEF_DROP_DOUBLE_BONUS = 25;
-// 에겐기니 가속 코어: shaved straight off the equipped skill's cooldown, once.
+// 구미호 가속 코어: shaved straight off the equipped skill's cooldown, once.
 export const COMPANION_REDUCE_COOLDOWN_MS = 3_000;
 // 모험기니 든든한 한 끼: food-buff-derived numbers (not the outfit's own bonus) run this much
 // stronger while the window's up.

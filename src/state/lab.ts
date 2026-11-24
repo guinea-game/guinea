@@ -40,7 +40,7 @@ const BAG_LEVELS: (TrackLevel & { stackBonus: number })[] = [
   { gems: 1800, durationMs: 6 * HOUR, stackBonus: 48 },
 ];
 
-// Skill: a flat extra cooldown cut (seconds), stacking with 에겐기니's cooldownSec and food's
+// Skill: a flat extra cooldown cut (seconds), stacking with 구미호's cooldownSec and food's
 // skillCooldown — all three feed the same cooldownReductionMs in useGameState.
 const SKILL_LEVELS: (TrackLevel & { cooldownSec: number })[] = [
   { gems: 300, durationMs: 40 * MIN, cooldownSec: 20 },

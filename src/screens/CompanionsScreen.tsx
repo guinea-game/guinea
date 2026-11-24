@@ -202,8 +202,8 @@ export const COMPANIONS: { outfit: Outfit; name: string; blurb: string; detail: 
   },
   {
     outfit: "egenGini",
-    name: "에겐기니",
-    blurb: "벚꽃 지팡이를 든 다정하고 상냥한 기니. 함께 있으면 마음이 편안해진다.",
+    name: "구미호",
+    blurb: "사실은 기니가 아니라 둔갑한 구미호. 다정한 얼굴 뒤에 아홉 개의 꼬리를 숨기고 있다.",
     detail: companionDetail("egenGini"),
   },
   {

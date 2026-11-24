@@ -248,9 +248,10 @@ export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = 
     ],
   },
   // Reaching stage 21 (stage 20's tavern boss down): the worn-out party drags itself up the
-  // azalea path; 에겐기니 sweeps them back to life with a flower breeze (her skill cooldown
-  // cut) and shares azalea pancakes. A nine-tailed silhouette watches from the pavilion —
-  // stage 21's boss, 구미호.
+  // azalea path; 구미호, disguised as a gentle gini with a cherry blossom staff, sweeps them
+  // back to life with a flower breeze (her skill cooldown cut) and shares azalea pancakes — her
+  // true nine-tailed shadow flickers across the pavilion. She's also stage 21's boss: the
+  // "foxpath" comic below is where the party actually catches on.
   egen: {
     title: "진달래길의 꽃바람",
     panels: [
@@ -273,7 +274,7 @@ export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = 
         aspect: 498 / 752,
         sfx: "cookDone",
         bubbles: [
-          { text: "꽃바람 한 번이면\n괜찮아질 거야.", right: 0.02, top: 0.03, maxWidth: 0.36, tail: "left", tailAt: 0.6 },
+          { text: "꽃바람 한 번이면\n여우비처럼 금방 갤 거야.", right: 0.02, top: 0.03, maxWidth: 0.36, tail: "left", tailAt: 0.6 },
           { text: "몸이 가벼워졌어!", left: 0.2, top: 0.86, maxWidth: 0.36, tail: "top", tailAt: 0.2, shout: true },
         ],
       },
@@ -919,7 +920,7 @@ export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = 
         image: comics.foxpath2,
         aspect: 500 / 768,
         bubbles: [
-          { text: "고마워요,\n여우님.", right: 0.02, top: 0.8, maxWidth: 0.26, tail: "top", tailAt: 0.5 },
+          { text: "역시...\n너였구나!", right: 0.02, top: 0.8, maxWidth: 0.26, tail: "top", tailAt: 0.5 },
         ],
       },
       {
@@ -997,7 +998,7 @@ export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = 
         image: comics.shrinesteps3,
         aspect: 504 / 768,
         bubbles: [
-          { text: "여우불...\n구미호님이랑 닮았어.", right: 0.03, top: 0.1, maxWidth: 0.32, tail: "left", tailAt: 0.5 },
+          { text: "여우불...\n구미호가 자주 쓰던 거다!", right: 0.03, top: 0.1, maxWidth: 0.32, tail: "left", tailAt: 0.5 },
         ],
       },
       {

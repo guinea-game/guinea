@@ -267,7 +267,7 @@ export const OUTFIT_NAMES: Record<Outfit, string> = {
   explorerHamster: "탐험기니",
   tetoGini: "테토기니",
   assassinGini: "암살기니",
-  egenGini: "에겐기니",
+  egenGini: "구미호",
   samuraiGini: "사무라이기니",
   chefGini: "셰프기니",
   boxerGini: "복서기니",

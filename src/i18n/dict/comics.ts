@@ -58,7 +58,7 @@ export const COMICS_DICT: Record<string, string> = {
   "주막에서\n너무 놀았어...": "We partied too hard\nat the tavern...",
   "다리가\n안 움직여...": "My legs...\nwon't move...",
   "어머,\n다들 많이 지쳤구나.": "Oh my,\nyou're all worn out.",
-  "꽃바람 한 번이면\n괜찮아질 거야.": "One gust of flower wind\nand you'll be just fine.",
+  "꽃바람 한 번이면\n여우비처럼 금방 갤 거야.": "One gust of flower wind,\nand you'll clear up like a sun shower.",
   "몸이 가벼워졌어!": "My body feels so light!",
   "진달래 화전이야.\n같이 먹고 가~": "It's azalea pancake.\nHave some with us~",
   "맛있다!\n우리랑 같이 가자!": "Delicious!\nCome along with us!",
@@ -206,7 +206,7 @@ export const COMICS_DICT: Record<string, string> = {
   // foxpath
   "구미호의 지름길": "The Nine-Tailed Fox's Shortcut",
   "흥, 들켰네.": "Hmph, caught in the act.",
-  "고마워요,\n여우님.": "Thank you,\nMs. Fox.",
+  "역시...\n너였구나!": "I knew it...\nit was you!",
   "여우불이\n길을 비춰 줘...": "The fox-fire\nlights the way...",
   "궁궐 앞 장터야!": "It's the market before the palace!",
   "쌀가마가\n많다.": "So many\nrice sacks.",
@@ -222,7 +222,7 @@ export const COMICS_DICT: Record<string, string> = {
   "벚꽃 상어와 달밤": "The Cherry Blossom Shark and a Moonlit Night",
   "에취!\n꽃가루...": "Achoo!\nPollen...",
   "저 위에\n여우 신사가 있소.": "There's a fox shrine\nup there.",
-  "여우불...\n구미호님이랑 닮았어.": "Fox-fire...\nit looks just like the nine-tailed fox's.",
+  "여우불...\n구미호가 자주 쓰던 거다!": "Fox-fire...\nthat's the one our Nine-Tailed Fox always uses!",
   "흥,\n참배는 저쪽.": "Hmph,\nworship's that way.",
 
   // tanukimap

@@ -766,7 +766,7 @@ export function useAutoBattle({
     setSkillTimers(next);
   }, []);
 
-  // 에겐기니's companion skill (가속 코어): shaves a flat amount off the equipped skill's
+  // 구미호's companion skill (가속 코어): shaves a flat amount off the equipped skill's
   // cooldown, same idea as resetSkillCooldown but partial instead of all the way to zero.
   const reduceSkillCooldown = useCallback((ms: number) => {
     const id = equippedSkillRef.current;
