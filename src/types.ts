@@ -7,7 +7,7 @@ export type PlayerAnimation = "idle" | "attack" | "critical" | "win";
 export type EnemyAnimation = "idle" | "hit" | "die";
 export type EnemyKind = "slime" | "mushroom" | "carrot" | "chicken" | "potato" | "mouse" | "cauldron" | "mudskipper" | "bluefish" | "salamander" | "monkey" | "carp" | "cactus" | "fox" | "lizard" | "mantou" | "pig" | "magpie" | "snowRabbit" | "drunkCat" | "flowerSnake" | "riceSack" | "mackerel" | "blossomCrab" | "shrineFox" | "armorBeetle" | "onsenMonkey" | "ninjaFrog" | "lanternAngler" | "clamMaid" | "gondolaDuck" | "bellCalf" | "croissantKid" | "sleepyGini" | "sleepwalkerGini" | "candyBasketSlime" | "bee" | "angryCandyBasketSlime" | "thiefCrow" | "spiceElephant" | "teaYak" | "saffronParrot" | "coconutCrab" | "paddyDuck" | "hulaPineapple" | "prairieDog" | "pinataDonkey" | "cacaoSloth" | "grapeSnail" | "llamaCook";
 export type Outfit = "default" | "explorerHamster" | "tetoGini" | "assassinGini" | "egenGini" | "samuraiGini" | "chefGini" | "boxerGini" | "witchGini" | "cowboyGini";
-export type SkillId = "beam" | "steal" | "focus" | "execute" | "shout" | "diligent" | "glutton" | "barrage" | "teleport" | "carrotThrow" | "chiliThrow" | "meteor" | "harvest";
+export type SkillId = "beam" | "steal" | "focus" | "execute" | "shout" | "diligent" | "glutton" | "barrage" | "teleport" | "carrotThrow" | "chiliThrow" | "meteor";
 export type UpgradeMode = 1 | 10 | 100 | "next" | "max";
 
 export interface Quest {
@@ -181,6 +181,14 @@ export interface GameState {
   longNaps?: number;
   // Hidden quest ids already claimed.
   hiddenClaimed?: string[];
+  // 레벨 보상 milestones already claimed (state/levelRewards.ts), by level; missing on older saves.
+  levelRewardsClaimed?: number[];
+  // 연구소 (state/lab.ts): each tiered track's level reached (0 = not researched) and which
+  // one-time unlocks are owned; missing on older saves = nothing researched yet.
+  labLevels?: Partial<Record<"offline" | "drop" | "bag" | "skill" | "cooking", number>>;
+  labUnlocked?: ("companionCap" | "critCap")[];
+  // The one research in progress, if any — paid up front, applied once readyAt passes.
+  labResearch?: { id: string; readyAt: number };
   kills: number;
   totalGoldEarned: number;
   attackUpgrades: number;

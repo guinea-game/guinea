@@ -30,6 +30,7 @@ import { LockBadge } from "../components/LockBadge";
 import { getOutfitGemPrice, isOutfitUnlocked, OUTFIT_EARLY_UNLOCK_GEMS, OUTFIT_GEM_PRICE, OUTFIT_LOOP_GRANT, OUTFIT_UNLOCK_STAGE } from "../state/unlocks";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { COMPANION_MAX_LEVEL, COMPANION_SHARD_STAGE, getCompanionLevel, getCompanionShards, getShardCost, SHARDS_PER_BOSS } from "../state/progression";
+import { getCompanionLevelCap } from "../state/lab";
 import { BOSS_NAME, getEnemyKind, getStageCode } from "../state/stages";
 import type { GameState, Outfit } from "../types";
 import { t } from "../i18n";
@@ -375,8 +376,8 @@ export function CompanionsScreen({
   progress,
   onUpgrade,
 }: {
-  // 동료 승급 (state/progression.ts).
-  progress: Pick<GameState, "companionLevels" | "companionShards">;
+  // 동료 승급 (state/progression.ts); labUnlocked for the 연구소-gated cap past Lv.5.
+  progress: Pick<GameState, "companionLevels" | "companionShards" | "labUnlocked">;
   onUpgrade: (outfit: Outfit) => void;
   equippedOutfit: Outfit;
   // Furthest stage reached (0-based) — companions join on arriving at their stage.
@@ -456,7 +457,10 @@ export function CompanionsScreen({
           const level = getCompanionLevel(progress, item.outfit);
           const shards = getCompanionShards(progress, item.outfit);
           const shardCost = getShardCost(level);
-          const maxed = level >= COMPANION_MAX_LEVEL;
+          const trueMax = level >= COMPANION_MAX_LEVEL;
+          // Soft-capped at Lv.5 until 연구소's 동료 승급 한계 해제 is researched (lab.ts).
+          const maxed = level >= getCompanionLevelCap(progress);
+          const pendingLabUnlock = maxed && !trueMax;
           const canUpgrade = !locked && !maxed && shards >= shardCost;
           return (
             <Panel slice={equipped ? kit.panel : kit.inset} style={styles.card} key={item.outfit}>
@@ -522,17 +526,22 @@ export function CompanionsScreen({
                 <View style={styles.growth}>
                   <Image source={shardImageForLevel(level)} style={styles.growthIcon} />
                   <View style={styles.growthCopy}>
-                    <Text style={styles.growthLevel}>{maxed ? t(`Lv.${level} 최고`, `Lv.${level} Max`) : `Lv.${level}`}</Text>
+                    <Text style={styles.growthLevel}>{trueMax ? t(`Lv.${level} 최고`, `Lv.${level} Max`) : `Lv.${level}`}</Text>
                     <ProgressBar
                       progress={maxed ? 100 : Math.min(100, (shards / shardCost) * 100)}
-                      fill={maxed ? "blue" : canUpgrade ? "green" : "gold"}
+                      fill={trueMax ? "blue" : pendingLabUnlock ? "gold" : canUpgrade ? "green" : "gold"}
                       height={16}
-                      label={maxed ? t("최고 레벨", "Max") : `${shards} / ${shardCost}`}
+                      label={trueMax ? t("최고 레벨", "Max") : pendingLabUnlock ? t("연구소 필요", "Lab Needed") : `${shards} / ${shardCost}`}
                     />
                   </View>
                   {!maxed && (
                     <Text style={styles.nextUpgradeHint} numberOfLines={3}>
                       {t(OUTFIT_GROWTH_HINT[item.outfit][0], OUTFIT_GROWTH_HINT[item.outfit][1], OUTFIT_GROWTH_HINT[item.outfit][2], OUTFIT_GROWTH_HINT[item.outfit][3])}
+                    </Text>
+                  )}
+                  {pendingLabUnlock && (
+                    <Text style={styles.nextUpgradeHint} numberOfLines={3}>
+                      {t("연구소에서 승급 한계를 풀어야 더 키울 수 있어요.", "Research in the Lab to raise the upgrade cap further.")}
                     </Text>
                   )}
                   {!maxed && (

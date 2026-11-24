@@ -59,6 +59,7 @@ export function BattleMenu({
   onOpenQuest,
   questReady,
   onOpenLevelReward,
+  levelRewardReady,
   onOpenLab,
   onOpenEvent,
   bagFull,
@@ -73,6 +74,8 @@ export function BattleMenu({
   // A quest reward waiting: red dot on the medal (it sits still — no wobble down here).
   questReady: boolean;
   onOpenLevelReward: () => void;
+  // A level milestone reached but not yet claimed.
+  levelRewardReady: boolean;
   onOpenLab: () => void;
   onOpenEvent: () => void;
   bagFull: boolean;
@@ -99,7 +102,7 @@ export function BattleMenu({
           <IconCaption>{t("퀘스트", "Quests")}</IconCaption>
           {questReady && <Image source={kitImages.dotRed} style={styles.dot} accessibilityLabel={t("받을 보상 있음", "Reward available")} />}
         </Pressable>
-        <MenuButton icon={LEVEL_REWARD_ICON} label={t("레벨 보상", "Lv. Rewards")} onPress={onOpenLevelReward} />
+        <MenuButton icon={LEVEL_REWARD_ICON} label={t("레벨 보상", "Lv. Rewards")} onPress={onOpenLevelReward} dot={levelRewardReady} />
         <MenuButton icon={LAB_ICON} label={t("연구소", "Lab")} onPress={onOpenLab} />
         <MenuButton icon={EVENT_ICON} label={t("이벤트", "Event")} onPress={onOpenEvent} />
       </ScrollView>
@@ -118,11 +121,12 @@ export function BattleMenu({
   );
 }
 
-function MenuButton({ icon, label, onPress }: { icon: RowIcon; label: string; onPress: () => void }) {
+function MenuButton({ icon, label, onPress, dot }: { icon: RowIcon; label: string; onPress: () => void; dot?: boolean }) {
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} hitSlop={4} style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
       <Image source={icon.source} style={fitInBox(icon)} />
       <IconCaption>{label}</IconCaption>
+      {dot && <Image source={kitImages.dotRed} style={styles.dot} accessibilityLabel={t("받을 보상 있음", "Reward available")} />}
     </Pressable>
   );
 }

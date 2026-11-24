@@ -18,6 +18,7 @@ import { ConfirmModal } from "../components/ConfirmModal";
 import { BUFF_SLOT_PRICES } from "../state/buffs";
 import type { EnemyKind } from "../types";
 import { hasClaimableQuest } from "../state/quests";
+import { hasClaimableLevelReward } from "../state/levelRewards";
 import { isDailyAllDone } from "../state/daily";
 import { t } from "../i18n";
 
@@ -61,7 +62,7 @@ export function BattleScreen({ game }: { game: UseGameState }) {
     wasDisplayBoss.current = displayBoss;
   }, [displayBoss]);
 
-  // 레벨 보상 / 연구소 / 이벤트 buttons are in the row ahead of their pages; for now a tap says so.
+  // 이벤트 button is in the row ahead of its page; for now a tap says so.
   const [comingSoon, setComingSoon] = useState<string | null>(null);
 
   return (
@@ -264,10 +265,11 @@ export function BattleScreen({ game }: { game: UseGameState }) {
         dailyAllDone={isDailyAllDone(state)}
         onOpenQuest={() => game.setQuestOpen(true)}
         questReady={hasClaimableQuest(state)}
-        onOpenLevelReward={() => setComingSoon(t("레벨 보상", "Level Rewards"))}
-        onOpenLab={() => setComingSoon(t("연구소", "Lab"))}
+        onOpenLevelReward={() => game.setLevelRewardOpen(true)}
+        levelRewardReady={hasClaimableLevelReward(state)}
+        onOpenLab={() => game.setLabOpen(true)}
         onOpenEvent={() => setComingSoon(t("이벤트", "Event"))}
-        bagFull={slotsUsed(state.inventory) >= getBagCapacity(state.bagExpansions)}
+        bagFull={slotsUsed(state.inventory, game.bagStackSize) >= getBagCapacity(state.bagExpansions)}
         dropEvents={game.dropEvents}
         trailing={
           <BattleActionsPanel

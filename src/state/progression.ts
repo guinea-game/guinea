@@ -1,4 +1,5 @@
 import { GROCERY } from "./grocery";
+import { getCompanionLevelCap } from "./lab";
 import type { GameState, Outfit } from "../types";
 
 // Long-haul goals that survive each loop back to stage 1. Every bonus here adds on and has a
@@ -51,7 +52,7 @@ export function applyCompanionUpgrade(previous: GameState, outfit: Outfit): Game
   const level = getCompanionLevel(previous, outfit);
   const cost = getShardCost(level);
   const shards = getCompanionShards(previous, outfit);
-  if (level >= COMPANION_MAX_LEVEL || shards < cost) return previous;
+  if (level >= getCompanionLevelCap(previous) || shards < cost) return previous;
   return {
     ...previous,
     companionShards: { ...previous.companionShards, [outfit]: shards - cost },

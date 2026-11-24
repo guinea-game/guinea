@@ -4,7 +4,7 @@ import type { EnemyKind, GameState, Outfit, SkillId, StatKey, UpgradeMode } from
 import { ATTENDANCE_REWARDS, getAttendance, todayKey } from "./attendance";
 import { subscribeAdShowing } from "../ads";
 import { LATEST_UPDATE } from "./updates";
-import { GLUTTON_FOOD_MULTIPLIER, HARVEST_DROP_DOUBLE_BONUS, INITIAL_SKILL_TIMERS, SKILL_SWAP_LOCK_MS, getSkill } from "./skills";
+import { GLUTTON_FOOD_MULTIPLIER, INITIAL_SKILL_TIMERS, SKILL_SWAP_LOCK_MS, getSkill } from "./skills";
 import { initialState } from "./initialState";
 import {
   addCompanionShards,
@@ -23,6 +23,8 @@ import { applyUpgradeLevels, BOSS_PHASE_TWO_TIME_LIMIT_MS, GEM_STATS, getBossTim
 import { useAutoBattle } from "./useAutoBattle";
 import { clearSave, loadSave, writeSave } from "./storage";
 import { claimHiddenQuest, claimMission, migrateQuestClaims } from "./quests";
+import { claimLevelReward as payLevelReward } from "./levelRewards";
+import { completeLabResearch, getEffectiveStatCap, getLabBagStackSize, getLabCookSpeedBonus, getLabDropDoubleBonus, getLabSkillCooldownSec, getOfflineCapMs, startLabResearch, type LabResearchId } from "./lab";
 import { deliverOrder, needsNewDaily, startDaily } from "./daily";
 import { getOutfitGemPrice, getOutfitsGrantedByLoop, getOutfitsUnlockedByStage, getUnlocksAtLevel, isOutfitUnlocked, isSkillUnlocked, syncStageUnlockedOutfits } from "./unlocks";
 import { fitItems, getBagCapacity, getBagExpandCost, BAG_MAX_SLOTS, slotsUsed } from "./bag";
@@ -41,7 +43,7 @@ import { GROCERY, applyDiscount, getSellPrice, getShortfall } from "./grocery";
 import { canCook, consumeIngredients, getKnownRecipes, isRecipeForSale, RECIPES } from "./recipes";
 import { playSfx } from "../sound";
 import { playHaptic } from "../haptics";
-import { simulateOfflineProgress, type OfflineSummary, MAX_OFFLINE_MS } from "./offline";
+import { simulateOfflineProgress, type OfflineSummary } from "./offline";
 import {
   BOSS_SKILL_CHECKPOINTS,
   ENRAGED_BOSS_SKILL_CHECKPOINTS,
@@ -126,6 +128,8 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   const [adShowing, setAdShowing] = useState(false);
   useEffect(() => subscribeAdShowing(setAdShowing), []);
   const [questOpen, setQuestOpen] = useState(false);
+  const [levelRewardOpen, setLevelRewardOpen] = useState(false);
+  const [labOpen, setLabOpen] = useState(false);
   const [boss, setBoss] = useState(false);
   // Which of the boss's two lives is up. Not saved, like the rest of the fight: a reload
   // starts the boss over from its first.
@@ -247,10 +251,14 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   // dish totals, since that's where the kitchen and drop rolls read them.
   const foodBuffs = {
     ...dishBuffs,
-    cookSpeed: dishBuffs.cookSpeed + (outfitBuff.cookSpeed ?? 0),
+    cookSpeed: dishBuffs.cookSpeed + (outfitBuff.cookSpeed ?? 0) + getLabCookSpeedBonus(state),
     greatSuccess: dishBuffs.greatSuccess + (outfitBuff.greatSuccess ?? 0),
     dropRate: dishBuffs.dropRate + (outfitBuff.dropRate ?? 0),
   };
+  // 가방 연구 (lab.ts): how many of one item a slot holds right now.
+  const bagStackSize = getLabBagStackSize(state);
+  // 드랍률 연구 (lab.ts): permanent double-drop chance.
+  const labDropDoubleBonus = getLabDropDoubleBonus(state);
   // Boss entrance's ad-for-attack-buff — same wall-clock-epoch shape as speedBoostUntil below,
   // so it keeps counting down while the app is closed.
   const bossBuffRemainingMs = state.bossBuffUntil ? Math.max(0, state.bossBuffUntil - now) : 0;
@@ -321,7 +329,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
           : "default";
         // Same guard for a save written before a skill (e.g. the old "freeze"/"swords"/"meteor"
         // magic trio) was retired — getSkill() would otherwise throw looking it up.
-        const validSkills = ["beam", "steal", "focus", "execute", "shout", "diligent", "glutton", "barrage", "teleport", "carrotThrow", "chiliThrow", "meteor", "harvest"];
+        const validSkills = ["beam", "steal", "focus", "execute", "shout", "diligent", "glutton", "barrage", "teleport", "carrotThrow", "chiliThrow", "meteor"];
         const equippedSkill = save.state.equippedSkill && validSkills.includes(save.state.equippedSkill) ? save.state.equippedSkill : null;
         // Placeholder starter materials that were never used by any recipe — strip them
         // from older saves so they stop cluttering the bag.
@@ -374,7 +382,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
           if (result) {
             loadedState = result.state;
             // Away the full offline cap or longer: a "slept the whole time" for the hidden quest.
-            if (awayMs >= MAX_OFFLINE_MS) loadedState = { ...loadedState, longNaps: (loadedState.longNaps ?? 0) + 1 };
+            if (awayMs >= getOfflineCapMs(loadedState)) loadedState = { ...loadedState, longNaps: (loadedState.longNaps ?? 0) + 1 };
             setOfflineSummary(result.summary);
             if (result.summary.goldEarned > (loadedState.records?.bestOfflineGold ?? 0)) {
               loadedState = { ...loadedState, records: { ...loadedState.records, bestOfflineGold: result.summary.goldEarned } };
@@ -630,7 +638,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
         dropRate +
         (ITEM_CATEGORY.get(name) === "vegetable" ? vegetableDrop : 0) +
         (ITEM_CATEGORY.get(name) === "seafood" ? seafoodDrop : 0),
-      doubleChance: dropDouble + (state.equippedSkill === "harvest" ? HARVEST_DROP_DOUBLE_BONUS : 0) + companionChefDropBoost,
+      doubleChance: dropDouble + companionChefDropBoost + labDropDoubleBonus,
       bossSure: bossDropSure > 0,
       allSure: OUTFIT_SURE_DROPS[state.equippedOutfit] ?? false,
     };
@@ -640,7 +648,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
       ...(wasMiniBoss ? rollDrops(getEnemyKind(state.stageNumber), false, dropOptions) : []),
     ];
     const withGift = gift ? [...rolled.filter((drop) => drop.name !== "초록 젤리"), { name: "초록 젤리", quantity: 1 }] : rolled;
-    const fitted = fitItems(state.inventory, withGift, getBagCapacity(state.bagExpansions));
+    const fitted = fitItems(state.inventory, withGift, getBagCapacity(state.bagExpansions), bagStackSize);
     const drops = fitted.kept;
     if (fitted.overflow.length > 0) notifyBagFull(true);
     // The very first gift kill's loot stays put on the ground — the battle pauses and the
@@ -751,7 +759,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
         experience,
       };
     });
-  }, [boss, bossPhase, bossHasPhaseTwo, miniBoss, goldenMini, strayKind, state.stageKills, state.stageMiniBosses, state.bossKills, state.runSeed, state.stageNumber, state.inventory, state.bagExpansions, state.bossesCleared, state.highestStageNumber, state.loopsCompleted, state.purchasedOutfits, state.equippedOutfit, state.equippedSkill, dropRate, vegetableDrop, seafoodDrop, dropDouble, bossDropSure, expBonus, startBossFight, state.giftKills, state.giftLootExplained, bossTimeLimitMs, state.buffSlots, state.stageStars, companionChefDropBoost]);
+  }, [boss, bossPhase, bossHasPhaseTwo, miniBoss, goldenMini, strayKind, state.stageKills, state.stageMiniBosses, state.bossKills, state.runSeed, state.stageNumber, state.inventory, state.bagExpansions, state.bossesCleared, state.highestStageNumber, state.loopsCompleted, state.purchasedOutfits, state.equippedOutfit, dropRate, vegetableDrop, seafoodDrop, dropDouble, bossDropSure, expBonus, startBossFight, state.giftKills, state.giftLootExplained, bossTimeLimitMs, state.buffSlots, state.stageStars, companionChefDropBoost, bagStackSize, labDropDoubleBonus]);
 
   // Gold that isn't a kill reward (the Steal skill) still counts toward the gold quest.
   const addBonusGold = useCallback((amount: number) => {
@@ -880,7 +888,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     // 테토기니's companion skill (전력 질주): forces 0% for the window, food reduction included.
     missChance: companionTetoNoMiss ? 0 : Math.max(0, outfitStats.missChance - foodBuffs.missReduction),
     hitCount: outfitStats.hitCount,
-    cooldownReductionMs: (outfitStats.cooldownSec + foodBuffs.skillCooldown) * 1000,
+    cooldownReductionMs: (outfitStats.cooldownSec + foodBuffs.skillCooldown + getLabSkillCooldownSec(state)) * 1000,
     bossDamage: foodBuffs.bossDamage,
     skillPower: OUTFIT_SKILL_POWER[state.equippedOutfit] ?? 1,
     firstStrikeMultiplier: outfitStats.firstStrike,
@@ -1186,7 +1194,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     setState((previous) => {
       const usesGems = GEM_STATS.includes(key);
       const balance = usesGems ? previous.gems : previous.gold;
-      const quote = getUpgradeQuote(key, getStatLevel(previous, key), balance, upgradeMode, getStatValue(previous, key));
+      const quote = getUpgradeQuote(key, getStatLevel(previous, key), balance, upgradeMode, getStatValue(previous, key), getEffectiveStatCap(previous, key));
       if (quote.levels === 0 || balance < quote.cost) return previous;
       const attackUpgrades =
         key === "attack"
@@ -1232,6 +1240,17 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
 
   const claimQuest = (id: string) =>
     setState((previous) => (/^c\d+-/.test(id) ? claimMission(previous, id) : claimHiddenQuest(previous, id)));
+
+  const claimLevelReward = (level: number) => setState((previous) => payLevelReward(previous, level));
+
+  const startResearch = (id: LabResearchId) => setState((previous) => startLabResearch(previous, id));
+  // Ticks alongside the once-a-second `now` clock (see above) — the moment a research's
+  // readyAt passes, this lands it (open or not; it's an absolute timestamp, not a simulation).
+  useEffect(() => {
+    if (!loaded) return;
+    const timer = setTimeout(() => setState((previous) => completeLabResearch(previous, Date.now())), 0);
+    return () => clearTimeout(timer);
+  }, [loaded, now]);
 
   const selectStage = (stageNumber: number) => {
     const highestStageNumber = state.highestStageNumber ?? state.stageNumber;
@@ -1345,7 +1364,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   // bag fills up — not again until it has had room in between.
   const [bagFullAt, setBagFullAt] = useState<number | null>(null);
   const dropNoticeShownRef = useRef(false);
-  const bagHasRoom = slotsUsed(state.inventory) < getBagCapacity(state.bagExpansions);
+  const bagHasRoom = slotsUsed(state.inventory, bagStackSize) < getBagCapacity(state.bagExpansions);
   useEffect(() => {
     if (bagHasRoom) dropNoticeShownRef.current = false;
   }, [bagHasRoom]);
@@ -1415,11 +1434,11 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     const recipe = RECIPES.find((item) => item.id === recipeId);
     if (!recipe) return "failed";
     const failed = grade === "fail";
-    if (!failed && fitItems(state.inventory, [{ name: recipe.name, quantity: 1 }], getBagCapacity(state.bagExpansions)).overflow.length > 0) return "full";
+    if (!failed && fitItems(state.inventory, [{ name: recipe.name, quantity: 1 }], getBagCapacity(state.bagExpansions), bagStackSize).overflow.length > 0) return "full";
     const great =
       !failed &&
       Math.random() * 100 < foodBuffs.greatSuccess &&
-      fitItems(state.inventory, [{ name: recipe.name, quantity: 2 }], getBagCapacity(state.bagExpansions)).overflow.length === 0;
+      fitItems(state.inventory, [{ name: recipe.name, quantity: 2 }], getBagCapacity(state.bagExpansions), bagStackSize).overflow.length === 0;
     const count = great ? 2 : 1;
     if (!failed) {
       setState((previous) => {
@@ -1443,13 +1462,13 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   const buyIngredient = (name: string, listPrice: number): "ok" | "gold" | "full" => {
     const price = applyDiscount(listPrice, foodBuffs.groceryDiscount);
     if (state.gold < price) return "gold";
-    if (fitItems(state.inventory, [{ name, quantity: 1 }], getBagCapacity(state.bagExpansions)).overflow.length > 0) {
+    if (fitItems(state.inventory, [{ name, quantity: 1 }], getBagCapacity(state.bagExpansions), bagStackSize).overflow.length > 0) {
       notifyBagFull();
       return "full";
     }
     setState((previous) => {
       if (previous.gold < price) return previous;
-      const { kept } = fitItems(previous.inventory, [{ name, quantity: 1 }], getBagCapacity(previous.bagExpansions));
+      const { kept } = fitItems(previous.inventory, [{ name, quantity: 1 }], getBagCapacity(previous.bagExpansions), getLabBagStackSize(previous));
       return {
         ...previous,
         gold: previous.gold - price,
@@ -1628,6 +1647,11 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     setState,
     questOpen,
     setQuestOpen,
+    levelRewardOpen,
+    setLevelRewardOpen,
+    labOpen,
+    setLabOpen,
+    startResearch,
     boss,
     defeatedBoss,
     defeatedStageNumber,
@@ -1681,6 +1705,8 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     skillTutorialActive,
     upgradeStat,
     claimQuest,
+    claimLevelReward,
+    bagStackSize,
     deliverDailyOrder,
     priceStage,
     catchFlyingCoin,

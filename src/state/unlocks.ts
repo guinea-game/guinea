@@ -49,9 +49,7 @@ export function getOutfitGemPrice(outfit: Outfit): number | undefined {
 }
 
 // Skills: utility and short buffs early, the big damage dealers late, spread out so a new
-// one opens every 15-25 levels up to Execute — the strongest passive — at level 200. 알찬
-// 수확 follows at 220 as a late-game loop-grinding passive (drop rate, not combat power), so
-// it doesn't crowd the main 15-25 level cadence above.
+// one opens every 15-25 levels up to Execute — the strongest passive — at level 200.
 // steal is pulled down to 2 on its own — that's about when a fresh player reaches the
 // first boss (see gini_balance_economy memory), so it's the one skill introduced via
 // SkillTutorial right as the player has something to use it on.
@@ -68,7 +66,6 @@ export const SKILL_UNLOCK_LEVEL: Record<SkillId, number> = {
   meteor: 150,
   beam: 175,
   execute: 200,
-  harvest: 220,
 };
 
 // `highestStageNumber`: the furthest stage (0-based) ever reached. `purchasedOutfits`:

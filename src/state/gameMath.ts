@@ -213,8 +213,10 @@ export const STAT_CAP: Partial<Record<StatKey, number>> = {
 
 // `currency`: gold for most stats, gems for the ones in GEM_STATS — only used to cap "max"
 // mode at what's actually affordable, so the caller picks which balance to pass in.
-export function getUpgradeQuote(key: StatKey, level: number, currency: number, mode: UpgradeMode, value: number) {
-  const cap = STAT_CAP[key];
+// `capOverride`: pass state/lab.ts's getEffectiveStatCap(state, key) so a 연구소-raised cap
+// (criticalChance/criticalDamage) is honored instead of STAT_CAP's default.
+export function getUpgradeQuote(key: StatKey, level: number, currency: number, mode: UpgradeMode, value: number, capOverride?: number) {
+  const cap = capOverride ?? STAT_CAP[key];
   const capLevels = cap === undefined ? Number.POSITIVE_INFINITY : Math.max(0, Math.floor((cap - value) / statInfo[key].step + 1e-9));
   const requestedLevels = Math.min(
     capLevels,

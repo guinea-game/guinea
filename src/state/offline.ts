@@ -6,6 +6,7 @@ import { getBuffTotals, getOutfitStats, OUTFIT_NO_OFFLINE } from "./buffs";
 import { getCompanionLevel } from "./progression";
 import { getDropTable } from "./drops";
 import { fitItems, getBagCapacity } from "./bag";
+import { getLabBagStackSize, getOfflineCapMs, getOfflineRewardRate } from "./lab";
 
 export type OfflineSummary = {
   mobsKilled: number;
@@ -33,12 +34,9 @@ const AVG_HIT_INTERVAL_MS = 1180;
 const MOB_RESPAWN_MS = 650 + 220;
 
 // Offline grinding pays less than actually playing — otherwise leaving the app open would
-// be strictly better than fighting in person. User's call: 1/8 of the online rate, applied
-// to both gold and exp equally.
-const OFFLINE_REWARD_RATE = 1 / 8;
-
-// Caps how much time away actually counts, and ignores trivial app switches.
-export const MAX_OFFLINE_MS = 8 * 60 * 60 * 1000;
+// be strictly better than fighting in person. User's call: 1/8 of the online rate by default,
+// applied to both gold and exp equally; 연구소's offline track (lab.ts) raises both this rate
+// and the cap below together.
 const MIN_OFFLINE_MS = 30 * 1000;
 
 function expectedDamage(attack: number, criticalChance: number, criticalDamage: number) {
@@ -59,7 +57,8 @@ export function simulateOfflineProgress(
   elapsedMsRaw: number
 ): { state: GameState; summary: OfflineSummary } | null {
   if (OUTFIT_NO_OFFLINE[state.equippedOutfit]) return null;
-  const elapsedMs = Math.min(elapsedMsRaw, MAX_OFFLINE_MS);
+  const offlineRewardRate = getOfflineRewardRate(state);
+  const elapsedMs = Math.min(elapsedMsRaw, getOfflineCapMs(state));
   if (elapsedMs < MIN_OFFLINE_MS) return null;
   const leftAt = Date.now() - elapsedMsRaw;
   const atLeave = getBuffTotals(state.buffSlots, leftAt, state.equippedOutfit);
@@ -102,7 +101,7 @@ export function simulateOfflineProgress(
       state.criticalDamage + (food?.criticalDamage ?? 0),
     );
     if (dmg <= 0) continue;
-    const mobExpReward = Math.round(getExpReward(difficultyStage, false) * (1 + (food?.exp ?? 0) / 100) * OFFLINE_REWARD_RATE);
+    const mobExpReward = Math.round(getExpReward(difficultyStage, false) * (1 + (food?.exp ?? 0) / 100) * offlineRewardRate);
     // 사무라이기니's opening draw (attack × N, no crit) may finish a mob outright.
     const outfitStats = getOutfitStats(state.equippedOutfit, getCompanionLevel(state, state.equippedOutfit));
     const firstStrike = outfitStats.firstStrike;
@@ -114,7 +113,7 @@ export function simulateOfflineProgress(
     while (remainingMs >= msPerMob) {
       remainingMs -= msPerMob;
 
-      const goldReward = Math.round(getGoldReward(attack, state.goldBonus + (food?.gold ?? 0), getEnemyRewardHp(difficultyStage, false), false) * goldMultiplier * OFFLINE_REWARD_RATE);
+      const goldReward = Math.round(getGoldReward(attack, state.goldBonus + (food?.gold ?? 0), getEnemyRewardHp(difficultyStage, false), false) * goldMultiplier * offlineRewardRate);
       gold += goldReward;
       totalGoldEarned += goldReward;
       kills += 1;
@@ -137,11 +136,11 @@ export function simulateOfflineProgress(
   // bag has no room for is left behind, as it would be in a live fight.
   const rolled = getDropTable(getEnemyKind(state.stageNumber), false)
     .map((entry) => {
-      const expected = mobsKilled * entry.chance * OFFLINE_REWARD_RATE * (entry.quantity ?? 1);
+      const expected = mobsKilled * entry.chance * offlineRewardRate * (entry.quantity ?? 1);
       return { name: entry.name, quantity: Math.floor(expected) + (Math.random() < expected % 1 ? 1 : 0) };
     })
     .filter((item) => item.quantity > 0);
-  const fitted = fitItems(state.inventory, rolled, getBagCapacity(state.bagExpansions));
+  const fitted = fitItems(state.inventory, rolled, getBagCapacity(state.bagExpansions), getLabBagStackSize(state));
   const items = fitted.kept.map(({ name, quantity }) => ({ name, quantity }));
   const inventory = items.reduce((bag, item) => {
     const owned = bag.find((entry) => entry.name === item.name);

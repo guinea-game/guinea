@@ -804,7 +804,6 @@ export const skillImages = {
   carrotThrow: require("../assets/skills/carrotThrow.webp"),
   chiliThrow: require("../assets/skills/chiliThrow.webp"),
   meteor: require("../assets/skills/meteor.webp"),
-  harvest: require("../assets/skills/harvest.webp"),
 };
 const SQUARE_ICON = 256 / 258;
 export const SKILL_ICON_ASPECT: Record<keyof typeof skillImages, number> = {
@@ -820,7 +819,6 @@ export const SKILL_ICON_ASPECT: Record<keyof typeof skillImages, number> = {
   carrotThrow: 1,
   chiliThrow: 1,
   meteor: 1,
-  harvest: 1,
 };
 
 export const food = {

@@ -7,7 +7,8 @@ import { frameKit, kit, panelSlices, statIcons, uiImages } from "../assets";
 import { GameButton } from "../components/GameButton";
 import { Panel } from "../components/NineSlice";
 import { FloatText, useFlash, useHoldRepeat, useShake } from "../components/motion";
-import { applyUpgradeLevels, formatGameNumber, GEM_STATS, getStatLevel, getStatValue, getUpgradeQuote, statInfo, STAT_CAP } from "../state/gameMath";
+import { applyUpgradeLevels, formatGameNumber, GEM_STATS, getStatLevel, getStatValue, getUpgradeQuote, statInfo } from "../state/gameMath";
+import { getEffectiveStatCap } from "../state/lab";
 import { CoinPrice } from "../components/CoinPrice";
 import type { GameState, StatKey, UpgradeMode } from "../types";
 import { t } from "../i18n";
@@ -70,14 +71,15 @@ function StatRow({
   // Gem stats (attackSpeed) spend gems at a flat per-level cost instead of gold.
   const usesGems = GEM_STATS.includes(key);
   const balance = usesGems ? state.gems : state.gold;
-  const quote = getUpgradeQuote(key, level, balance, upgradeMode, value);
+  const cap = getEffectiveStatCap(state, key);
+  const quote = getUpgradeQuote(key, level, balance, upgradeMode, value, cap);
   const nextValue = applyUpgradeLevels(key, value, quote.levels);
   const suffix = key === "attack" ? "" : "%";
   // 공격력 only: formatGameNumber shows up to 3 decimals under 1000 — too noisy here,
   // capped to 1 instead of switching every other screen that reads attack. From 1,000 up
   // formatGameNumber already drops decimals, and past six digits it adds the a/b/c units.
   const formatStat = (n: number) => (key === "attack" && Math.abs(n) < 1000 ? n.toLocaleString("ko-KR", { maximumFractionDigits: 1 }) : formatGameNumber(n));
-  const atCap = STAT_CAP[key] !== undefined && getStatValue(state, key) >= STAT_CAP[key]!;
+  const atCap = cap !== undefined && getStatValue(state, key) >= cap;
   const affordable = quote.levels > 0 && balance >= quote.cost;
   const short = !atCap && !affordable;
 

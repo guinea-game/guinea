@@ -9,6 +9,8 @@ import { BottomNavigation } from "./components/BottomNavigation";
 import { ConfirmModal } from "./components/ConfirmModal";
 import { ExitBannerAd } from "./components/ExitBannerAd";
 import { QuestModal } from "./components/QuestModal";
+import { LevelRewardModal } from "./components/LevelRewardModal";
+import { LabModal } from "./components/LabModal";
 import { OfflineRewardModal } from "./components/OfflineRewardModal";
 import { BattleScreen } from "./screens/BattleScreen";
 import { CompanionsScreen } from "./screens/CompanionsScreen";
@@ -86,7 +88,7 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
   const [playingComic, setPlayingComic] = useState<ComicId | null>(null);
   const [comicPaused, setComicPaused] = useState(false);
   const game = useGameState({ externallyPaused: comicPaused });
-  const { state, setState, questOpen, setQuestOpen, claimQuest } = game;
+  const { state, setState, questOpen, setQuestOpen, claimQuest, levelRewardOpen, setLevelRewardOpen, claimLevelReward, labOpen, setLabOpen, startResearch } = game;
   // Grocery/recipe/sell prices (see useGameState's own priceStage) keyed off the furthest
   // stage of this loop, so prices stay put across a loop instead of resetting cheap.
   const priceStage = getDifficultyStage(state.highestStageNumber ?? state.stageNumber, state.loopsCompleted ?? 0);
@@ -323,6 +325,7 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             priceStage={priceStage}
             gems={state.gems}
             expansions={state.bagExpansions ?? 0}
+            stackSize={game.bagStackSize}
             onExpand={game.expandBag}
             bagSeen={state.bagSeen}
             codexSeen={state.codexSeen}
@@ -484,6 +487,12 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
         )}
         {questOpen && (
           <QuestModal state={state} gems={state.gems} onClose={() => setQuestOpen(false)} onClaim={claimQuest} />
+        )}
+        {levelRewardOpen && (
+          <LevelRewardModal state={state} onClose={() => setLevelRewardOpen(false)} onClaim={claimLevelReward} />
+        )}
+        {labOpen && (
+          <LabModal state={state} now={game.now} onClose={() => setLabOpen(false)} onStartResearch={startResearch} />
         )}
         {game.offlineSummary && (
           <OfflineRewardModal

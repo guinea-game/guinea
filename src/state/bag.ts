@@ -19,30 +19,32 @@ export function getBagExpandCost(expansions = 0) {
   return 30 + expansions * 20;
 }
 
-export function slotsFor(quantity: number) {
-  return Math.ceil(quantity / STACK_SIZE);
+// `stackSize` defaults to the base STACK_SIZE; pass state/lab.ts's getLabBagStackSize(state)
+// wherever a save is in scope, so a researched bag actually holds more per slot.
+export function slotsFor(quantity: number, stackSize: number = STACK_SIZE) {
+  return Math.ceil(quantity / stackSize);
 }
 
-// Slots the whole bag takes up: every item, split into stacks of STACK_SIZE.
-export function slotsUsed(inventory: Inventory) {
-  return inventory.reduce((total, item) => total + slotsFor(item.quantity), 0);
+// Slots the whole bag takes up: every item, split into stacks of stackSize.
+export function slotsUsed(inventory: Inventory, stackSize: number = STACK_SIZE) {
+  return inventory.reduce((total, item) => total + slotsFor(item.quantity, stackSize), 0);
 }
 
 // Splits incoming items into what fits (topping up an item's last stack, then free slots)
 // and what's left over because the bag is full — partially, if only some of a pile fits.
-export function fitItems<T extends { name: string; quantity?: number }>(inventory: Inventory, items: T[], capacity: number) {
+export function fitItems<T extends { name: string; quantity?: number }>(inventory: Inventory, items: T[], capacity: number, stackSize: number = STACK_SIZE) {
   const owned = new Map(inventory.map((item) => [item.name, item.quantity]));
-  let used = slotsUsed(inventory);
+  let used = slotsUsed(inventory, stackSize);
   const kept: (T & { quantity: number })[] = [];
   const overflow: (T & { quantity: number })[] = [];
   for (const item of items) {
     const want = item.quantity ?? 1;
     const have = owned.get(item.name) ?? 0;
-    const room = slotsFor(have) * STACK_SIZE - have + Math.max(0, capacity - used) * STACK_SIZE;
+    const room = slotsFor(have, stackSize) * stackSize - have + Math.max(0, capacity - used) * stackSize;
     const take = Math.min(want, room);
     if (take > 0) {
       kept.push({ ...item, quantity: take });
-      used += slotsFor(have + take) - slotsFor(have);
+      used += slotsFor(have + take, stackSize) - slotsFor(have, stackSize);
       owned.set(item.name, have + take);
     }
     if (take < want) overflow.push({ ...item, quantity: want - take });

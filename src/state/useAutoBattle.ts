@@ -178,7 +178,6 @@ export function useAutoBattle({
     carrotThrow: 0,
     chiliThrow: 0,
     meteor: 0,
-    harvest: 0,
   });
   // 운석 낙하: bumped per falling meteor (the cast's own, then one per mob of the shower), so
   // the scene drops a fresh rock each time. Charges are the mobs still to come in the shower.

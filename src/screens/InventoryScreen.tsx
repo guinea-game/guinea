@@ -6,7 +6,7 @@ import { colors, fonts } from "../theme";
 import { frameKit, icons, kit, uiImages } from "../assets";
 import { IngredientCodex } from "../components/IngredientCodex";
 import { ITEM_IMAGES } from "../state/recipes";
-import { BAG_EXPAND_SLOTS, BAG_MAX_SLOTS, getBagCapacity, getBagExpandCost, slotsFor, STACK_SIZE } from "../state/bag";
+import { BAG_EXPAND_SLOTS, BAG_MAX_SLOTS, getBagCapacity, getBagExpandCost, slotsFor } from "../state/bag";
 import { Panel } from "../components/NineSlice";
 import { PageHeading } from "../components/PageHeading";
 import { GameButton } from "../components/GameButton";
@@ -28,6 +28,7 @@ export function InventoryScreen({
   priceStage,
   gems,
   expansions,
+  stackSize,
   onExpand,
   onOpenShop,
   bagSeen,
@@ -43,6 +44,8 @@ export function InventoryScreen({
   priceStage: number;
   gems: number;
   expansions: number;
+  // state/lab.ts's getLabBagStackSize(state) — how many of one item a slot holds right now.
+  stackSize: number;
   onExpand: () => boolean;
   onOpenShop: () => void;
   // What was in the bag / codex at the last visit (undefined = never tracked yet).
@@ -60,9 +63,9 @@ export function InventoryScreen({
   const affordable = gems >= cost;
   // One cell per stack: an item over 64 fills a cell with 64 and carries on in the next.
   const stacks: (InventoryItem & { key: string })[] = inventory.flatMap((item) =>
-    Array.from({ length: slotsFor(item.quantity) }, (_, index) => ({
+    Array.from({ length: slotsFor(item.quantity, stackSize) }, (_, index) => ({
       ...item,
-      quantity: Math.min(STACK_SIZE, item.quantity - index * STACK_SIZE),
+      quantity: Math.min(stackSize, item.quantity - index * stackSize),
       key: `${item.name}-${index}`,
     })),
   );
@@ -134,8 +137,18 @@ export function InventoryScreen({
           />
           <Text style={styles.summaryHint}>
             {canSell
-              ? t("같은 아이템은 64개씩 쌓여요. 재료를 누르면 팔 수 있어요.", "Items stack in 64s. Tap an ingredient to sell it.")
-              : t("같은 아이템은 한 칸에 64개까지 쌓여요.", "Items stack up to 64 per slot.")}
+              ? t(
+                  `같은 아이템은 ${stackSize}개씩 쌓여요. 재료를 누르면 팔 수 있어요.`,
+                  `Items stack in ${stackSize}s. Tap an ingredient to sell it.`,
+                  `同じアイテムは${stackSize}個まとめて積み重なります。材料を押すと売れます。`,
+                  `相同道具最多可以叠加${stackSize}个。点击食材即可出售。`,
+                )
+              : t(
+                  `같은 아이템은 한 칸에 ${stackSize}개까지 쌓여요.`,
+                  `Items stack up to ${stackSize} per slot.`,
+                  `同じアイテムは1スロットに${stackSize}個まで積み重なります。`,
+                  `相同道具一格最多可以叠加${stackSize}个。`,
+                )}
           </Text>
         </View>
         {maxed ? (
