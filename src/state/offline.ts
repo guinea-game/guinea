@@ -6,7 +6,7 @@ import { getBuffTotals, getOutfitStats, OUTFIT_NO_OFFLINE } from "./buffs";
 import { getCompanionLevel } from "./progression";
 import { getDropTable } from "./drops";
 import { fitItems, getBagCapacity } from "./bag";
-import { getLabBagStackSize, getOfflineCapMs, getOfflineRewardRate } from "./lab";
+import { getLabBagStackSize, getLabMobHpScale, getOfflineCapMs, getOfflineRewardRate } from "./lab";
 
 export type OfflineSummary = {
   mobsKilled: number;
@@ -88,7 +88,7 @@ export function simulateOfflineProgress(
   // (see getEffectiveDifficultyStage), in which case offline progress stays just as easy/cheap
   // as it would be live.
   const difficultyStage = getEffectiveDifficultyStage(state);
-  const enemyMaxHp = getEnemyMaxHp(difficultyStage, false);
+  const enemyMaxHp = getEnemyMaxHp(difficultyStage, false) * getLabMobHpScale(state);
 
   for (const segment of segments) {
     // Leftover time from the last segment carries into this one.

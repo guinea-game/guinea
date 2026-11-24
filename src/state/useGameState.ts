@@ -24,11 +24,11 @@ import { useAutoBattle } from "./useAutoBattle";
 import { clearSave, loadSave, writeSave } from "./storage";
 import { claimHiddenQuest, claimMission, migrateQuestClaims } from "./quests";
 import { claimLevelReward as payLevelReward } from "./levelRewards";
-import { completeLabResearch, getEffectiveStatCap, getLabBagStackSize, getLabCookSpeedBonus, getLabDropDoubleBonus, getLabSkillCooldownSec, getOfflineCapMs, startLabResearch, type LabResearchId } from "./lab";
+import { completeLabResearch, getEffectiveStatCap, getLabBagStackSize, getLabCookSpeedBonus, getLabBossDoubleBonus, getLabBossTimeBonusMs, getLabMobHpScale, getLabGoldenChance, getLabSkillCooldownSec, getOfflineCapMs, startLabResearch, applyLabBoost, type LabResearchId } from "./lab";
 import { deliverOrder, needsNewDaily, startDaily } from "./daily";
 import { getOutfitGemPrice, getOutfitsGrantedByLoop, getOutfitsUnlockedByStage, getUnlocksAtLevel, isOutfitUnlocked, isSkillUnlocked, syncStageUnlockedOutfits } from "./unlocks";
 import { fitItems, getBagCapacity, getBagExpandCost, BAG_MAX_SLOTS, slotsUsed } from "./bag";
-import { BOSS_NAME, getClearedBosses, BOSS_PHASE_TWO_HP_MULTIPLIER, getDifficultyStage, getEffectiveDifficultyStage, getEnemyKind, getEnemyMaxHp, getEnemyRewardHp, getStageLabel, LAST_STAGE_NUMBER, isMiniBossDue, isGoldenMiniBoss, getMiniBossSalt, GOLDEN_GEMS, GOLDEN_GOLD_MULTIPLIER, STRAY_MOB_CHANCE, MINI_BOSS_COUNT, MINI_BOSS_EXP_MULTIPLIER, MINI_BOSS_HP_MULTIPLIER, STAGE_KILL_TARGET } from "./stages";
+import { BOSS_NAME, getClearedBosses, BOSS_PHASE_TWO_HP_MULTIPLIER, getDifficultyStage, getEffectiveDifficultyStage, getEnemyKind, getEnemyMaxHp, getEnemyRewardHp, getStageLabel, LAST_STAGE_NUMBER, isMiniBossDue, isGoldenMiniBoss, getMiniBossSalt, GOLDEN_GEMS, GOLDEN_MINI_CHANCE, GOLDEN_GOLD_MULTIPLIER, STRAY_MOB_CHANCE, MINI_BOSS_COUNT, MINI_BOSS_EXP_MULTIPLIER, MINI_BOSS_HP_MULTIPLIER, STAGE_KILL_TARGET } from "./stages";
 import { rollDrops, type DropModifiers } from "./drops";
 import {
   COMPANION_CHEF_CRIT_BONUS,
@@ -201,10 +201,12 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   // to an earlier stage can't buy things cheap) rather than wherever you're currently
   // standing — same idea as difficultyStage, just against highestStageNumber instead.
   const priceStage = getDifficultyStage(state.highestStageNumber ?? state.stageNumber, state.loopsCompleted ?? 0);
+  // 몹 약화 연구 (lab.ts): regular mobs only — not mid-bosses or bosses.
+  const mobHpScale = getLabMobHpScale(state);
   const enemyMaxHp =
     strayKind && !boss && !miniBoss
-      ? getEnemyMaxHp(Math.max(0, difficultyStage - 1), false)
-      : Math.round(getEnemyMaxHp(difficultyStage, boss) * (miniBoss && !boss ? MINI_BOSS_HP_MULTIPLIER : boss && bossPhase === 2 ? BOSS_PHASE_TWO_HP_MULTIPLIER : 1));
+      ? Math.round(getEnemyMaxHp(Math.max(0, difficultyStage - 1), false) * mobHpScale)
+      : Math.round(getEnemyMaxHp(difficultyStage, boss) * (miniBoss && !boss ? MINI_BOSS_HP_MULTIPLIER : boss && bossPhase === 2 ? BOSS_PHASE_TWO_HP_MULTIPLIER : boss ? 1 : mobHpScale));
   const enemyRewardHp =
     strayKind && !boss && !miniBoss
       ? getEnemyRewardHp(Math.max(0, difficultyStage - 1), false)
@@ -257,8 +259,11 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   };
   // 가방 연구 (lab.ts): how many of one item a slot holds right now.
   const bagStackSize = getLabBagStackSize(state);
-  // 드랍률 연구 (lab.ts): permanent double-drop chance.
-  const labDropDoubleBonus = getLabDropDoubleBonus(state);
+  // 보스 재료 연구 (lab.ts): boss-only ingredients come in twos more often.
+  const labBossDoubleBonus = getLabBossDoubleBonus(state);
+  // 보스 시간 연구: extra seconds on every boss clock. 황금몹 연구: more golden mid-bosses.
+  const labBossTimeMs = getLabBossTimeBonusMs(state);
+  const goldenChance = getLabGoldenChance(state, GOLDEN_MINI_CHANCE);
   // Boss entrance's ad-for-attack-buff — same wall-clock-epoch shape as speedBoostUntil below,
   // so it keeps counting down while the app is closed.
   const bossBuffRemainingMs = state.bossBuffUntil ? Math.max(0, state.bossBuffUntil - now) : 0;
@@ -402,9 +407,9 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
         if (bossDue) startBossFight(loadedState.stageNumber);
         if (miniDue) {
           setMiniBoss(true);
-          setGoldenMini(isGoldenMiniBoss(loadedState.stageNumber, loadedState.stageMiniBosses ?? 0, getMiniBossSalt(loadedState)));
+          setGoldenMini(isGoldenMiniBoss(loadedState.stageNumber, loadedState.stageMiniBosses ?? 0, getMiniBossSalt(loadedState), getLabGoldenChance(loadedState, GOLDEN_MINI_CHANCE)));
         }
-        battle.resetEnemy(getEnemyMaxHp(getEffectiveDifficultyStage(loadedState), bossDue) * (miniDue ? MINI_BOSS_HP_MULTIPLIER : 1));
+        battle.resetEnemy(getEnemyMaxHp(getEffectiveDifficultyStage(loadedState), bossDue) * (miniDue ? MINI_BOSS_HP_MULTIPLIER : bossDue ? 1 : getLabMobHpScale(loadedState)));
         // A first-clear celebration that was still open when the game closed comes back.
         // Always today's amount — a celebration saved before the reward changed still carries
         // its old gem count.
@@ -537,10 +542,10 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     // enraged boss comeback this early.
     setBossHasPhaseTwo(stageNumber > NO_BOSS_PHASE_TWO_UNTIL_STAGE && (stageNumber >= LAST_STAGE_NUMBER || Math.random() < 0.5));
     setBossTimerStartedAt(null);
-    setBossTimeLimitMs(getBossTimeLimitMs(stageNumber));
+    setBossTimeLimitMs(getBossTimeLimitMs(stageNumber, 1, labBossTimeMs));
     setBossIntroPending(true);
     setBoss(true);
-  }, [state.stageNumber]);
+  }, [state.stageNumber, labBossTimeMs]);
   const beginBossFight = useCallback(() => {
     if (!bossIntroPending) return;
     setBossIntroPending(false);
@@ -602,7 +607,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     const bossFightMs = boss && bossClockStartRef.current !== null ? Date.now() - bossClockStartRef.current : null;
     // The stage's stars: the clear itself, the enraged boss inside half its full clock (a retry
     // after an ad runs a shorter clock, and doesn't count), and no food running.
-    const beatTheClock = bossFightMs !== null && bossTimeLimitMs === BOSS_PHASE_TWO_TIME_LIMIT_MS && bossFightMs <= BOSS_PHASE_TWO_TIME_LIMIT_MS / 2;
+    const beatTheClock = bossFightMs !== null && bossTimeLimitMs === BOSS_PHASE_TWO_TIME_LIMIT_MS + labBossTimeMs && bossFightMs <= BOSS_PHASE_TWO_TIME_LIMIT_MS / 2;
     const foodRunning = (state.buffSlots ?? []).some((slot) => slot !== null && slot.expiresAt > Date.now());
     const earnedStars = boss ? STAR_CLEAR | (beatTheClock ? STAR_FAST : 0) | (foodRunning ? 0 : STAR_NO_FOOD) : 0;
     if (boss) {
@@ -627,7 +632,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     const reachesBossThreshold = !boss && !miniDue && !wasMiniBoss && killsAfter >= STAGE_KILL_TARGET;
     if (miniDue) {
       setMiniBoss(true);
-      setGoldenMini(isGoldenMiniBoss(state.stageNumber, miniBeatenAfter, getMiniBossSalt({ bossKills: state.bossKills, runSeed: state.runSeed })));
+      setGoldenMini(isGoldenMiniBoss(state.stageNumber, miniBeatenAfter, getMiniBossSalt({ bossKills: state.bossKills, runSeed: state.runSeed }), goldenChance));
     } else if (reachesBossThreshold || (wasMiniBoss && killsAfter >= STAGE_KILL_TARGET)) startBossFight();
     // The one just beaten, and whether the next regular mob is a stray from the stage before.
     const wasStray = !boss && !wasMiniBoss ? strayKind : null;
@@ -643,7 +648,8 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
         dropRate +
         (ITEM_CATEGORY.get(name) === "vegetable" ? vegetableDrop : 0) +
         (ITEM_CATEGORY.get(name) === "seafood" ? seafoodDrop : 0),
-      doubleChance: dropDouble + companionChefDropBoost + labDropDoubleBonus,
+      doubleChance: dropDouble + companionChefDropBoost,
+      bossOnlyDouble: labBossDoubleBonus,
       bossSure: bossDropSure > 0,
       allSure: OUTFIT_SURE_DROPS[state.equippedOutfit] ?? false,
     };
@@ -764,7 +770,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
         experience,
       };
     });
-  }, [boss, bossPhase, bossHasPhaseTwo, miniBoss, goldenMini, strayKind, state.stageKills, state.stageMiniBosses, state.bossKills, state.runSeed, state.stageNumber, state.inventory, state.bagExpansions, state.bossesCleared, state.highestStageNumber, state.loopsCompleted, state.purchasedOutfits, state.equippedOutfit, dropRate, vegetableDrop, seafoodDrop, dropDouble, bossDropSure, expBonus, startBossFight, state.giftKills, state.giftLootExplained, bossTimeLimitMs, state.buffSlots, state.stageStars, companionChefDropBoost, bagStackSize, labDropDoubleBonus]);
+  }, [boss, bossPhase, bossHasPhaseTwo, miniBoss, goldenMini, strayKind, state.stageKills, state.stageMiniBosses, state.bossKills, state.runSeed, state.stageNumber, state.inventory, state.bagExpansions, state.bossesCleared, state.highestStageNumber, state.loopsCompleted, state.purchasedOutfits, state.equippedOutfit, dropRate, vegetableDrop, seafoodDrop, dropDouble, bossDropSure, expBonus, startBossFight, state.giftKills, state.giftLootExplained, bossTimeLimitMs, state.buffSlots, state.stageStars, companionChefDropBoost, bagStackSize, labBossDoubleBonus, goldenChance, labBossTimeMs]);
 
   // Gold that isn't a kill reward (the Steal skill) still counts toward the gold quest.
   const addBonusGold = useCallback((amount: number) => {
@@ -1029,12 +1035,12 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   useEffect(() => {
     if (!boss || bossPhase !== 2 || bossTimerStartedAt !== null || bossRetryAvailable || battle.phase === "defeated") return;
     const timer = setTimeout(() => {
-      setBossTimeLimitMs(getBossTimeLimitMs(state.stageNumber, 2));
+      setBossTimeLimitMs(getBossTimeLimitMs(state.stageNumber, 2, labBossTimeMs));
       setBossTimerStartedAt(Date.now());
       setNow(Date.now());
     }, 0);
     return () => clearTimeout(timer);
-  }, [boss, bossPhase, bossTimerStartedAt, bossRetryAvailable, battle.phase, state.stageNumber]);
+  }, [boss, bossPhase, bossTimerStartedAt, bossRetryAvailable, battle.phase, state.stageNumber, labBossTimeMs]);
 
   // Boss skill (src/state/bossSkills.ts): up to 3 casts per fight, one per BOSS_SKILL_CHECKPOINTS
   // entry (75%/50%/30% of the boss's own hp), each resolved — rolled and spent, hit or miss —
@@ -1149,9 +1155,9 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     setBossRetryAvailable(false);
     // Same enemy, a fresh but shorter window (BOSS_RETRY_TIME_RATIO) — no entrance banner.
     setBossTimerStartedAt(Date.now());
-    setBossTimeLimitMs(Math.round(getBossTimeLimitMs(state.stageNumber, bossPhase) * BOSS_RETRY_TIME_RATIO));
+    setBossTimeLimitMs(Math.round(getBossTimeLimitMs(state.stageNumber, bossPhase, labBossTimeMs) * BOSS_RETRY_TIME_RATIO));
     setNow(Date.now());
-  }, [bossRetryAvailable, state.stageNumber, bossPhase]);
+  }, [bossRetryAvailable, state.stageNumber, bossPhase, labBossTimeMs]);
 
   // The retry prompt's no-ad option: the boss gets away — back to this stage's regular mobs
   // from zero kills (the mid-bosses already beaten stay beaten), to earn the boss again.
@@ -1161,7 +1167,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     endBossFight();
     setDefeatedBoss(false);
     setState((previous) => ({ ...previous, stageKills: 0 }));
-    battle.resetEnemy(getEnemyMaxHp(difficultyStage, false));
+    battle.resetEnemy(getEnemyMaxHp(difficultyStage, false) * mobHpScale);
   };
 
   // Whether the boss sprite is actually on screen — lags `boss` by the death clip on both
@@ -1248,7 +1254,12 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
 
   const claimLevelReward = (level: number) => setState((previous) => payLevelReward(previous, level));
 
-  const startResearch = (id: LabResearchId) => setState((previous) => startLabResearch(previous, id));
+  // What one of the current stage's mobs pays this player, food buffs left out — 연구소's gold
+  // prices are counted in these, so they stay steady while a buff runs.
+  const labMobGold = getGoldReward(state.attack, state.goldBonus, getEnemyRewardHp(difficultyStage, false), false);
+  const startResearch = (id: LabResearchId) => setState((previous) => startLabResearch(previous, id, labMobGold));
+  // 시간 가속권: 5 hours off the running research; the lab-completion effect lands it if that finishes it.
+  const boostResearch = () => setState((previous) => applyLabBoost(previous));
   // Ticks alongside the once-a-second `now` clock (see above) — the moment a research's
   // readyAt passes, this lands it (open or not; it's an absolute timestamp, not a simulation).
   useEffect(() => {
@@ -1295,11 +1306,11 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     const miniDue = isMiniBossDue(targetKills, targetMinis, stageNumber, getMiniBossSalt(state));
     if (miniDue) {
       setMiniBoss(true);
-      setGoldenMini(isGoldenMiniBoss(stageNumber, targetMinis, getMiniBossSalt(state)));
+      setGoldenMini(isGoldenMiniBoss(stageNumber, targetMinis, getMiniBossSalt(state), goldenChance));
     }
     battle.resetEnemy(
       getEnemyMaxHp(getEffectiveDifficultyStage({ stageNumber, highestStageNumber, loopsCompleted: state.loopsCompleted }), false) *
-        (miniDue ? MINI_BOSS_HP_MULTIPLIER : 1),
+        (miniDue ? MINI_BOSS_HP_MULTIPLIER : mobHpScale),
     );
   };
 
@@ -1657,6 +1668,8 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     labOpen,
     setLabOpen,
     startResearch,
+    boostResearch,
+    labMobGold,
     boss,
     defeatedBoss,
     defeatedStageNumber,

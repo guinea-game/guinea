@@ -185,10 +185,15 @@ export interface GameState {
   levelRewardsClaimed?: number[];
   // 연구소 (state/lab.ts): each tiered track's level reached (0 = not researched) and which
   // one-time unlocks are owned; missing on older saves = nothing researched yet.
-  labLevels?: Partial<Record<"offline" | "drop" | "bag" | "skill" | "cooking", number>>;
+  // 연구소 progress: steps finished per track/unlock (3 per level — see state/lab.ts). labLevels
+  // and labUnlocked are the older whole-level records, read as steps when labSteps is missing.
+  labSteps?: Partial<Record<"mobHp" | "effDish" | "effTime" | "effCost" | "offline" | "drop" | "golden" | "bossTime" | "bag" | "skill" | "cooking" | "companionCap" | "critCap", number>>;
+  labLevels?: Partial<Record<"mobHp" | "effDish" | "effTime" | "effCost" | "offline" | "drop" | "golden" | "bossTime" | "bag" | "skill" | "cooking", number>>;
   labUnlocked?: ("companionCap" | "critCap")[];
   // The one research in progress, if any — paid up front, applied once readyAt passes.
   labResearch?: { id: string; readyAt: number };
+  // 시간 가속권 held: each takes LAB_BOOST_MS off the running research (state/lab.ts).
+  labBoosts?: number;
   kills: number;
   totalGoldEarned: number;
   attackUpgrades: number;

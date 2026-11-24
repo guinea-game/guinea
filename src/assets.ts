@@ -769,6 +769,9 @@ export const currencyImages = {
 
 export const uiImages = {
   coin: require("../assets/ui/coin.webp"),
+  // 연구소: a fully researched node's crowned gold frame (built from panels/panel-25; the body below
+  // the crown is square — 200px wide, crown on top makes it 221px tall).
+  labNodeComplete: require("../assets/ui/lab-node-complete.webp"),
   // Winged coin that flutters across the battle scene to be tapped.
   coinWinged: require("../assets/ui/coin-winged.webp"),
   // Winged gem that occasionally replaces the flying coin in battle.
@@ -1142,6 +1145,8 @@ export const frameKit = {
   fillRed: slice(require("../assets/frames/fill-red.webp"), 275, 34, [14, 18, 14, 18]),
   fillBlue: slice(require("../assets/frames/fill-blue.webp"), 276, 36, [14, 18, 14, 18]),
   squareWood: slice(require("../assets/kit2/sq-cream.webp"), 54, 56, [16, 16, 18, 16], "#fceccb"),
+  // Plain wood square from the frames-wood sheet (wood-1-3) — 연구소's nodes before their first step.
+  woodSquare: slice(require("../assets/frames-wood/wood-1-3.webp"), 203, 196, [46, 46, 46, 46], "#fce6c1"),
   squareGold: slice(require("../assets/kit2/frame-gold.webp"), 134, 153, [24, 24, 24, 24], "#fdf0d3"),
 };
 
@@ -1630,3 +1635,25 @@ export const companionSkillImages: Record<Outfit, number> = {
   cowboyGini: require("../assets/companions/skill-cowboy.webp"),
   boxerGini: require("../assets/companions/skill-boxer.webp"),
 };
+
+// Wood frame sheet (frames-wood/, cut in reading order: row-column). Row 1 plain wood (wide,
+// medium, square), green, stone; row 2 the same with a gold ornament on top; row 3 big wood,
+// medium, small, green-filled, a thin gold-cornered bar; 4-1 a gold progress bar with a coin.
+export const woodFrameArt = [
+  require("../assets/frames-wood/wood-1-1.webp"),
+  require("../assets/frames-wood/wood-1-2.webp"),
+  require("../assets/frames-wood/wood-1-3.webp"),
+  require("../assets/frames-wood/wood-1-4.webp"),
+  require("../assets/frames-wood/wood-1-5.webp"),
+  require("../assets/frames-wood/wood-2-1.webp"),
+  require("../assets/frames-wood/wood-2-2.webp"),
+  require("../assets/frames-wood/wood-2-3.webp"),
+  require("../assets/frames-wood/wood-2-4.webp"),
+  require("../assets/frames-wood/wood-2-5.webp"),
+  require("../assets/frames-wood/wood-3-1.webp"),
+  require("../assets/frames-wood/wood-3-2.webp"),
+  require("../assets/frames-wood/wood-3-3.webp"),
+  require("../assets/frames-wood/wood-3-4.webp"),
+  require("../assets/frames-wood/wood-3-5.webp"),
+  require("../assets/frames-wood/wood-4-1.webp"),
+];

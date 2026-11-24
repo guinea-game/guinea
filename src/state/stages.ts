@@ -365,13 +365,14 @@ export function getMiniBossKill(stageNumber: number, block: number, salt: number
 export const GOLDEN_MINI_CHANCE = 0.05;
 export const GOLDEN_GOLD_MULTIPLIER = 10;
 export const GOLDEN_GEMS = 10;
-export function isGoldenMiniBoss(stageNumber: number, block: number, salt: number) {
+// `chance` is the share that come golden — GOLDEN_MINI_CHANCE, or higher with 황금몹 연구.
+export function isGoldenMiniBoss(stageNumber: number, block: number, salt: number, chance = GOLDEN_MINI_CHANCE) {
   // Same +1s as getMiniBossKill: all zeros hashed to 0, which read as golden every time.
   let hash = ((stageNumber + 1) * 2654435761) ^ ((block + 1) * 40503) ^ ((salt + 1) * 2246822519);
   hash = Math.imul(hash ^ (hash >>> 15), 0x2c1b3c6d);
   hash = Math.imul(hash ^ (hash >>> 12), 0x297a2d39);
   hash ^= hash >>> 15;
-  return ((hash >>> 0) % 10000) / 10000 < GOLDEN_MINI_CHANCE;
+  return ((hash >>> 0) % 10000) / 10000 < chance;
 }
 
 // The `salt` the mid-boss rolls use: this save's own seed, changed with each boss beaten.

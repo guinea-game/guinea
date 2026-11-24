@@ -11,6 +11,7 @@ import { BattleScene } from "./BattleScene";
 import { StatUpgradePanel } from "./StatUpgradePanel";
 import { BOSS_AD_BUFF_ATTACK_PERCENT, BOSS_RETRY_TIME_RATIO, type UseGameState } from "../state/useGameState";
 import { getBossTimeLimitMs } from "../state/gameMath";
+import { getLabBossTimeBonusMs } from "../state/lab";
 import { getEnemyKind, getStageLabel } from "../state/stages";
 import { getBagCapacity, slotsUsed } from "../state/bag";
 import { playSfx } from "../sound";
@@ -252,8 +253,8 @@ export function BattleScreen({ game }: { game: UseGameState }) {
       {game.bossRetryAvailable && (
         <RewardedAdModal
           message={t(
-            `광고를 보면 보스의 남은 체력 그대로 이어서 싸워요. 제한 시간은 절반(${Math.round((getBossTimeLimitMs(state.stageNumber, game.bossEnraged ? 2 : 1) * BOSS_RETRY_TIME_RATIO) / 1000)}초)이에요. 필드로 가면 보스는 도망가고 처음부터 다시 몹을 잡아야 해요.`,
-            `Watch an ad to pick the fight back up with the boss's remaining HP. The time limit is half as long (${Math.round((getBossTimeLimitMs(state.stageNumber, game.bossEnraged ? 2 : 1) * BOSS_RETRY_TIME_RATIO) / 1000)}s). If you head to the field instead, the boss flees and you'll have to fight through mobs again from the start.`,
+            `광고를 보면 보스의 남은 체력 그대로 이어서 싸워요. 제한 시간은 절반(${Math.round((getBossTimeLimitMs(state.stageNumber, game.bossEnraged ? 2 : 1, getLabBossTimeBonusMs(state)) * BOSS_RETRY_TIME_RATIO) / 1000)}초)이에요. 필드로 가면 보스는 도망가고 처음부터 다시 몹을 잡아야 해요.`,
+            `Watch an ad to pick the fight back up with the boss's remaining HP. The time limit is half as long (${Math.round((getBossTimeLimitMs(state.stageNumber, game.bossEnraged ? 2 : 1, getLabBossTimeBonusMs(state)) * BOSS_RETRY_TIME_RATIO) / 1000)}s). If you head to the field instead, the boss flees and you'll have to fight through mobs again from the start.`,
           )}
           claimLabel={t("이어서 도전", "Resume Fight")}
           onClaim={game.retryBossAfterAd}

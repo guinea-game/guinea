@@ -665,6 +665,16 @@ export function getDropSources(name: string) {
   ]);
 }
 
+// Ingredients no regular monster drops — only a boss's table has them (what 연구소 research eats).
+const BOSS_ONLY = new Set(
+  (Object.keys(DROPS) as EnemyKind[])
+    .flatMap((kind) => DROPS[kind].boss.map((entry) => entry.name))
+    .filter((name) => !(Object.keys(DROPS) as EnemyKind[]).some((kind) => DROPS[kind].mob.some((entry) => entry.name === name))),
+);
+export function isBossOnlyIngredient(name: string) {
+  return BOSS_ONLY.has(name);
+}
+
 // Every ingredient a monster can drop, mob table then boss table, for the codex.
 export function getDropTable(kind: EnemyKind, boss: boolean): DropEntry[] {
   return boss ? DROPS[kind].boss : DROPS[kind].mob;
@@ -676,6 +686,8 @@ export type DropModifiers = {
   chanceBonus?: (name: string) => number;
   // % chance each dropped item comes in twos.
   doubleChance?: number;
+  // Extra % on that, for boss-only ingredients alone (보스 재료 연구).
+  bossOnlyDouble?: number;
   // Every boss entry drops, whatever its chance.
   bossSure?: boolean;
   // Every entry drops, mob or boss, whatever its chance (셰프기니).
@@ -691,7 +703,7 @@ export function rollDrops(kind: EnemyKind, boss: boolean, modifiers: DropModifie
     })
     .map((entry) => {
       const quantity = entry.quantity ?? 1;
-      const doubled = Math.random() * 100 < (modifiers.doubleChance ?? 0);
+      const doubled = Math.random() * 100 < (modifiers.doubleChance ?? 0) + (BOSS_ONLY.has(entry.name) ? (modifiers.bossOnlyDouble ?? 0) : 0);
       return { name: entry.name, quantity: doubled ? quantity * 2 : quantity };
     });
 }
