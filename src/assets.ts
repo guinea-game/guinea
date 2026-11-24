@@ -1091,6 +1091,7 @@ export const dailyImages = {
   pattern: require("../assets/daily/pattern.webp"),
   // Gold frame for the order tickets (300x328, transparent inside).
   ticketFrame: require("../assets/daily/ticket-frame.webp"),
+  ticketFrameCompanion: require("../assets/daily/ticket-frame-companion.webp"),
 };
 
 // 일일 의뢰 customers (state/daily.ts CUSTOMERS), all 320 tall: lady 307, farmer 297,

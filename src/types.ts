@@ -172,7 +172,7 @@ export interface GameState {
   interstitialAds?: { day: string; count: number; lastAt: number };
   // 일일 의뢰 (state/daily.ts): the local day these food orders came in, the orders, and
   // which of them (by index) were handed over. Missing on older saves.
-  daily?: { day: string; orders: { recipeId: string; count: number; customer: string }[]; delivered: number[] };
+  daily?: { day: string; orders: { recipeId: string; count: number; customer: string; gems?: number }[]; delivered: number[] };
   // The day the attendance reward was doubled by an ad (once a day).
   attendanceBonusDay?: string;
   // Quirk counters behind the hidden quests; all missing on older saves.

@@ -2106,10 +2106,11 @@ export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = 
       },
       {
         image: comics.apprenticeMisfire4,
-        aspect: 504 / 760,
+        aspect: 507 / 760,
         bubbles: [
-          { text: "나는...\n그냥 방해만 되나 봐.", left: 0.0, top: 0.02, maxWidth: 0.38, tail: "bottom", tailAt: 0.6 },
-          { text: "다음엔 더 잘 될 거야.\n천천히 해봐.", right: 0.0, top: 0.68, maxWidth: 0.4, tail: "top", tailAt: 0.3 },
+          // The bumped 견습기니 (right) speaks first, then 모험기니 (left) answers.
+          { text: "나는...\n그냥 방해만 되나 봐.", right: 0.0, top: 0.06, maxWidth: 0.38, tail: "bottom", tailAt: 0.45 },
+          { text: "다음엔 더 잘 될 거야.\n천천히 해봐.", left: 0.0, top: 0.0, maxWidth: 0.4, tail: "bottom", tailAt: 0.75 },
         ],
       },
     ],

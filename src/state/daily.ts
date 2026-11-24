@@ -1,8 +1,9 @@
-import type { GameState } from "../types";
+import type { GameState, Outfit } from "../types";
 import { npcImages } from "../assets";
 import { getKnownRecipes, getItemQuantity, RECIPES, type Recipe } from "./recipes";
 import { getGroceryPrice } from "./grocery";
-import { shiftGrade } from "./buffs";
+import { OUTFIT_NAMES, shiftGrade } from "./buffs";
+import { isOutfitUnlocked } from "./unlocks";
 import { roundPrice } from "./gameMath";
 import { t } from "../i18n";
 
@@ -59,6 +60,29 @@ export const CUSTOMERS: { id: string; name: string; image: number; line: Line }[
   },
 ];
 
+// Companions the player has met drop by now and then too — at most one a day, in place of
+// one of the regular customers — and pay in gems instead of gold. The one out adventuring
+// with the player (equipped) is busy, and 모험기니 is the player.
+const COMPANION_LINES: Partial<Record<Outfit, Line>> = {
+  explorerHamster: (dish, n) => t(`탐험 떠나기 전에 든든하게! ${dish} ${n}개 부탁해!`, `Fuel for the next expedition! ${n} ${t(dish)}, please!`),
+  tetoGini: (dish, n) => t(`운동 끝! 단백질 보충이다. ${dish} ${n}개!`, `Workout done, time to refuel. ${n} ${t(dish)}!`),
+  assassinGini: (dish, n) => t(`…조용히 ${dish} ${n}개. 아무한테도 말하지 마.`, `...${n} ${t(dish)}. Quietly. Tell no one.`),
+  // 구미호 in disguise (egenGini was retconned into the stage-21 boss).
+  egenGini: (dish, n) => t(`후후, ${dish} ${n}개 부탁해요. 꼬리는… 못 본 걸로 해줘요.`, `Hehe, ${n} ${t(dish)}, please. And the tails... you didn't see them.`),
+  samuraiGini: (dish, n) => t(`${dish} ${n}개. …그거면 충분하다.`, `${n} ${t(dish)}. ...That will suffice.`),
+  chefGini: (dish, n) => t(`다른 셰프 솜씨도 맛봐야지! ${dish} ${n}개 줘!`, `A chef should taste other chefs' work! ${n} ${t(dish)}!`),
+  boxerGini: (dish, n) => t(`시합 전엔 든든하게! ${dish} ${n}개, 원투!`, `Gotta eat before the bout! ${n} ${t(dish)}, one-two!`),
+  witchGini: (dish, n) => t(`마법약에 ${dish} ${n}개가 필요해. 히히.`, `My potion needs ${n} ${t(dish)}. Hehe.`),
+  cowboyGini: (dish, n) => t(`먼 길 왔다구. ${dish} ${n}개 내줘, 파트너!`, `Long ride in. ${n} ${t(dish)}, partner!`),
+};
+const COMPANION_VISIT_CHANCE = 0.4;
+const COMPANION_GEMS_MIN = 10;
+const COMPANION_GEMS_MAX = 30;
+
+function isCompanionCustomer(id: string): id is Outfit {
+  return id in COMPANION_LINES;
+}
+
 const ORDERS_PER_DAY = 3;
 const MAX_COUNT = 3;
 // An order pays this share of what its ingredients cost at the grocery right now — about
@@ -66,7 +90,8 @@ const MAX_COUNT = 3;
 // gold a second time, but buying them just to fill orders always loses a little.
 const PAY_MULTIPLIER = 0.6;
 
-export type DailyOrder = { recipeId: string; count: number; customer: string };
+// `gems` is set on a companion's order: it pays that many gems instead of gold.
+export type DailyOrder = { recipeId: string; count: number; customer: string; gems?: number };
 type Daily = NonNullable<GameState["daily"]>;
 
 // Small seeded RNG so a day's orders are fixed once drawn (and differ per save via runSeed).
@@ -99,6 +124,16 @@ export function startDaily(state: GameState, day: string): Daily {
     const [customer] = customers.splice(Math.floor(random() * customers.length), 1);
     orders.push({ recipeId, count: 1 + Math.floor(random() * MAX_COUNT), customer });
   }
+  const highest = state.highestStageNumber ?? state.stageNumber;
+  const companions = (Object.keys(COMPANION_LINES) as Outfit[]).filter(
+    (outfit) => outfit !== state.equippedOutfit && isOutfitUnlocked(outfit, highest, state.purchasedOutfits),
+  );
+  if (orders.length > 0 && companions.length > 0 && random() < COMPANION_VISIT_CHANCE) {
+    const slot = Math.floor(random() * orders.length);
+    const customer = companions[Math.floor(random() * companions.length)];
+    const gems = COMPANION_GEMS_MIN + Math.floor(random() * (COMPANION_GEMS_MAX - COMPANION_GEMS_MIN + 1));
+    orders[slot] = { ...orders[slot], customer, gems };
+  }
   return { day, orders, delivered: [] };
 }
 
@@ -119,7 +154,9 @@ export type DailyOrderView = DailyOrder & {
   index: number;
   recipe: Recipe;
   customerName: string;
-  customerImage: number;
+  // A regular's portrait, or — for a visiting companion — their outfit (drawn as its sprite).
+  customerImage: number | null;
+  companion: Outfit | null;
   // What the customer says at the counter (names the dish and count).
   line: string;
   have: number;
@@ -133,15 +170,18 @@ export function getDailyOrders(state: GameState, priceStage: number): DailyOrder
   return daily.orders.flatMap((order, index) => {
     const recipe = RECIPES.find((item) => item.id === order.recipeId);
     if (!recipe) return [];
+    const companionLine = isCompanionCustomer(order.customer) ? COMPANION_LINES[order.customer] : undefined;
+    const companion = companionLine ? (order.customer as Outfit) : null;
     const customer = CUSTOMERS.find((item) => item.id === order.customer) ?? CUSTOMERS[0];
     return [
       {
         ...order,
         index,
         recipe,
-        customerName: t(customer.name),
-        customerImage: customer.image,
-        line: customer.line(recipe.name, order.count),
+        customerName: t(companion ? OUTFIT_NAMES[companion] : customer.name),
+        customerImage: companion ? null : customer.image,
+        companion,
+        line: (companionLine ?? customer.line)(recipe.name, order.count),
         have: getItemQuantity(state.inventory, recipe.name),
         pay: getOrderPay(recipe, order.count, priceStage),
         delivered: daily.delivered.includes(index),
@@ -157,20 +197,24 @@ export function isDailyAllDone(state: GameState) {
   return daily.orders.every((_, index) => daily.delivered.includes(index));
 }
 
-// Hands an order's dishes over (oldest-cooked first, like eating does) and pays for them.
+// Hands an order's dishes over (oldest-cooked first, like eating does) and pays for them —
+// in gold, or in gems for a companion.
 export function deliverOrder(state: GameState, index: number, priceStage: number): GameState {
   const order = getDailyOrders(state, priceStage).find((item) => item.index === index);
   if (!state.daily || !order || order.delivered || order.have < order.count) return state;
   let dishQuality = state.dishQuality;
   for (let unit = 0; unit < order.count; unit++) dishQuality = shiftGrade(dishQuality, order.recipeId);
+  const gems = order.companion ? (order.gems ?? COMPANION_GEMS_MIN) : 0;
+  const gold = order.companion ? 0 : order.pay;
   return {
     ...state,
     inventory: state.inventory
       .map((item) => (item.name === order.recipe.name ? { ...item, quantity: item.quantity - order.count } : item))
       .filter((item) => item.quantity > 0),
     dishQuality,
-    gold: state.gold + order.pay,
-    totalGoldEarned: state.totalGoldEarned + order.pay,
+    gold: state.gold + gold,
+    gems: state.gems + gems,
+    totalGoldEarned: state.totalGoldEarned + gold,
     daily: { ...state.daily, delivered: [...state.daily.delivered, index] },
   };
 }

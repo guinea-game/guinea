@@ -119,6 +119,7 @@ export function CharacterSprite({
   restartKey,
   startFrame,
   tintColor,
+  still,
 }: {
   outfit: Outfit;
   animation: PlayerAnimation;
@@ -129,6 +130,8 @@ export function CharacterSprite({
   startFrame?: number;
   // Flat recolor of every opaque pixel (e.g. "#000" for a locked companion's silhouette).
   tintColor?: string;
+  // One frame held, no breathing (e.g. a companion standing at the 일일 의뢰 counter).
+  still?: boolean;
 }) {
   const source = spriteSheets.guinea[outfit][animation];
   const config = CONFIG[outfit][animation];
@@ -153,7 +156,7 @@ export function CharacterSprite({
         frameCount={config.frameCount}
         displaySize={size}
         durationMs={DURATIONS[animation]}
-        mode={animation === "idle" ? "loop" : "once"}
+        mode={still ? "still" : animation === "idle" ? "loop" : "once"}
         repeat={repeat}
         restartKey={restartKey}
         startFrame={startFrame}

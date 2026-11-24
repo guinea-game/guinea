@@ -5,13 +5,14 @@ import { Text } from "../components/GameText";
 import { StrokedText } from "../components/StrokedText";
 import { colors, fonts } from "../theme";
 import { LinearGradient } from "expo-linear-gradient";
-import { dailyImages, kit, shopKit } from "../assets";
+import { dailyImages, kit, shopKit, uiImages } from "../assets";
+import { CharacterSprite } from "../components/CharacterSprite";
 import { NineSlice, Panel } from "../components/NineSlice";
 import { GameButton } from "../components/GameButton";
 import { CoinPrice } from "../components/CoinPrice";
 import { ShopTopBar } from "../components/ShopScene";
 import { getDailyOrders, type DailyOrderView } from "../state/daily";
-import type { GameState } from "../types";
+import type { GameState, Outfit } from "../types";
 import { t } from "../i18n";
 
 // A deep warm brown the restaurant fades up into under the top bar (whose text goes light).
@@ -33,6 +34,10 @@ const COUNTER_ASPECT = 398 / 900;
 const COUNTER_TOP = 0.36;
 const CUSTOMER_HEIGHT = 168;
 const CUSTOMER_WIDTH = CUSTOMER_HEIGHT * 0.95;
+// A companion is drawn from one still frame of its battle sprite, whose 160px frame leaves room around the
+// guinea pig — drawn larger so it stands as tall as the regulars.
+const COMPANION_SPRITE = 200;
+const TICKET_SPRITE = 104;
 
 // 일일 의뢰: a restaurant counter that customers walk up to. The one being served stands
 // behind the counter saying their order (and what it pays) in a speech bubble;
@@ -103,7 +108,7 @@ export function DailyScreen({
           )}
           <View style={[styles.stage, { top: headerHeight }]} pointerEvents="box-none">
           {width > 0 && current && (
-            <Customer key={`customer-${shownKey}`} source={current.customerImage} sceneWidth={width} top={customerTop} leaving={leaving} />
+            <Customer key={`customer-${shownKey}`} source={current.customerImage} companion={current.companion} sceneWidth={width} top={customerTop} leaving={leaving} />
           )}
           {width > 0 && <Image source={dailyImages.counter} style={[styles.counter, { width, height: counterHeight }]} />}
           {width > 0 && current && <OrderBubble key={`bubble-${shownKey}`} order={current} />}
@@ -151,7 +156,19 @@ export function DailyScreen({
 
 // The customer behind the counter: walks in from the left on arrival; on `leaving`, a happy
 // hop and off to the right.
-function Customer({ source, sceneWidth, top, leaving }: { source: number; sceneWidth: number; top: number; leaving: boolean }) {
+function Customer({
+  source,
+  companion,
+  sceneWidth,
+  top,
+  leaving,
+}: {
+  source: number | null;
+  companion: Outfit | null;
+  sceneWidth: number;
+  top: number;
+  leaving: boolean;
+}) {
   const x = useSharedValue(-sceneWidth * 0.7);
   const hop = useSharedValue(0);
   useEffect(() => {
@@ -166,7 +183,13 @@ function Customer({ source, sceneWidth, top, leaving }: { source: number; sceneW
   const style = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }, { translateY: hop.value }] }));
   return (
     <Animated.View style={[styles.customer, { top, left: sceneWidth * 0.5 - CUSTOMER_WIDTH / 2 }, style]}>
-      <Image source={source} style={styles.customerImage} />
+      {companion ? (
+        <View style={styles.companionSprite}>
+          <CharacterSprite outfit={companion} animation="idle" still size={COMPANION_SPRITE} restartKey={companion} />
+        </View>
+      ) : (
+        source !== null && <Image source={source} style={styles.customerImage} />
+      )}
     </Animated.View>
   );
 }
@@ -187,8 +210,12 @@ function OrderBubble({ order }: { order: DailyOrderView }) {
       <Text style={styles.bubbleLine}>
         <HighlightDish line={order.line} dish={t(order.recipe.name)} />
       </Text>
-      {/* What it pays, under the line. */}
-      <CoinPrice amount={order.pay} textStyle={styles.bubblePay} style={styles.bubblePayRow} />
+      {/* What it pays, under the line — gems from a companion. */}
+      {order.companion ? (
+        <CoinPrice amount={order.gems ?? 0} icon={uiImages.crystal} textStyle={[styles.bubblePay, styles.bubbleGems]} style={styles.bubblePayRow} />
+      ) : (
+        <CoinPrice amount={order.pay} textStyle={styles.bubblePay} style={styles.bubblePayRow} />
+      )}
     </Animated.View>
   );
 }
@@ -220,16 +247,23 @@ function Ticket({ order, onPress }: { order: DailyOrderView; onPress: () => void
       <View style={[styles.ticket, order.delivered && styles.ticketDone]}>
         {/* The customer stands low, cut off at the belly by the card's inner edge; a dark
             fade over the top lifts the dish and count out above them. */}
-        <View style={styles.ticketWindow}>
-          <Image source={order.customerImage} style={styles.ticketCustomer} />
+        <View style={[styles.ticketWindow, order.companion && styles.ticketWindowGold]}>
+          {order.companion ? (
+            <View style={styles.ticketSprite}>
+              <CharacterSprite outfit={order.companion} animation="idle" still size={TICKET_SPRITE} restartKey={order.companion} />
+            </View>
+          ) : (
+            order.customerImage !== null && <Image source={order.customerImage} style={styles.ticketCustomer} />
+          )}
           <LinearGradient colors={["rgba(240, 156, 72, 0.62)", "rgba(246, 176, 96, 0.32)", "rgba(246, 176, 96, 0)"]} locations={[0, 0.45, 1]} style={styles.ticketFade} pointerEvents="none" />
           <View style={styles.ticketDishRow}>
             <Image source={order.recipe.image} style={styles.ticketDish} />
             <Text style={styles.ticketCount}>×{order.count}</Text>
           </View>
         </View>
-        {/* Gold frame over the window, so its rim covers where the picture is cut. */}
-        <Image source={dailyImages.ticketFrame} style={styles.ticketFrame} />
+        {/* Wood frame over the window, so its rim covers where the picture is cut — the gold one
+            for a visiting companion (a gem order). */}
+        <Image source={order.companion ? dailyImages.ticketFrameCompanion : dailyImages.ticketFrame} style={styles.ticketFrame} />
         {order.delivered && (
           <View style={styles.ticketStamp} pointerEvents="none">
             <StrokedText style={styles.ticketStampText} strokeColor={colors.line} strokeWidth={2}>
@@ -259,6 +293,7 @@ const styles = StyleSheet.create({
   background: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
   customer: { position: "absolute", width: CUSTOMER_WIDTH, height: CUSTOMER_HEIGHT },
   customerImage: { width: "100%", height: "100%", resizeMode: "contain" },
+  companionSprite: { position: "absolute", bottom: -10, left: (CUSTOMER_WIDTH - COMPANION_SPRITE) / 2 },
   counter: { position: "absolute", left: 0, bottom: COUNTER_LIFT },
   // Up in the faded top-right (the top bar has no gold chip here), above the centred
   // customer's head, its tail pointing down at them.
@@ -267,6 +302,7 @@ const styles = StyleSheet.create({
   bubbleLine: { fontSize: 15, lineHeight: 20, fontWeight: "800", fontFamily: fonts.bold, color: colors.ink },
   bubblePayRow: { marginTop: 3, alignSelf: "flex-end" },
   bubblePay: { fontSize: 15, fontWeight: "900", fontFamily: fonts.bold, color: "#b0632a" },
+  bubbleGems: { color: "#7b4fb8" },
   closedSign: { position: "absolute", top: 140, left: 0, right: 0, alignItems: "center" },
   closedPlank: { alignItems: "center", paddingHorizontal: 22, paddingTop: 10, paddingBottom: 13 },
   closedText: { fontSize: 17, fontWeight: "900", fontFamily: fonts.bold, color: colors.cream },
@@ -278,15 +314,18 @@ const styles = StyleSheet.create({
   queue: { flexDirection: "row", gap: 8, marginBottom: 12 },
   ticketWrap: { flex: 1 },
   pressed: { transform: [{ scale: 0.95 }] },
-  // Gold frame art (300x328, see assets): the window fills its opening right out under the
+  // Frame art (~300x330, see assets): the window fills its opening right out under the
   // rim, so the dark fade and the customer reach the frame on every side.
   ticket: { aspectRatio: 300 / 328 },
-  ticketWindow: { position: "absolute", left: "6%", right: "6%", top: "6%", bottom: "6%", borderRadius: 12, overflow: "hidden", alignItems: "center", backgroundColor: TICKET_FILL },
+  ticketWindow: { position: "absolute", left: "8%", right: "8%", top: "8%", bottom: "8%", borderRadius: 12, overflow: "hidden", alignItems: "center", backgroundColor: TICKET_FILL },
+  // The companion's gold frame has a thinner rim, so its window reaches further out.
+  ticketWindowGold: { left: "6%", right: "6%", top: "6%", bottom: "6%" },
   ticketFrame: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", resizeMode: "stretch" },
   // A delivered order goes black-and-white (faded too, where filters aren't supported).
   ticketDone: { filter: "grayscale(1)", opacity: 0.7 },
   // Customer art is ~300x320; the bottom third (belly down) hangs below the card.
   ticketCustomer: { position: "absolute", bottom: -30, width: 86, height: 92, resizeMode: "contain" },
+  ticketSprite: { position: "absolute", bottom: -34 },
   ticketFade: { position: "absolute", top: 0, left: 0, right: 0, height: 58 },
   ticketDishRow: { flexDirection: "row", alignItems: "center", gap: 2, marginTop: 8 },
   ticketDish: { width: 34, height: 34, resizeMode: "contain" },

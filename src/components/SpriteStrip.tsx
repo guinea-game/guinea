@@ -7,7 +7,7 @@ type Props = {
   frameCount: number; // 5 for guinea strips, 4 for boss strips
   displaySize: number; // rendered box size on screen, e.g. 108
   durationMs: number; // full-cycle duration, ported verbatim from the web CSS animation-duration
-  mode: "loop" | "once"; // loop = idle breathing; once = CSS "both" fill, holds last frame
+  mode: "loop" | "once" | "still"; // loop = idle breathing; once = CSS "both" fill, holds last frame; still = just startFrame, no animation
   repeat?: number; // "once" mode only: play the full cycle this many times before holding (default 1)
   restartKey?: string | number; // change this to force the animation to restart from startFrame (mirrors the web's key={tick} remount trick)
   startFrame?: number; // frame a (re)start begins on, default 0 — e.g. to skip a wind-up
@@ -43,7 +43,7 @@ export function SpriteStrip({
   }
 
   useEffect(() => {
-    if (frameCount <= 1) return;
+    if (frameCount <= 1 || mode === "still") return;
     // CSS steps(frameCount - 1) visits frameCount frames across durationMs with no easing.
     const stepMs = durationMs / (frameCount - 1);
     let current = startFrame;
