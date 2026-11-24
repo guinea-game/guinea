@@ -9,7 +9,7 @@
     "ios": {
       "bundleIdentifier": "com.guinea.adventure",
       "supportsTablet": true,
-      "buildNumber": "22",
+      "buildNumber": "23",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "SKAdNetworkItems": [
@@ -103,7 +103,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.guinea.adventure",
-      "versionCode": 22
+      "versionCode": 23
     },
     "web": {
       "favicon": "./assets/app-icon.png"
