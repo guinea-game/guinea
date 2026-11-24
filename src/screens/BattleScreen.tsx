@@ -21,6 +21,7 @@ import type { EnemyKind } from "../types";
 import { hasClaimableQuest } from "../state/quests";
 import { hasClaimableLevelReward } from "../state/levelRewards";
 import { isDailyAllDone } from "../state/daily";
+import { getMenuPageLockCaption, isMenuPageUnlocked, type MenuPage } from "../state/menuUnlocks";
 import { t } from "../i18n";
 
 export function BattleScreen({ game }: { game: UseGameState }) {
@@ -271,6 +272,9 @@ export function BattleScreen({ game }: { game: UseGameState }) {
         onOpenEvent={() => setEventOpen(true)}
         bagFull={slotsUsed(state.inventory, game.bagStackSize) >= getBagCapacity(state.bagExpansions)}
         dropEvents={game.dropEvents}
+        locks={Object.fromEntries(
+          (["daily", "levelReward", "lab", "event"] as MenuPage[]).filter((page) => !isMenuPageUnlocked(state, page)).map((page) => [page, getMenuPageLockCaption(page)]),
+        )}
         trailing={
           <BattleActionsPanel
             speedBoostActive={game.speedMultiplier > 1}

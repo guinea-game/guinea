@@ -10,6 +10,8 @@ import { DROP_ARRIVAL_MS } from "./DropItem";
 import { tutorialRef } from "./tutorialTargets";
 import { t } from "../i18n";
 import type { DropEvent } from "../state/useGameState";
+import type { MenuPage } from "../state/menuUnlocks";
+import { StrokedText } from "./StrokedText";
 
 // The battle row's menu: bag, 일일 의뢰, 퀘스트, 레벨 보상, 연구소, 이벤트 (요리 lives in the bottom nav) — and whatever new pages join later. Every
 // icon gets the same box; its art (trimmed to the visible pixels) is scaled to fit that box
@@ -65,6 +67,7 @@ export function BattleMenu({
   bagFull,
   dropEvents,
   trailing,
+  locks = {},
 }: {
   onOpenBag: () => void;
   onOpenDaily: () => void;
@@ -82,6 +85,8 @@ export function BattleMenu({
   dropEvents: DropEvent[];
   // Pinned to the row's right end, outside the scrolling part (the 2배속 button).
   trailing?: ReactNode;
+  // Pages not open yet, each with the caption saying what opens it (see state/menuUnlocks).
+  locks?: Partial<Record<MenuPage, string>>;
 }) {
   // One row of page buttons under the scene, laid out left to right; it scrolls sideways
   // once more pages join than fit.
@@ -90,7 +95,7 @@ export function BattleMenu({
       <View style={styles.scroll}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rowContent}>
         <BagButton onPress={onOpenBag} dropEvents={dropEvents} full={bagFull} />
-        <MenuButton icon={dailyAllDone ? DAILY_DONE_ICON : DAILY_NEW_ICON} label={t("일일 의뢰", "Daily")} onPress={onOpenDaily} />
+        <MenuButton icon={dailyAllDone || locks.daily ? DAILY_DONE_ICON : DAILY_NEW_ICON} label={t("일일 의뢰", "Daily")} onPress={onOpenDaily} locked={locks.daily} />
         <Pressable
           onPress={onOpenQuest}
           accessibilityRole="button"
@@ -102,9 +107,9 @@ export function BattleMenu({
           <IconCaption>{t("퀘스트", "Quests")}</IconCaption>
           {questReady && <Image source={kitImages.dotRed} style={styles.dot} accessibilityLabel={t("받을 보상 있음", "Reward available")} />}
         </Pressable>
-        <MenuButton icon={LEVEL_REWARD_ICON} label={t("레벨 보상", "Lv. Rewards")} onPress={onOpenLevelReward} dot={levelRewardReady} />
-        <MenuButton icon={LAB_ICON} label={t("연구소", "Lab")} onPress={onOpenLab} />
-        <MenuButton icon={EVENT_ICON} label={t("이벤트", "Event")} onPress={onOpenEvent} />
+        <MenuButton icon={LEVEL_REWARD_ICON} label={t("레벨 보상", "Lv. Rewards")} onPress={onOpenLevelReward} dot={levelRewardReady} locked={locks.levelReward} />
+        <MenuButton icon={LAB_ICON} label={t("연구소", "Lab")} onPress={onOpenLab} locked={locks.lab} />
+        <MenuButton icon={EVENT_ICON} label={t("이벤트", "Event")} onPress={onOpenEvent} locked={locks.event} />
       </ScrollView>
       {/* Icons scrolling past fade into the page's cream instead of being cut off. */}
       <LinearGradient
@@ -121,7 +126,21 @@ export function BattleMenu({
   );
 }
 
-function MenuButton({ icon, label, onPress, dot }: { icon: RowIcon; label: string; onPress: () => void; dot?: boolean }) {
+// `locked` (the caption saying what opens it): a black silhouette with a "?" on it, not pressable.
+function MenuButton({ icon, label, onPress, dot, locked }: { icon: RowIcon; label: string; onPress: () => void; dot?: boolean; locked?: string }) {
+  if (locked) {
+    return (
+      <View style={styles.button} accessible accessibilityLabel={t(`잠김: ${locked}`, `Locked: ${locked}`)}>
+        <Image source={icon.source} style={[fitInBox(icon), styles.silhouette]} />
+        <View style={styles.lockMark} pointerEvents="none">
+          <StrokedText style={styles.lockMarkText} strokeColor={colors.line} strokeWidth={2.5}>
+            ?
+          </StrokedText>
+        </View>
+        <IconCaption>{locked}</IconCaption>
+      </View>
+    );
+  }
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} hitSlop={4} style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
       <Image source={icon.source} style={fitInBox(icon)} />
@@ -178,6 +197,9 @@ const styles = StyleSheet.create({
   rowContent: { gap: MENU_ICON_GAP, paddingHorizontal: ROW_PADDING, paddingTop: 14, paddingBottom: 12 },
   button: { ...MENU_ICON_BOX },
   pressed: { transform: [{ scale: 0.92 }] },
+  silhouette: { tintColor: "#000", opacity: 0.72 },
+  lockMark: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" },
+  lockMarkText: { fontSize: 24, fontWeight: "900", fontFamily: fonts.bold, color: colors.cream },
   // Tucked onto the medal's rim (the medal is ~41 wide, centred in the 52 box).
   dot: { position: "absolute", top: 2, right: 5, width: 13, height: 13 },
   bagFull: { position: "absolute", top: -4, right: -6, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 7, backgroundColor: colors.red, borderWidth: 1.5, borderColor: colors.line },
