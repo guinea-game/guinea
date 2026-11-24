@@ -73,12 +73,26 @@ src/
 │  ├─ grocery.ts         # 식료품점 가격 계산
 │  ├─ stages.ts          # 스테이지 데이터
 │  ├─ bestiary.ts        # 몬스터 도감
-│  └─ offline.ts         # 오프라인 보상 계산
+│  ├─ offline.ts         # 오프라인 보상 계산
+│  ├─ levelRewards.ts    # 레벨 보상 (레벨 마일스톤 보석 상자)
+│  ├─ lab.ts             # 연구소 (시간제 연구 트리)
+│  └─ remoteUpdate.ts    # 앱 업데이트 알림 (아래 참고)
 ├─ assets.ts             # 모든 이미지 에셋 등록처
 └─ i18n/                 # 다국어 문자열
 ```
 
 새 필드가 세이브(`GameState`)에 추가될 때는 항상 `optional`로 선언하고, 이전 버전 세이브와의 호환을 `useGameState.ts`의 로드 로직에서 처리합니다.
+
+## 앱 업데이트 알림
+
+이미 설치된 빌드에게 "새 버전이 나왔다"고 알려주는 가벼운 장치가 있습니다 ([`src/state/remoteUpdate.ts`](src/state/remoteUpdate.ts)). 백엔드 없이, 별도의 public 저장소 [`guinea-game/guinea-config`](https://github.com/guinea-game/guinea-config)에 있는 `update-config.json`을 `raw.githubusercontent.com`으로 직접 읽어오는 방식입니다 — 이 저장소(`guinea`)는 private이라 자기 자신의 파일은 이 방법으로 못 읽으므로, 설정 파일만 따로 public 저장소에 둡니다.
+
+- **판정 기준은 GitHub입니다.** 앱스토어/플레이스토어를 실제로 조회하지 않습니다 — `update-config.json`의 `ios.latestVersion`/`android.latestVersion`과 빌드에 박힌 `app.json`의 `version`을 숫자로 비교할 뿐이고, 그 값은 사람이 직접 적어 넣습니다.
+- **플랫폼별로 따로 관리합니다.** iOS/Android는 스토어 심사·배포 시점이 서로 다르므로, 버전 번호와 스토어 링크를 `ios`/`android` 각각 따로 둡니다 — 한쪽만 올려도 다른 쪽엔 영향이 없습니다.
+- **그래서 순서가 중요합니다.** 해당 플랫폼의 스토어 심사/배포가 끝나 사용자가 실제로 받을 수 있는 상태가 된 뒤에 그 플랫폼의 `latestVersion`을 올려야 합니다. 미리 올리면 "업데이트하기"를 눌러도 스토어에 그 버전이 아직 없어서 혼란을 줍니다.
+- **알리는 방법**: `guinea-config` 저장소의 `update-config.json`에서 해당 플랫폼의 `latestVersion`(필요하면 `message`/`url`도)을 고치고 그 저장소의 `main`에 푸시하면 끝 — 이미 깔려 있는 옛날 빌드들도 앱을 켤 때마다 이 파일을 확인하므로, 몇 분 안에(GitHub 캐시) 알림이 뜨기 시작합니다.
+- 하루에 같은 버전으로 한 번만 뜨고, "나중에"를 눌러도 다음 날이나 버전이 더 오르면 다시 뜹니다. 네트워크가 안 되면 조용히 아무 일도 없습니다.
+- 진짜 푸시 알림(앱이 꺼져 있어도 오는 알림)이 아니라, 앱을 켤 때마다 확인하는 방식입니다.
 
 ## 세계관
 

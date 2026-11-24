@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BackHandler, ScrollView, StatusBar, StyleSheet, View } from "react-native";
+import { BackHandler, Platform, ScrollView, StatusBar, StyleSheet, View } from "react-native";
 import { useKeepAwake } from "expo-keep-awake";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { APP_MAX_WIDTH, colors } from "./theme";
@@ -11,6 +11,8 @@ import { ExitBannerAd } from "./components/ExitBannerAd";
 import { QuestModal } from "./components/QuestModal";
 import { LevelRewardModal } from "./components/LevelRewardModal";
 import { LabModal } from "./components/LabModal";
+import { UpdateAvailableModal } from "./components/UpdateAvailableModal";
+import { checkForUpdate, markUpdatePromptShown, type UpdateNotice } from "./state/remoteUpdate";
 import { OfflineRewardModal } from "./components/OfflineRewardModal";
 import { BattleScreen } from "./screens/BattleScreen";
 import { CompanionsScreen } from "./screens/CompanionsScreen";
@@ -172,6 +174,22 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
   // The update list reopened from the settings (its first, gift-bearing showing is automatic).
   const [whatsNewOpen, setWhatsNewOpen] = useState(false);
   const updateDue = Boolean(game.loaded && game.updateUnseen && state.tutorialDone && Boolean(state.recipeTutorialDone) && !game.offlineSummary && !game.firstClear);
+  // A newer app build than this one, per state/remoteUpdate.ts's remote check — separate from
+  // updateDue above, which only announces in-app content baked into this same build.
+  const [updateNotice, setUpdateNotice] = useState<UpdateNotice | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    checkForUpdate(Platform.OS).then((notice) => {
+      if (!cancelled && notice) setUpdateNotice(notice);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const dismissUpdateNotice = () => {
+    if (updateNotice) markUpdatePromptShown(updateNotice.latestVersion);
+    setUpdateNotice(null);
+  };
   useEffect(() => {
     if (!stealHint) return;
     const timer = setTimeout(() => setStealHint(false), getSkill("steal").durationMs ?? 5000);
@@ -510,7 +528,10 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             }}
           />
         )}
-        {game.loaded && (game.attendanceReady || attendanceClaimed) && !attendanceClosed && !updateDue && !whatsNewOpen && state.tutorialDone && state.recipeTutorialDone && !game.offlineSummary && !game.firstClear && (
+        {updateNotice && !updateDue && !whatsNewOpen && state.tutorialDone && Boolean(state.recipeTutorialDone) && !game.offlineSummary && !game.firstClear && (
+          <UpdateAvailableModal notice={updateNotice} onClose={dismissUpdateNotice} />
+        )}
+        {game.loaded && (game.attendanceReady || attendanceClaimed) && !attendanceClosed && !updateDue && !whatsNewOpen && !updateNotice && state.tutorialDone && state.recipeTutorialDone && !game.offlineSummary && !game.firstClear && (
           <AttendanceModal
             dayIndex={game.attendanceDay}
             goldFor={game.attendanceGold}
