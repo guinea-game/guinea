@@ -67,7 +67,6 @@ function getTopics(): { title: string; lines: string[] }[] {
           "음식 칸은 3개까지 열 수 있어요. 같은 세트의 요리 3개를 함께 먹으면 세트 효과가 추가돼요.",
           "You can open up to 3 food slots. Eating 3 dishes from the same set together adds a set bonus.",
         ),
-        t("요리마다 '궁합' 동료가 있어요. 그 동료와 함께일 때 먹으면 효과가 1.5배예요.", "Every dish has a 'paired' companion. Eating it while that companion is equipped gives 1.5x the effect."),
         t(
           "요리하다 대성공이 나면 한 번에 두 그릇이 나와요. 보석으로 바로 완성할 수도 있어요.",
           "A Great Success while cooking yields two servings at once. You can also finish a pot instantly with gems.",

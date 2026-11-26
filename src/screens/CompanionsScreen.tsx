@@ -21,13 +21,10 @@ import {
   OUTFIT_NO_OFFLINE,
   OUTFIT_SURE_DROPS,
   OUTFIT_SKILL_POWER,
-  DISH_PARTNERS,
-  PARTNER_MULTIPLIER,
   describeEffect,
   describeEffectParts,
 } from "../state/buffs";
 import type { BuffEffect } from "../state/buffs";
-import { RECIPES } from "../state/recipes";
 import { LockBadge } from "../components/LockBadge";
 import { getOutfitGemPrice, isOutfitUnlocked, OUTFIT_EARLY_UNLOCK_GEMS, OUTFIT_GEM_PRICE, OUTFIT_LOOP_GRANT, OUTFIT_UNLOCK_STAGE } from "../state/unlocks";
 import { ConfirmModal } from "../components/ConfirmModal";
@@ -248,27 +245,6 @@ export const COMPANIONS: { outfit: Outfit; name: string; blurb: string; detail: 
 // separately so the live companionDetail() call at display time can append it too.
 const WITCH_EXTRA_DETAIL = "모든 공격이 마법";
 
-// Dishes whose buff this companion boosts (DISH_PARTNERS), with their icons.
-function PartnerDishes({ outfit, light = false }: { outfit: Outfit; light?: boolean }) {
-  const dishes = RECIPES.filter((recipe) => DISH_PARTNERS[recipe.id] === outfit);
-  if (dishes.length === 0) return null;
-  return (
-    <View style={styles.partners}>
-      <Text style={[styles.partnerLabel, light && styles.partnerLabelLight]}>{t(`궁합 요리 ×${PARTNER_MULTIPLIER}`, `Paired Dish ×${PARTNER_MULTIPLIER}`)}</Text>
-      {dishes.map((recipe) => (
-        <View style={styles.partner} key={recipe.id}>
-          <Image source={recipe.image} style={styles.partnerImage} />
-          <Text style={[styles.partnerName, light && styles.partnerNameLight]}>{t(recipe.name)}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function partnerDishes(outfit: Outfit) {
-  return RECIPES.filter((recipe) => DISH_PARTNERS[recipe.id] === outfit);
-}
-
 // One fact about a companion on a soft cream plate: a small label over its value.
 function InfoTile({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -442,7 +418,6 @@ export function CompanionsScreen({
             <Text style={styles.previewSub}>
               {equippedItem.outfit === "witchGini" ? `${companionDetail(equippedItem.outfit, getCompanionLevel(progress, equippedItem.outfit))} · ${t(WITCH_EXTRA_DETAIL, "Every attack is magic")}` : companionDetail(equippedItem.outfit, getCompanionLevel(progress, equippedItem.outfit))}
             </Text>
-            <PartnerDishes outfit={equippedItem.outfit} light />
           </View>
           <View style={styles.previewSprite}>
             <OutfitSwap key={equippedOutfit} animate={equippedOutfit !== outfitOnArrival}>
@@ -576,13 +551,6 @@ export function CompanionsScreen({
                     <IconFact key={effect.text} icon={effect.icon} caption={effect.text} />
                   ))}
                 </InfoTile>
-                {partnerDishes(item.outfit).length > 0 && (
-                  <InfoTile label={t(`궁합 요리 ×${PARTNER_MULTIPLIER}`, `Paired Dish ×${PARTNER_MULTIPLIER}`)}>
-                    {partnerDishes(item.outfit).map((recipe) => (
-                      <IconFact key={recipe.id} icon={recipe.image} caption={t(recipe.name)} />
-                    ))}
-                  </InfoTile>
-                )}
                 <InfoTile label={t(`조각 획득 +${SHARDS_PER_BOSS}`, `Shards +${SHARDS_PER_BOSS}`)}>
                   <IconFact
                     caption={t(
@@ -663,13 +631,6 @@ const styles = StyleSheet.create({
   swap: { alignItems: "center", justifyContent: "center" },
   puff: { position: "absolute", width: 36, height: 36, borderRadius: 18, backgroundColor: "#f3eee2" },
   breaking: { position: "absolute", right: 0, bottom: 0, width: 24, height: 24 },
-  partners: { marginTop: 4, flexDirection: "row", flexWrap: "wrap", alignItems: "center", columnGap: 6, rowGap: 2 },
-  partnerLabel: { fontSize: 12, fontWeight: "900", fontFamily: fonts.bold, color: "#b0632a" },
-  partnerLabelLight: { color: "#f3d993" },
-  partner: { flexDirection: "row", alignItems: "center", gap: 2 },
-  partnerImage: { width: 16, height: 16 },
-  partnerName: { fontSize: 12, fontWeight: "800", fontFamily: fonts.bold, color: colors.brown },
-  partnerNameLight: { color: "#efe7d4" },
   card: { paddingHorizontal: 16, paddingTop: 15, paddingBottom: 15, gap: 10 },
   cardHead: { flexDirection: "row", alignItems: "center", gap: 10 },
   tiles: { flexDirection: "row", flexWrap: "wrap", gap: 6 },

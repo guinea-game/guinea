@@ -245,23 +245,6 @@ export function getDishSet(recipeId: string) {
   return DISH_SETS.find((set) => set.recipes.includes(recipeId));
 }
 
-// A dish's effect is this much stronger while its partner companion is equipped.
-export const PARTNER_MULTIPLIER = 1.5;
-export const DISH_PARTNERS: Record<string, Outfit> = {
-  "chopped-salad": "default",
-  "mango-smoothie": "explorerHamster",
-  "banana-milk": "explorerHamster",
-  "salmon-steak": "tetoGini",
-  "fire-skewer": "tetoGini",
-  octopus: "assassinGini",
-  "lamb-rib": "egenGini",
-  "tuna-sashimi": "samuraiGini",
-  "squid-ink-risotto": "chefGini",
-  "slime-potion": "witchGini",
-  steak: "boxerGini",
-  "pecan-bbq-ribs": "cowboyGini",
-};
-
 export const OUTFIT_NAMES: Record<Outfit, string> = {
   default: "모험기니",
   explorerHamster: "탐험기니",
@@ -293,14 +276,10 @@ export function getOutfitName(outfit: Outfit, state: Pick<GameState, "bossesClea
   return OUTFIT_NAMES[outfit];
 }
 
-// "세트: 바다 한 상", "궁합: 테토기니" — the set a dish belongs to and its partner companion.
+// "세트: 바다 한 상" — the set a dish belongs to.
 export function describeDishLinks(recipeId: string) {
   const set = getDishSet(recipeId);
-  const partner = DISH_PARTNERS[recipeId];
-  return [
-    set && t(`세트: ${set.name}`, `Set: ${t(set.name)}`, `セット: ${t(set.name)}`, `套装: ${t(set.name)}`),
-    partner && t(`궁합: ${OUTFIT_NAMES[partner]}`, `Pairs With: ${t(OUTFIT_NAMES[partner])}`, `相性: ${t(OUTFIT_NAMES[partner])}`, `搭配: ${t(OUTFIT_NAMES[partner])}`),
-  ].filter((part): part is string => !!part);
+  return [set && t(`세트: ${set.name}`, `Set: ${t(set.name)}`, `セット: ${t(set.name)}`, `套装: ${t(set.name)}`)].filter((part): part is string => !!part);
 }
 
 export function runningSlots(slots: BuffSlot[] | undefined, now: number) {
@@ -555,13 +534,12 @@ export function formatDuration(ms: number) {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-// Sum of every slot that's still running at `now` — a dish whose partner companion is
-// equipped counts PARTNER_MULTIPLIER times over — plus a full set's bonus.
-export function getBuffTotals(slots: BuffSlot[] | undefined, now: number, outfit?: Outfit): Required<BuffEffect> {
+// Sum of every slot that's still running at `now`, plus a full set's bonus.
+export function getBuffTotals(slots: BuffSlot[] | undefined, now: number): Required<BuffEffect> {
   const totals = emptyEffect();
   for (const slot of runningSlots(slots, now)) {
     const effect = BUFFS[slot.recipeId]?.effect ?? {};
-    addEffect(totals, effect, outfit && DISH_PARTNERS[slot.recipeId] === outfit ? PARTNER_MULTIPLIER : 1);
+    addEffect(totals, effect);
   }
   const set = getActiveSet(slots, now);
   if (set) addEffect(totals, set.bonus);

@@ -248,7 +248,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   const buffSlots = state.buffSlots ?? emptyBuffSlots();
   const outfitStats = getOutfitStats(state.equippedOutfit, getCompanionLevel(state, state.equippedOutfit));
   const outfitBuff = outfitStats.buff;
-  const dishBuffs = getBuffTotals(buffSlots, now, state.equippedOutfit);
+  const dishBuffs = getBuffTotals(buffSlots, now);
   // The companion's cooking/drop quirks (셰프기니, 탐험기니's milestone) ride along with the
   // dish totals, since that's where the kitchen and drop rolls read them.
   const foodBuffs = {

@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
   projectTitle: { fontSize: 16, fontWeight: "900", fontFamily: fonts.bold, color: colors.ink },
   projectTitleShut: { color: colors.muted },
   projectDone: { fontSize: 12, fontWeight: "900", fontFamily: fonts.bold, color: colors.green },
-  projectVeil: { position: "absolute", left: 6, right: 6, top: 6, bottom: 6, borderRadius: 10, backgroundColor: "rgba(0,0,0,0.55)", alignItems: "center", paddingTop: 96, paddingHorizontal: 16 },
+  projectVeil: { position: "absolute", left: 6, right: 6, top: 6, bottom: 6, borderRadius: 10, backgroundColor: "rgba(0,0,0,0.55)", alignItems: "center", justifyContent: "center", paddingHorizontal: 16 },
   projectLocked: { fontSize: 14, fontWeight: "800", fontFamily: fonts.bold, color: colors.cream, textAlign: "center" },
   top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   topEyebrow: { color: colors.green, fontWeight: "800", fontFamily: fonts.bold, fontSize: 12, letterSpacing: 1.5 },

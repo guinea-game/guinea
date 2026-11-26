@@ -1146,7 +1146,7 @@ export const frameKit = {
   fillBlue: slice(require("../assets/frames/fill-blue.webp"), 276, 36, [14, 18, 14, 18]),
   squareWood: slice(require("../assets/kit2/sq-cream.webp"), 54, 56, [16, 16, 18, 16], "#fceccb"),
   // Plain wood square from the frames-wood sheet (wood-1-3) — 연구소's nodes before their first step.
-  woodSquare: slice(require("../assets/frames-wood/wood-1-3.webp"), 203, 196, [46, 46, 46, 46], "#fce6c1"),
+  woodSquare: slice(require("../assets/frames-wood/wood-1-3.webp"), 203, 196, [46, 46, 46, 46], "#fce9c4"),
   squareGold: slice(require("../assets/kit2/frame-gold.webp"), 134, 153, [24, 24, 24, 24], "#fdf0d3"),
 };
 

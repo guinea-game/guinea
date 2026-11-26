@@ -61,7 +61,7 @@ export function simulateOfflineProgress(
   const elapsedMs = Math.min(elapsedMsRaw, getOfflineCapMs(state));
   if (elapsedMs < MIN_OFFLINE_MS) return null;
   const leftAt = Date.now() - elapsedMsRaw;
-  const atLeave = getBuffTotals(state.buffSlots, leftAt, state.equippedOutfit);
+  const atLeave = getBuffTotals(state.buffSlots, leftAt);
   const goldMultiplier = (state.equippedSkill === "diligent" ? 1 + DILIGENT_OFFLINE_BONUS : 1) * (1 + atLeave.offlineGold / 100);
   const keepBuffs = atLeave.offlineBuffs > 0;
 
@@ -93,7 +93,7 @@ export function simulateOfflineProgress(
   for (const segment of segments) {
     // Leftover time from the last segment carries into this one.
     remainingMs += segment.end - segment.start;
-    const food = keepBuffs ? getBuffTotals(state.buffSlots, leftAt + segment.start, state.equippedOutfit) : undefined;
+    const food = keepBuffs ? getBuffTotals(state.buffSlots, leftAt + segment.start) : undefined;
     const attack = state.attack * (1 + (food?.attack ?? 0) / 100);
     const dmg = expectedDamage(
       attack,

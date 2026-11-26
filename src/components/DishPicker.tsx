@@ -5,7 +5,7 @@ import { kit } from "../assets";
 import { GameButton } from "./GameButton";
 import { ARROW_H, ARROW_W, GuideArrow } from "./GuideArrow";
 import { NineSlice, Panel } from "./NineSlice";
-import { BUFFS, DISH_PARTNERS, GRADE_DURATION_MS, GRADE_LABEL, describeDish, describeDishLinks, formatDuration, INSTANT_DISHES, PARTNER_MULTIPLIER, peekGrade, type BuffSlot, type DishQuality } from "../state/buffs";
+import { BUFFS, GRADE_DURATION_MS, GRADE_LABEL, describeDish, describeDishLinks, formatDuration, INSTANT_DISHES, peekGrade, type BuffSlot, type DishQuality } from "../state/buffs";
 import { getItemQuantity, RECIPES } from "../state/recipes";
 import type { GameState, Outfit } from "../types";
 import { t } from "../i18n";
@@ -82,7 +82,6 @@ export function DishPicker({
                             ? t(`즉시 효과 · ${GRADE_LABEL[grade]}`, `Instant Effect · ${t(GRADE_LABEL[grade])}`)
                             : t(`${GRADE_LABEL[grade]} · ${formatDuration(GRADE_DURATION_MS[grade])} 지속`, `${t(GRADE_LABEL[grade])} · Lasts ${formatDuration(GRADE_DURATION_MS[grade])}`),
                           ...describeDishLinks(recipe.id),
-                          ...(DISH_PARTNERS[recipe.id] === outfit ? [t(`효과 ×${PARTNER_MULTIPLIER}`, `Effect ×${PARTNER_MULTIPLIER}`)] : []),
                         ].join(" · ")}
                       </Text>
                     </View>

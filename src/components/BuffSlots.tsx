@@ -5,7 +5,7 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSeq
 import { colors, fonts } from "../theme";
 import { frameImages, uiImages } from "../assets";
 import { StrokedText } from "./StrokedText";
-import { BUFF_SLOT_PRICES, BUFFS, DISH_PARTNERS, describeEffect, formatDuration, getActiveSet, PARTNER_MULTIPLIER, runningSlots, type BuffSlot } from "../state/buffs";
+import { BUFF_SLOT_PRICES, BUFFS, describeEffect, formatDuration, getActiveSet, runningSlots, type BuffSlot } from "../state/buffs";
 import { InfoBubble } from "./InfoBubble";
 import { tutorialRef } from "./tutorialTargets";
 import { RECIPES } from "../state/recipes";
@@ -135,7 +135,6 @@ export function BuffSlots({
                 title={t(recipe.name)}
                 lines={[
                   ...describeEffect(buff.effect).split(" · "),
-                  ...(DISH_PARTNERS[running.recipeId] === outfit ? [t(`동료 궁합 ×${PARTNER_MULTIPLIER}`, `Companion Match ×${PARTNER_MULTIPLIER}`)] : []),
                   ...(activeSet ? [t(`${activeSet.name} 세트: ${describeEffect(activeSet.bonus)}`, `${t(activeSet.name)} Set: ${describeEffect(activeSet.bonus)}`)] : []),
                   t(`${formatDuration(remaining)} 남음`, `${formatDuration(remaining)} left`),
                 ]}
