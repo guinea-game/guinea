@@ -387,7 +387,7 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             now={game.now}
             enemyKind={getEnemyKind(state.stageNumber)}
             outfit={state.equippedOutfit}
-            playerName={getOutfitName(state.equippedOutfit, state)}
+            playerName={t(getOutfitName(state.equippedOutfit, state))}
           />
         );
       case "shop":

@@ -104,7 +104,7 @@ export function BattleScreen({ game }: { game: UseGameState }) {
         stageKills={state.stageKills}
         onOpenMap={() => game.setState((previous) => ({ ...previous, selectedTab: "milestone" }))}
         outfit={state.equippedOutfit}
-        playerName={getOutfitName(state.equippedOutfit, state)}
+        playerName={t(getOutfitName(state.equippedOutfit, state))}
         manualEnabled={!battle.isAutoBattle || state.equippedOutfit === "cowboyGini"}
         autoBattle={!battle.manualActive}
         onManualAttack={battle.manualAttack}
