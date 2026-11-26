@@ -18,7 +18,7 @@ Expo 관련 일반 규칙은 [AGENTS.md](AGENTS.md)를 따른다 (단, 이 프�
 
 `update-config.json`은 이 저장소(`guinea`, private)가 아니라 별도의 **public** 저장소 [`guinea-game/guinea-config`](https://github.com/guinea-game/guinea-config)에 있다 — `guinea`가 private이라 `raw.githubusercontent.com`으로 직접 못 읽기 때문. `src/state/remoteUpdate.ts`의 `UPDATE_CONFIG_URL`이 그쪽을 가리킨다.
 
-스토어에 새 버전을 올리고 나서 "업데이트하세요" 알림을 띄우려면: `guinea-config` 저장소를 따로 체크아웃해서(이 저장소 안에는 없다) `update-config.json`에서 **그 버전이 실제로 라이브된 플랫폼의** `ios.latestVersion` 또는 `android.latestVersion`만 새 버전으로 바꾸고 그 저장소의 `main`에 푸시한다 — 그게 전부다. iOS/Android는 심사·배포 시점이 서로 다르므로 버전 번호와 스토어 링크를 플랫폼별로 따로 가진다(하나를 올려도 다른 플랫폼엔 영향 없음). 이미 깔려 있는 옛날 빌드도 앱을 켜면 몇 분 안에(GitHub 캐시) 스스로 확인해서 알림을 띄운다. 하루에 같은 버전으로 한 번만 뜨고(`markUpdatePromptShown`), "나중에"를 눌러도 그냥 닫힐 뿐 다음 날 또는 버전을 더 올리면 다시 뜬다.
+스토어에 새 버전을 올리고 나서 "업데이트하세요" 알림을 띄우려면: `guinea-config` 저장소를 따로 체크아웃해서(이 저장소 안에는 없다) `update-config.json`에서 **그 버전이 실제로 라이브된 플랫폼의** `ios.latestVersion` 또는 `android.latestVersion`만 새 버전으로 바꾸고 그 저장소의 `main`에 푸시한다 — 그게 전부다. iOS/Android는 심사·배포 시점이 서로 다르므로 버전 번호와 스토어 링크를 플랫폼별로 따로 가진다(하나를 올려도 다른 플랫폼엔 영향 없음). 이미 깔려 있는 옛날 빌드도 앱을 켜면 몇 분 안에(GitHub 캐시) 스스로 확인해서 알림을 띄운다. "나중에"를 눌러도 그 세션만 닫힐 뿐, 업데이트하기 전까진 앱을 켤 때마다 계속 뜬다.
 이건 `src/state/updates.ts`의 `LATEST_UPDATE`(업데이트 소식, 앱 안에 박혀 있는 신규 콘텐츠 안내)와는 별개 — 그건 이미 설치된 빌드가 아는 내용이고, 이건 "새 빌드가 스토어에 나왔다"는 사실 자체를 알리는 용도다.
 이벤트(기간 한정) 설정도 같은 이유로 `guinea-config`에 있다 — 이 저장소가 아니라 그쪽에서 수정한다.
 

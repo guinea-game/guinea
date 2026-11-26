@@ -1,6 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import appConfig from "../../app.json";
-import { todayKey } from "./attendance";
 import { getLanguage } from "../i18n";
 
 // 앱 업데이트 안내: a tiny JSON file (update-config.json), served over
@@ -16,7 +14,6 @@ import { getLanguage } from "../i18n";
 // https://github.com/guinea-game/guinea-config
 const UPDATE_CONFIG_URL = "https://raw.githubusercontent.com/guinea-game/guinea-config/main/update-config.json";
 const FETCH_TIMEOUT_MS = 4000;
-const PROMPT_KEY = "gini.updatePrompt.v1";
 
 const CURRENT_VERSION: string = appConfig.expo.version;
 
@@ -59,35 +56,13 @@ async function fetchConfig(): Promise<RemoteUpdateConfig | null> {
   }
 }
 
-async function alreadyShownToday(version: string) {
-  try {
-    const raw = await AsyncStorage.getItem(PROMPT_KEY);
-    if (!raw) return false;
-    const saved = JSON.parse(raw) as { version: string; day: string };
-    return saved.version === version && saved.day === todayKey();
-  } catch {
-    return false;
-  }
-}
-
-// Once a day per version — bumping latestVersion in the config resets the nag for players
-// who already dismissed the previous one today.
-export async function markUpdatePromptShown(version: string) {
-  try {
-    await AsyncStorage.setItem(PROMPT_KEY, JSON.stringify({ version, day: todayKey() }));
-  } catch {
-    // Best-effort, same as the rest of this file — worst case it nags again today.
-  }
-}
-
-// null unless the config is reachable, this platform has its own entry genuinely newer than
-// this build, and it hasn't already been shown today for that exact version. Never throws —
-// a flaky network (or an unrecognized platform, e.g. web) just means no nudge.
+// null unless the config is reachable and this platform has its own entry genuinely newer
+// than this build. Shows every time the app opens until the player actually updates — never
+// throws, a flaky network (or an unrecognized platform, e.g. web) just means no nudge.
 export async function checkForUpdate(platformOS: string): Promise<UpdateNotice | null> {
   const config = await fetchConfig();
   const platformInfo = platformOS === "ios" ? config?.ios : platformOS === "android" ? config?.android : undefined;
   if (!platformInfo?.latestVersion || !isNewerVersion(platformInfo.latestVersion, CURRENT_VERSION)) return null;
-  if (await alreadyShownToday(platformInfo.latestVersion)) return null;
   const lang = getLanguage();
   const message = config?.message?.[lang] ?? config?.message?.ko ?? config?.message?.en ?? "";
   return { latestVersion: platformInfo.latestVersion, message, storeUrl: platformInfo.url };

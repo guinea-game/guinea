@@ -2,14 +2,14 @@
   "expo": {
     "name": "기니 키우기",
     "slug": "gini_app",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "bundleIdentifier": "com.guinea.adventure",
       "supportsTablet": true,
-      "buildNumber": "23",
+      "buildNumber": "25",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "SKAdNetworkItems": [
@@ -103,13 +103,14 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.guinea.adventure",
-      "versionCode": 23
+      "versionCode": 26
     },
     "web": {
       "favicon": "./assets/app-icon.png"
     },
     "plugins": [
       "./plugins/withLevelPlayTopViewController",
+      "./plugins/withOptionalPortraitFeature",
       [
         "expo-font",
         {

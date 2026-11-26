@@ -12,7 +12,7 @@ import { QuestModal } from "./components/QuestModal";
 import { LevelRewardModal } from "./components/LevelRewardModal";
 import { LabModal } from "./components/LabModal";
 import { UpdateAvailableModal } from "./components/UpdateAvailableModal";
-import { checkForUpdate, markUpdatePromptShown, type UpdateNotice } from "./state/remoteUpdate";
+import { checkForUpdate, type UpdateNotice } from "./state/remoteUpdate";
 import { OfflineRewardModal } from "./components/OfflineRewardModal";
 import { BattleScreen } from "./screens/BattleScreen";
 import { CompanionsScreen } from "./screens/CompanionsScreen";
@@ -187,7 +187,6 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
     };
   }, []);
   const dismissUpdateNotice = () => {
-    if (updateNotice) markUpdatePromptShown(updateNotice.latestVersion);
     setUpdateNotice(null);
   };
   useEffect(() => {
