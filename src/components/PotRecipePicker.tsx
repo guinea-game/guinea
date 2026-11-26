@@ -18,11 +18,14 @@ export function PotRecipePicker({
   knownRecipes,
   onQueue,
   onClose,
+  onOpenIngredient,
 }: {
   inventory: GameState["inventory"];
   knownRecipes: string[] | undefined;
   onQueue: (recipeId: string) => void;
   onClose: () => void;
+  // Tapping an ingredient closes this picker and jumps to the ingredient codex, searched down to it.
+  onOpenIngredient: (name: string) => void;
 }) {
   const known = getKnownRecipes(knownRecipes);
   const recipes = RECIPES.filter((recipe) => known.includes(recipe.id))
@@ -59,12 +62,19 @@ export function PotRecipePicker({
                       </Text>
                       <View style={styles.ingredientRow}>
                         {ingredients.map((ingredient) => (
-                          <View style={styles.ingredient} key={ingredient.name}>
+                          <Pressable
+                            style={({ pressed }) => [styles.ingredient, pressed && styles.pressed]}
+                            key={ingredient.name}
+                            onPress={() => onOpenIngredient(ingredient.name)}
+                            accessibilityRole="button"
+                            accessibilityLabel={t(`${ingredient.name} 도감 보기`, `View ${t(ingredient.name)} in the codex`)}
+                            hitSlop={4}
+                          >
                             {ITEM_IMAGES[ingredient.name] !== undefined && <Image source={ITEM_IMAGES[ingredient.name]} style={styles.ingredientImage} />}
                             <Text style={[styles.ingredientText, getItemQuantity(inventory, ingredient.name) < ingredient.quantity && styles.ingredientShort]}>
                               {getItemQuantity(inventory, ingredient.name)}/{ingredient.quantity}
                             </Text>
-                          </View>
+                          </Pressable>
                         ))}
                       </View>
                     </View>
@@ -108,6 +118,7 @@ const styles = StyleSheet.create({
   meta: { marginTop: 1, fontSize: 12, fontWeight: "800", fontFamily: fonts.bold, color: colors.green },
   ingredientRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 3 },
   ingredient: { flexDirection: "row", alignItems: "center", gap: 2 },
+  pressed: { opacity: 0.6 },
   ingredientImage: { width: 14, height: 14 },
   ingredientText: { fontSize: 11, fontWeight: "800", fontFamily: fonts.bold, color: colors.brown },
   ingredientShort: { color: colors.red },

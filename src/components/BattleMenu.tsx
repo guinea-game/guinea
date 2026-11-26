@@ -111,9 +111,9 @@ export function BattleMenu({
         <MenuButton icon={LAB_ICON} label={t("연구소", "Lab")} onPress={onOpenLab} locked={locks.lab} />
         <MenuButton icon={EVENT_ICON} label={t("이벤트", "Event")} onPress={onOpenEvent} locked={locks.event} />
       </ScrollView>
-      {/* Icons scrolling past fade into the page's cream instead of being cut off. */}
+      {/* Icons scrolling past fade into the page's background instead of being cut off. */}
       <LinearGradient
-        colors={["rgba(245, 237, 218, 0)", colors.paper]}
+        colors={["rgba(232, 220, 196, 0)", "#e8dcc4"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.fade}

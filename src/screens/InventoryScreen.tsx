@@ -36,6 +36,8 @@ export function InventoryScreen({
   onSeen,
   canSell,
   onSell,
+  focusItemName,
+  onFocusHandled,
 }: {
   inventory: GameState["inventory"];
   discoveredItems: string[];
@@ -56,6 +58,11 @@ export function InventoryScreen({
   // Ingredients can be tapped to sell once the tutorials that cook with them are done.
   canSell: boolean;
   onSell: (name: string, quantity: number) => void;
+  // Arrived here from an ingredient tapped elsewhere (Kitchen's recipe cards, its "i" info) —
+  // opens straight into the codex, searched down to that one ingredient. One-shot: consumed
+  // on this mount, then cleared by the caller so a plain "가방" tap later opens normally.
+  focusItemName?: string | null;
+  onFocusHandled?: () => void;
 }) {
   const capacity = getBagCapacity(expansions);
   const cost = getBagExpandCost(expansions);
@@ -82,7 +89,12 @@ export function InventoryScreen({
   const padded = Math.ceil((visible.length + empties) / COLUMNS) * COLUMNS - visible.length;
   const cells = [...visible, ...Array.from({ length: Math.min(capacity - used, padded) }, () => null)];
 
-  const [codex, setCodex] = useState(false);
+  const [codex, setCodex] = useState(!!focusItemName);
+  useEffect(() => {
+    if (focusItemName) onFocusHandled?.();
+    // Runs once, on mount — the prop is only ever meant to steer this one arrival.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [selling, setSelling] = useState<string | null>(null);
   const sellingItem = selling ? inventory.find((item) => item.name === selling && item.type === "food") : undefined;
 
@@ -120,7 +132,7 @@ export function InventoryScreen({
         </Pressable>
       </View>
       {codex ? (
-        <IngredientCodex discovered={discoveredItems} dropped={droppedItems} priceStage={priceStage} fresh={newInCodex} />
+        <IngredientCodex discovered={discoveredItems} dropped={droppedItems} priceStage={priceStage} fresh={newInCodex} initialQuery={focusItemName ?? undefined} />
       ) : (
       <>
       <Panel slice={kit.buttonBeige} style={styles.summary}>

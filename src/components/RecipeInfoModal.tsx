@@ -32,7 +32,18 @@ function ingredientSource(name: string) {
 // A recipe's details behind the "i" on its kitchen card: the story line, set and partner
 // companion, how hard its minigame is, and how many are in the bag. The card itself keeps
 // just the picture, name, effect and ingredients.
-export function RecipeInfoModal({ recipe, owned, onClose }: { recipe: Recipe; owned: number; onClose: () => void }) {
+export function RecipeInfoModal({
+  recipe,
+  owned,
+  onClose,
+  onOpenIngredient,
+}: {
+  recipe: Recipe;
+  owned: number;
+  onClose: () => void;
+  // Tapping an ingredient closes this modal and jumps to the ingredient codex, searched down to it.
+  onOpenIngredient: (name: string) => void;
+}) {
   const tier = recipe.tier;
   const rows: { label: string; value: string }[] = [
     { label: t("효과", "Effect"), value: describeDish(recipe.id).split(" · ").join("\n") },
@@ -67,7 +78,14 @@ export function RecipeInfoModal({ recipe, owned, onClose }: { recipe: Recipe; ow
               <Text style={styles.rowLabel}>{t("재료", "Ingredients")}</Text>
               <View style={styles.ingredients}>
                 {recipe.ingredients.map((ingredient) => (
-                  <View key={ingredient.name} style={styles.ingredient}>
+                  <Pressable
+                    key={ingredient.name}
+                    style={({ pressed }) => [styles.ingredient, pressed && styles.pressed]}
+                    onPress={() => onOpenIngredient(ingredient.name)}
+                    accessibilityRole="button"
+                    accessibilityLabel={t(`${ingredient.name} 도감 보기`, `View ${t(ingredient.name)} in the codex`)}
+                    hitSlop={4}
+                  >
                     <Image source={ITEM_IMAGES[ingredient.name]} style={styles.ingredientIcon} resizeMode="contain" />
                     <View style={styles.ingredientText}>
                       <Text style={styles.ingredientName} numberOfLines={1}>
@@ -77,7 +95,7 @@ export function RecipeInfoModal({ recipe, owned, onClose }: { recipe: Recipe; ow
                         {ingredientSource(ingredient.name)}
                       </Text>
                     </View>
-                  </View>
+                  </Pressable>
                 ))}
               </View>
             </View>
@@ -103,6 +121,7 @@ const styles = StyleSheet.create({
   rowValue: { flex: 1, fontSize: 13, lineHeight: 18, fontWeight: "900", fontFamily: fonts.bold, color: colors.ink },
   ingredients: { flex: 1, gap: 6 },
   ingredient: { flexDirection: "row", alignItems: "center", gap: 6 },
+  pressed: { opacity: 0.6 },
   ingredientIcon: { width: 28, height: 28 },
   ingredientText: { flex: 1 },
   ingredientName: { fontSize: 13, lineHeight: 17, fontWeight: "900", fontFamily: fonts.bold, color: colors.ink },

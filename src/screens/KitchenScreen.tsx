@@ -48,6 +48,7 @@ export function KitchenScreen({
   onQueuePot,
   onCollectPot,
   onRushPot,
+  onOpenIngredient,
 }: {
   inventory: GameState["inventory"];
   knownRecipes: string[] | undefined;
@@ -77,6 +78,9 @@ export function KitchenScreen({
   onQueuePot: (recipeId: string) => void;
   onCollectPot: () => void;
   onRushPot: () => void;
+  // Tapping an ingredient's name or picture (a recipe's chip list, its "i" info, or the pot's
+  // picker) jumps to the ingredient codex searched down to it, instead of just sitting there.
+  onOpenIngredient: (name: string) => void;
 }) {
   const [potPickerOpen, setPotPickerOpen] = useState(false);
   const known = getKnownRecipes(knownRecipes);
@@ -161,14 +165,21 @@ export function KitchenScreen({
             (ingredient) => `${getItemQuantity(inventory, ingredient.name)}/${ingredient.quantity}`,
           );
           const ingredientChips = recipe.ingredients.map((ingredient, index) => (
-            <View style={styles.ingredient} key={ingredient.name}>
+            <Pressable
+              style={({ pressed }) => [styles.ingredient, pressed && styles.pressed]}
+              key={ingredient.name}
+              onPress={() => onOpenIngredient(ingredient.name)}
+              accessibilityRole="button"
+              accessibilityLabel={t(`${ingredient.name} 도감 보기`, `View ${t(ingredient.name)} in the codex`)}
+              hitSlop={4}
+            >
               {ITEM_IMAGES[ingredient.name] !== undefined && (
                 <Image source={ITEM_IMAGES[ingredient.name]} style={styles.ingredientImage} />
               )}
               <Text style={[styles.ingredientText, getItemQuantity(inventory, ingredient.name) < ingredient.quantity && styles.ingredientShort]}>
                 {ingredientLabels[index]}
               </Text>
-            </View>
+            </Pressable>
           ));
           // Rows balanced by width, so a long list breaks into even lines instead of a
           // full line plus a straggler.
@@ -260,11 +271,25 @@ export function KitchenScreen({
           </Panel>
         )}
       </View>
-      {infoRecipe && <RecipeInfoModal recipe={infoRecipe} owned={getItemQuantity(inventory, infoRecipe.name)} onClose={() => setInfoRecipeId(null)} />}
+      {infoRecipe && (
+        <RecipeInfoModal
+          recipe={infoRecipe}
+          owned={getItemQuantity(inventory, infoRecipe.name)}
+          onClose={() => setInfoRecipeId(null)}
+          onOpenIngredient={(name) => {
+            setInfoRecipeId(null);
+            onOpenIngredient(name);
+          }}
+        />
+      )}
       {potPickerOpen && (
         <PotRecipePicker
           inventory={inventory}
           knownRecipes={knownRecipes}
+          onOpenIngredient={(name) => {
+            setPotPickerOpen(false);
+            onOpenIngredient(name);
+          }}
           onQueue={(recipeId) => {
             onQueuePot(recipeId);
             setPotPickerOpen(false);

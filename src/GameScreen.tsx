@@ -106,6 +106,17 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
   }, [bgmGroup, game.displayBoss]);
 
   const onSelectTab = useCallback((selectedTab: Tab) => setState((previous) => ({ ...previous, selectedTab })), [setState]);
+  // An ingredient tapped somewhere in cooking (a recipe card, its "i" info) — jumps straight to
+  // the bag's ingredient codex, searched down to it. One-shot: InventoryScreen reads it once on
+  // mount and immediately hands it back via onFocusHandled, so a later plain "가방" tap opens normally.
+  const [ingredientFocus, setIngredientFocus] = useState<string | null>(null);
+  const openIngredientCodex = useCallback(
+    (name: string) => {
+      setIngredientFocus(name);
+      onSelectTab("inventory");
+    },
+    [onSelectTab],
+  );
   // Hit sounds stay on the battle page (see setBattleVisible).
   useEffect(() => {
     setBattleVisible(state.selectedTab === "battle");
@@ -362,6 +373,8 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             onOpenShop={() => onSelectTab("shop")}
             canSell={Boolean(state.tutorialDone && state.recipeTutorialDone)}
             onSell={game.sellIngredient}
+            focusItemName={ingredientFocus}
+            onFocusHandled={() => setIngredientFocus(null)}
           />
         );
       case "skills":
@@ -401,6 +414,7 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             onQueuePot={game.queuePot}
             onCollectPot={onCollectPot}
             onRushPot={onRushPot}
+            onOpenIngredient={openIngredientCodex}
           />
         );
       case "daily":
@@ -716,7 +730,9 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
 
 const styles = StyleSheet.create({
   shell: { flex: 1, backgroundColor: colors.appBackground },
-  frame: { flex: 1, maxWidth: APP_MAX_WIDTH, width: "100%", alignSelf: "center", backgroundColor: colors.paper },
+  // Matches every screen's own page background (#e8dcc4) so the header strip behind it
+  // doesn't show as a lighter seam above the content.
+  frame: { flex: 1, maxWidth: APP_MAX_WIDTH, width: "100%", alignSelf: "center", backgroundColor: "#e8dcc4" },
   content: { flex: 1 },
   contentContainer: { flexGrow: 1, paddingBottom: 12 },
 });

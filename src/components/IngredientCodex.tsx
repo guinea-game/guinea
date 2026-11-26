@@ -58,10 +58,24 @@ function getSourceStages(name: string) {
 // One you've ever had shows where it drops, its shop price and the dishes it goes into;
 // the rest are dark silhouettes with a hint of where to look.
 // `fresh`: found since the codex was last opened — they light up from silhouette with "발견!".
-export function IngredientCodex({ discovered, dropped, priceStage, fresh = [] }: { discovered: string[]; dropped: string[] | undefined; priceStage: number; fresh?: string[] }) {
+export function IngredientCodex({
+  discovered,
+  dropped,
+  priceStage,
+  fresh = [],
+  initialQuery,
+}: {
+  discovered: string[];
+  dropped: string[] | undefined;
+  priceStage: number;
+  fresh?: string[];
+  // Arriving here from an ingredient tapped elsewhere (a recipe card, its "i" info) — the
+  // search box starts on that ingredient's name instead of empty.
+  initialQuery?: string;
+}) {
   const found = GROCERY.filter((item) => discovered.includes(item.name)).length;
   // Search by ingredient name or a dish that uses it; undiscovered ones only show unfiltered.
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery ?? "");
   const shown = GROCERY.filter((item) =>
     discovered.includes(item.name)
       ? matchesSearch(query, item.name, ...RECIPES.filter((recipe) => recipe.ingredients.some((ingredient) => ingredient.name === item.name)).map((recipe) => recipe.name))

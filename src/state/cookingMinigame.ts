@@ -62,8 +62,8 @@ export function classifyTaps(tapCount: number, target: number, zoneWidth: number
 // 낚시's hold-to-rise/release-to-fall control (per second). Rises a little faster than it
 // falls, so holding it down too long overshoots — landing in the zone takes a tap-release
 // rhythm, not just a single well-timed hold.
-export const HOLD_RISE_PER_SEC = 0.9;
-export const HOLD_FALL_PER_SEC = 0.6;
+export const HOLD_RISE_PER_SEC = 0.35;
+export const HOLD_FALL_PER_SEC = 0.45;
 
 // cookSpeed (see buffs.ts) widens the zone by its % — easier, not faster — capped so the
 // hardest tier never trivializes into a free pass.
