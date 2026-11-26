@@ -1424,6 +1424,10 @@ export const comics = {
   skyCity2: require("../assets/comics/sky-city-2.webp"),
   skyCity3: require("../assets/comics/sky-city-3.webp"),
   skyCity4: require("../assets/comics/sky-city-4.webp"),
+  giniBoxRescue1: require("../assets/comics/gini-box-rescue-1.webp"),
+  giniBoxRescue2: require("../assets/comics/gini-box-rescue-2.webp"),
+  giniBoxRescue3: require("../assets/comics/gini-box-rescue-3.webp"),
+  giniBoxRescue4: require("../assets/comics/gini-box-rescue-4.webp"),
 };
 
 // Per-region BGM — see BGM_GROUP in stages.ts for which EnemyKind maps to which group.

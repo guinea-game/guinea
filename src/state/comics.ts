@@ -22,7 +22,7 @@ export type ComicBubble = {
 // `aspect`: the panel art's height / width (panels from one page can differ slightly).
 export type ComicPanel = { image: number; aspect: number; bubbles: ComicBubble[]; sfx?: SfxKey; shake?: boolean };
 
-export type ComicId = "opening" | "explorer" | "cookbook" | "teto" | "assassin" | "egen" | "samurai" | "harbor" | "dive" | "kite" | "snowpass" | "jungle" | "cavevillage" | "cloudpalace" | "farmchicken" | "jungleoasis" | "marketsilk" | "oasisdesert" | "slimeroad" | "swampfarm" | "snowvillage" | "tigerride" | "foxpath" | "chiliport" | "shrinesteps" | "tanukimap" | "castleonsen" | "nightthief" | "dragonroad" | "dragongate" | "whaleride" | "alpinetrain" | "sledbakery" | "ginitown" | "townasleep" | "pumpkinforest" | "beeChase" | "giniReturn" | "griffinFlight" | "ending" | "bazaarBound" | "teaTrail" | "saffronGarden" | "floatingMarket" | "baliTerraces" | "hawaiiBeach" | "texasCanyon" | "tacoFiesta" | "cacaoJungle" | "andesVineyard" | "skyCity" | "apprenticeGini" | "apprenticeWeak" | "apprenticeGuard" | "boxerEvolution" | "apprenticeMisfire" | "apprenticeQuickdraw" | "cowboyEvolution";
+export type ComicId = "opening" | "explorer" | "cookbook" | "teto" | "assassin" | "egen" | "samurai" | "harbor" | "dive" | "kite" | "snowpass" | "jungle" | "cavevillage" | "cloudpalace" | "farmchicken" | "jungleoasis" | "marketsilk" | "oasisdesert" | "slimeroad" | "swampfarm" | "snowvillage" | "tigerride" | "foxpath" | "chiliport" | "shrinesteps" | "tanukimap" | "castleonsen" | "nightthief" | "dragonroad" | "dragongate" | "whaleride" | "alpinetrain" | "sledbakery" | "ginitown" | "townasleep" | "pumpkinforest" | "beeChase" | "giniReturn" | "griffinFlight" | "ending" | "bazaarBound" | "teaTrail" | "saffronGarden" | "floatingMarket" | "baliTerraces" | "hawaiiBeach" | "texasCanyon" | "tacoFiesta" | "cacaoJungle" | "andesVineyard" | "skyCity" | "apprenticeGini" | "apprenticeWeak" | "apprenticeGuard" | "boxerEvolution" | "apprenticeMisfire" | "apprenticeQuickdraw" | "cowboyEvolution" | "giniBoxRescue";
 
 // Loop-gated story beats: each fires once, in GameScreen's comic chain, the first time
 // `loopsCompleted` equals `afterLoop` and (if given) `stageNumber` has passed `afterStage` —
@@ -39,6 +39,7 @@ export const LOOP_COMICS: LoopComic[] = [
   { comic: "apprenticeMisfire", afterLoop: 2, afterStage: 5 }, // during 3회차, 평범한 마을 (stage 6): a different 견습기니's first try at fighting from range, badly
   { comic: "apprenticeQuickdraw", afterLoop: 2, afterStage: 22 }, // during 3회차, 수군 포구 (stage 23): the same one's first real hit
   { comic: "cowboyEvolution", afterLoop: 3 }, // 3회차's last boss: that 견습기니 evolves into 카우보이기니
+  { comic: "giniBoxRescue", afterLoop: 4 }, // 4회차's last boss: the box-reward reveal's setup — a village gini gets taken
 ];
 
 export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = {
@@ -1613,6 +1614,46 @@ export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = 
       },
     ],
   },
+  // Plays once loopsCompleted first reaches 4 (see LOOP_COMICS below) — 4회차의 마지막 보스를
+  // 잡자마자. 집에 돌아오고(1) → 아가기니들의 환영을 받다가(2) → 마지막 보스가 들이닥쳐 아가기니
+  // 하나를 채가고(3) → 모험기니가 쫓아 나서는(4) 데까지 — 결말(상자를 찾아 구해 오는 장면)은
+  // 아직 없음, 다음 편에서. 이게 바로 그동안 마지막 보스가 기니들을 수프 재료로 알고 잡아갔던
+  // 진짜 이유 — 보스를 잡을 때마다 기니태초마을에서 또 한 마리씩 없어지고 있었다는 뒷이야기.
+  giniBoxRescue: {
+    title: "아가기니 유괴 사건",
+    panels: [
+      {
+        image: comics.giniBoxRescue1,
+        aspect: 504 / 760,
+        sfx: "levelup",
+        bubbles: [{ text: "다녀왔습니다!\n한 바퀴 더 돌고 왔어요!", left: 0.02, top: 0.02, maxWidth: 0.46, tail: "bottom", tailAt: 0.6, shout: true }],
+      },
+      {
+        image: comics.giniBoxRescue2,
+        aspect: 504 / 760,
+        bubbles: [
+          { text: "모험기니다!!", left: 0.02, top: 0.03, maxWidth: 0.34, tail: "bottom", tailAt: 0.5, shout: true },
+          { text: "어서 오렴!", right: 0.02, top: 0.03, maxWidth: 0.3, tail: "bottom", tailAt: 0.4 },
+        ],
+      },
+      {
+        image: comics.giniBoxRescue3,
+        aspect: 504 / 760,
+        sfx: "hit",
+        bubbles: [
+          { text: "맛있는 기니들이\n한가득이군!", right: 0.02, top: 0.02, maxWidth: 0.34, tail: "bottom", tailAt: 0.5 },
+          { text: "꺄아악!!", left: 0.3, top: 0.02, maxWidth: 0.26, tail: "bottom", tailAt: 0.5, shout: true },
+          { text: "안 돼...!", left: 0.02, top: 0.56, maxWidth: 0.3, tail: "top", tailAt: 0.4 },
+        ],
+      },
+      {
+        image: comics.giniBoxRescue4,
+        aspect: 504 / 760,
+        sfx: "bossEnter",
+        bubbles: [{ text: "거기 서!!", left: 0.02, top: 0.56, maxWidth: 0.3, tail: "top", tailAt: 0.4, shout: true }],
+      },
+    ],
+  },
   // Stage 39 (0-based) — 인도 향신료 바자르. 커리 재료를 다 모으고 호랑이 셰프에게서 요리책 짜이의
   // 찻잎이 산 위에 있다는 걸 듣고(1) → 산길을 올라(2) →
   // 히말라야 차밭에 도착해 감탄하고(3) → 짜이 설인이 나타나는(4) 데까지. 다음 스테이지(40,
@@ -2334,6 +2375,7 @@ export const COMIC_ORDER: ComicId[] = [
   "apprenticeMisfire",
   "apprenticeQuickdraw",
   "cowboyEvolution",
+  "giniBoxRescue",
 ];
 
 // What opens a comic, for the album's locked cards.

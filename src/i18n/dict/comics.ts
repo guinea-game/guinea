@@ -364,6 +364,16 @@ export const COMICS_DICT: Record<string, string> = {
   "저도... 같이 가도 될까요?": "Could I... come along too?",
   "그래, 같이 가자!": "Sure, let's go together!",
 
+  // giniBoxRescue
+  "아가기니 유괴 사건": "The Baby Gini Kidnapping Incident",
+  "다녀왔습니다!\n한 바퀴 더 돌고 왔어요!": "I'm home!\nWent around one more loop!",
+  "모험기니다!!": "It's Adventurer Gini!!",
+  "어서 오렴!": "Welcome back!",
+  "맛있는 기니들이\n한가득이군!": "What a bunch of\ndelicious-looking ginis!",
+  "꺄아악!!": "Aaaahh!!",
+  "안 돼...!": "No...!",
+  "거기 서!!": "Stop right there!!",
+
   // teaTrail
   "찻잎 향기 따라 산 위로": "Up the Mountain, Following the Scent of Tea",
   "커리 재료,\n다 모았다!": "Got all the\ncurry ingredients!",

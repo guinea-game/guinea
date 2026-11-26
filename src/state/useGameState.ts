@@ -1376,10 +1376,16 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   };
 
   // 텔레포트: the player-facing version of the shortcut above — only on a stage whose boss
-  // has already fallen at least once (re-grinding an old stage, not skipping new content),
-  // and gated by the skill's own cooldown like any other cast.
+  // has already fallen at least once (re-grinding an old stage, not skipping new content a
+  // first-loop player has never seen), gated by the skill's own cooldown like any other cast.
+  // Once a loop has actually been completed (loopsCompleted > 0), every stage up to the
+  // current frontier is effectively a repeat for this player even if a content update since
+  // added a stage past where loop 1 ended — so that per-stage check is skipped from then on.
   const canTeleportToBoss = (now: number) =>
-    state.equippedSkill === "teleport" && !boss && getClearedBosses(state).includes(state.stageNumber) && battle.canCastSkill(now);
+    state.equippedSkill === "teleport" &&
+    !boss &&
+    (getClearedBosses(state).includes(state.stageNumber) || (state.loopsCompleted ?? 0) > 0) &&
+    battle.canCastSkill(now);
   const teleportToBoss = () => {
     if (!canTeleportToBoss(Date.now())) return;
     battle.castSkill();
