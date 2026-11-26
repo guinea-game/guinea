@@ -503,6 +503,7 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
         <ScrollView
           key={state.selectedTab}
           ref={contentScroll}
+          showsVerticalScrollIndicator={false}
           onLayout={(event) => {
             contentHeight.current = event.nativeEvent.layout.height;
           }}
@@ -534,7 +535,7 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
           <LevelRewardModal state={state} onClose={() => setLevelRewardOpen(false)} onClaim={claimLevelReward} />
         )}
         {labOpen && (
-          <LabModal state={state} now={game.now} mobGold={game.labMobGold} onClose={() => setLabOpen(false)} onStartResearch={startResearch} />
+          <LabModal state={state} now={game.now} onClose={() => setLabOpen(false)} onStartResearch={startResearch} />
         )}
         {game.offlineSummary && (
           <OfflineRewardModal

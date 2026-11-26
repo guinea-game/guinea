@@ -220,15 +220,24 @@ function OrderBubble({ order }: { order: DailyOrderView }) {
   );
 }
 
-// The line with the dish's name picked out in its own colour.
+// The line with the dish's name picked out in its own colour. Where the coloured name meets
+// the words around it with no space (a particle like "를", or a word just before it), a
+// WORD JOINER glues the two pieces — otherwise iOS treats the colour change as a place it
+// may break the line, splitting "수프를" into "수프" / "를".
+const WORD_JOINER = "\u2060";
+
 function HighlightDish({ line, dish }: { line: string; dish: string }) {
   const at = line.indexOf(dish);
   if (at < 0) return <>{line}</>;
+  const before = line.slice(0, at);
+  const after = line.slice(at + dish.length);
+  const glueBefore = before.length > 0 && !/\s$/.test(before);
+  const glueAfter = after.length > 0 && !/^\s/.test(after);
   return (
     <>
-      {line.slice(0, at)}
+      {glueBefore ? before + WORD_JOINER : before}
       <Text style={styles.bubbleDish}>{dish}</Text>
-      {line.slice(at + dish.length)}
+      {glueAfter ? WORD_JOINER + after : after}
     </>
   );
 }

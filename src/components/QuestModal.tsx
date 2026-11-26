@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Image, Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Image, Modal, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./GameText";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { colors, fonts } from "../theme";
 import { buttonKit, frameKit, kit, uiImages, shopImages, kitImages } from "../assets";
 import { NineSlice, Panel } from "./NineSlice";
 import { ModalFrame } from "./ModalFrame";
+import { FadedScroll } from "./FadedScroll";
 import { CountBadge } from "./CountBadge";
 import { ProgressBar } from "./ProgressBar";
 import { formatGameNumber } from "../state/gameMath";
@@ -105,7 +106,7 @@ export function QuestModal({
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t("닫기", "Close")} />
         <View style={styles.panel}>
           <ModalFrame />
-          <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <FadedScroll style={styles.scroll} contentContainerStyle={styles.scrollContent}>
             <View style={styles.top}>
               <View>
                 <Text style={styles.topEyebrow}>{t("오늘의 할 일", "Today's To-Do")}</Text>
@@ -278,7 +279,7 @@ export function QuestModal({
                 </View>
               </>
             )}
-          </ScrollView>
+          </FadedScroll>
           <FlightLayer channel="quest" />
         </View>
       </View>

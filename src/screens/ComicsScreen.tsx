@@ -42,16 +42,18 @@ function comicLoop(id: ComicId) {
   return entry.afterStage === undefined ? entry.afterLoop : entry.afterLoop + 1;
 }
 
-// "12화", counted afresh in each loop (the loops after the first get their own "2회차"
-// heading in the list); the first run's last one is just "엔딩".
+// "오프닝", then "12화" counted afresh in each loop (the loops after the first get their own
+// "2회차" heading in the list).
 function episodeLabels() {
   const perLoop = new Map<number, number>();
   return new Map(
     COMIC_ORDER.map((id) => {
+      // The opening sits before 1화, so the stage comics run 1화 to 50화 (the ending is 50화).
+      if (id === "opening") return [id, t("오프닝", "Opening")] as const;
       const loop = comicLoop(id);
       const n = (perLoop.get(loop) ?? 0) + 1;
       perLoop.set(loop, n);
-      return [id, id === "ending" ? t("엔딩", "Ending") : t(`${n}화`, `Ep. ${n}`)] as const;
+      return [id, t(`${n}화`, `Ep. ${n}`)] as const;
     }),
   );
 }

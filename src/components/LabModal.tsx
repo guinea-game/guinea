@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Image, Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Image, Modal, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./GameText";
 import { colors, fonts } from "../theme";
 import { buttonKit, food, frameKit, icons, statIcons, uiImages } from "../assets";
 import { NineSlice, Panel } from "./NineSlice";
 import { ModalFrame } from "./ModalFrame";
+import { FadedScroll } from "./FadedScroll";
 import { GameButton } from "./GameButton";
 import { formatGameNumber } from "../state/gameMath";
 import {
@@ -110,8 +111,8 @@ function nodeEffect(state: GameState, node: LabNode) {
 }
 
 // The research a node would cost — its track's next level is exactly this node when it's open.
-function nodeCost(state: GameState, node: LabNode, mobGold: number) {
-  return isLabNodeOpen(state, node) ? getResearchCost(state, node.research, mobGold) : undefined;
+function nodeCost(state: GameState, node: LabNode) {
+  return isLabNodeOpen(state, node) ? getResearchCost(state, node.research) : undefined;
 }
 
 // 연구소: three projects one under another (scrolled), each a small research tree three columns wide — a project
@@ -123,13 +124,11 @@ function nodeCost(state: GameState, node: LabNode, mobGold: number) {
 export function LabModal({
   state,
   now,
-  mobGold,
   onClose,
   onStartResearch,
 }: {
   state: GameState;
   now: number;
-  mobGold: number;
   onClose: () => void;
   onStartResearch: (id: LabResearchId) => void;
 }) {
@@ -165,7 +164,7 @@ export function LabModal({
           </View>
 
           {/* The projects one under another, scrolled through — each its own small tree. */}
-          <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+          <FadedScroll style={styles.scroll}>
             {LAB_PROJECTS.map((project) => {
               const nodes = LAB_TREE.filter((node) => node.project === project);
               const projectOpen = isLabProjectOpen(state, project);
@@ -268,13 +267,12 @@ export function LabModal({
                 </View>
               );
             })}
-          </ScrollView>
+          </FadedScroll>
 
           <NodeCard
             state={state}
             node={selected}
             now={now}
-            mobGold={mobGold}
             busy={busy}
             researching={activeNode?.id === selected.id ? active!.readyAt : undefined}
             onStart={() => onStartResearch(selected.research)}
@@ -291,7 +289,6 @@ function NodeCard({
   state,
   node,
   now,
-  mobGold,
   busy,
   researching,
   onStart,
@@ -299,13 +296,12 @@ function NodeCard({
   state: GameState;
   node: LabNode;
   now: number;
-  mobGold: number;
   busy: boolean;
   researching?: number;
   onStart: () => void;
 }) {
   const done = isLabNodeDone(state, node);
-  const cost = nodeCost(state, node, mobGold);
+  const cost = nodeCost(state, node);
   const parent = node.parent ? LAB_TREE.find((item) => item.id === node.parent) : undefined;
   const dish = getLabNodeDish(state, node);
   const enoughDish = dish.have >= dish.count;

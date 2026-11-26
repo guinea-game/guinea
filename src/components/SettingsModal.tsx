@@ -3,6 +3,7 @@ import { Text } from "./GameText";
 import { colors, fonts } from "../theme";
 import { buttonImages } from "../assets";
 import { ModalFrame } from "./ModalFrame";
+import { FadedScroll } from "./FadedScroll";
 import { GameButton } from "./GameButton";
 import { VolumeSlider } from "./VolumeSlider";
 import { playSfx, setBgmVolume, setCalmBgm, setSfxVolume, useBgmVolume, useCalmBgm, useSfxVolume } from "../sound";
@@ -58,8 +59,10 @@ export function SettingsModal({
   const language = useLanguage();
   return (
     <Modal visible animationType="fade" transparent onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.panel} onPress={(event) => event.stopPropagation()}>
+      <View style={styles.backdrop}>
+        {/* A sibling behind the panel (not wrapped around it), so the panel's list can scroll. */}
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t("닫기", "Close")} />
+        <View style={styles.panel}>
           <ModalFrame />
           <Text style={styles.title}>{t("설정", "Settings")}</Text>
           <Pressable
@@ -74,6 +77,8 @@ export function SettingsModal({
           >
             <Image source={buttonImages.closeRed} style={styles.closeIcon} />
           </Pressable>
+          {/* Everything below the title scrolls, so the developer tools can't push it off-screen. */}
+          <FadedScroll style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           <View style={styles.sfxRow}>
             <Text style={styles.sfxLabel}>{t("언어", "Language")}</Text>
             <View style={styles.langRow}>
@@ -287,8 +292,19 @@ export function SettingsModal({
               </>
             )}
           </View>
-        </Pressable>
-      </Pressable>
+          </FadedScroll>
+          <GameButton
+            variant="beige"
+            onPress={() => {
+              playSfx("uiClick");
+              onClose();
+            }}
+            style={styles.closeButton}
+          >
+            {t("닫기", "Close")}
+          </GameButton>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -307,11 +323,15 @@ const styles = StyleSheet.create({
   closePressed: { transform: [{ scale: 0.9 }] },
   closeIcon: { width: 36, height: 36 },
   panel: {
+    maxHeight: "90%",
     paddingHorizontal: 34,
     paddingTop: 48,
     paddingBottom: 36,
     alignItems: "center",
   },
+  scroll: { flexGrow: 0, alignSelf: "stretch" },
+  scrollContent: { alignItems: "center" },
+  closeButton: { marginTop: 14, minWidth: 120 },
   title: { fontSize: 19, fontWeight: "800", fontFamily: fonts.bold, color: colors.ink, textAlign: "center" },
   sfxRow: {
     marginTop: 14,

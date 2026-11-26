@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Image, Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Image, Modal, Pressable, StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Text } from "./GameText";
 import { colors, fonts } from "../theme";
 import { buttonKit, frameKit, kit, kitImages, uiImages } from "../assets";
 import { NineSlice, Panel } from "./NineSlice";
 import { ModalFrame } from "./ModalFrame";
+import { FadedScroll } from "./FadedScroll";
 import { CountBadge } from "./CountBadge";
 import { GameButton } from "./GameButton";
 import { formatGameNumber } from "../state/gameMath";
@@ -60,7 +61,7 @@ export function LevelRewardModal({
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t("닫기", "Close")} />
         <View style={styles.panel}>
           <ModalFrame />
-          <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <FadedScroll style={styles.scroll} contentContainerStyle={styles.scrollContent}>
             <View style={styles.top}>
               <View>
                 <Text style={styles.topEyebrow}>{t("레벨을 올릴수록", "The higher you climb")}</Text>
@@ -123,7 +124,7 @@ export function LevelRewardModal({
                 </Panel>
               ))}
             </View>
-          </ScrollView>
+          </FadedScroll>
         </View>
       </View>
     </Modal>

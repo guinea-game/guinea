@@ -1259,8 +1259,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
 
   // What one of the current stage's mobs pays this player, food buffs left out — 연구소's gold
   // prices are counted in these, so they stay steady while a buff runs.
-  const labMobGold = getGoldReward(state.attack, state.goldBonus, getEnemyRewardHp(difficultyStage, false), false);
-  const startResearch = (id: LabResearchId) => setState((previous) => startLabResearch(previous, id, labMobGold));
+  const startResearch = (id: LabResearchId) => setState((previous) => startLabResearch(previous, id));
   // Ticks alongside the once-a-second `now` clock (see above) — the moment a research's
   // readyAt passes, this lands it (open or not; it's an absolute timestamp, not a simulation).
   useEffect(() => {
@@ -1698,7 +1697,6 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     labOpen,
     setLabOpen,
     startResearch,
-    labMobGold,
     boss,
     defeatedBoss,
     defeatedStageNumber,

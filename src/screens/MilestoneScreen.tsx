@@ -4,7 +4,7 @@ import Svg, { Polyline } from "react-native-svg";
 import { Text } from "../components/GameText";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { colors, fonts } from "../theme";
-import { frameImages, icons, kit, uiImages } from "../assets";
+import { frameImages, icons, kit, kitImages, uiImages } from "../assets";
 import { PageHeading } from "../components/PageHeading";
 import { GameButton } from "../components/GameButton";
 import { Panel } from "../components/NineSlice";
@@ -208,8 +208,15 @@ export function MilestoneScreen({
                     hitSlop={8}
                     style={({ pressed }) => [styles.infoButton, pressed && styles.togglePressed]}
                   >
-                    <InfoIcon twinkle={getUnclaimedStars({ stageStars, stageStarsClaimed }, index) !== 0} />
+                    <View style={styles.infoRing}>
+                      <Text style={styles.infoText}>i</Text>
+                    </View>
                   </Pressable>
+                )}
+                {/* Star gems waiting to be collected (from the "i"): the red notice dot on the
+                    card's top-right corner. */}
+                {unlocked && getUnclaimedStars({ stageStars, stageStarsClaimed }, index) !== 0 && (
+                  <Image source={kitImages.dotRed} style={styles.cardDot} accessibilityLabel={t("받을 별 보상 있음", "Star reward waiting")} />
                 )}
               </Panel>
               {!isLast && <TrailPath locked={index >= highestStageNumber} draw={index + 1 === newStage} />}
@@ -314,24 +321,6 @@ function WaveStar({ on, order, wave }: { on: boolean; order: number; wave: boole
   return <Animated.Image source={on ? icons.star : icons.starGray} style={[styles.starIcon, style]} />;
 }
 
-// The card's "i": its ring twinkles gold — a gentle swell and fade, then a rest — while the
-// stage has star gems waiting to be collected.
-function InfoIcon({ twinkle }: { twinkle: boolean }) {
-  const glow = useSharedValue(0);
-  useEffect(() => {
-    glow.value = twinkle
-      ? withRepeat(withSequence(withTiming(1, { duration: 420, easing: Easing.out(Easing.quad) }), withTiming(0, { duration: 420, easing: Easing.in(Easing.quad) }), withDelay(700, withTiming(0, { duration: 0 }))), -1)
-      : 0;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [twinkle]);
-  const style = useAnimatedStyle(() => ({ transform: [{ scale: 1 + glow.value * 0.25 }] }));
-  return (
-    <Animated.View style={[styles.infoRing, twinkle && styles.infoRingReady, style]}>
-      <Text style={[styles.infoText, twinkle && styles.infoTextReady]}>i</Text>
-    </Animated.View>
-  );
-}
-
 const CHALLENGES: { bit: number; label: string; labelEn: string }[] = [
   { bit: STAR_CLEAR, label: "보스 처치", labelEn: "Defeat the boss" },
   { bit: STAR_FAST, label: "분노한 보스를 40초 안에 처치", labelEn: "Defeat the enraged boss within 40s" },
@@ -416,8 +405,7 @@ const styles = StyleSheet.create({
   infoButton: { position: "absolute", top: CARD_PAD_TOP, right: CARD_PAD_X, zIndex: 2 },
   cardStrongLocked: { color: colors.muted },
   infoRing: { width: 19, height: 19, borderRadius: 10, borderWidth: 1.5, borderColor: "#b9a487", alignItems: "center", justifyContent: "center" },
-  infoRingReady: { borderColor: "#e9aa3a", backgroundColor: "#ffe9a8" },
-  infoTextReady: { color: "#b5701c" },
+  cardDot: { position: "absolute", top: -5, right: -5, width: 18, height: 18, zIndex: 3 },
   moveLink: { position: "absolute", right: CARD_PAD_X, bottom: CARD_PAD_BOTTOM, flexDirection: "row", alignItems: "center", gap: 3 },
   moveLinkText: { fontSize: 13, fontWeight: "900", fontFamily: fonts.bold, color: colors.green },
   claimLabel: { flexDirection: "row", alignItems: "center", gap: 4 },

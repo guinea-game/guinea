@@ -1,6 +1,6 @@
 import type { GameState, StatKey } from "../types";
 import { STACK_SIZE } from "./bag";
-import { roundPrice, STAT_CAP } from "./gameMath";
+import { roundPrice, STAT_CAP, getReferenceMobGold } from "./gameMath";
 import { getItemQuantity, RECIPES } from "./recipes";
 import { shiftGrade } from "./buffs";
 
@@ -50,9 +50,12 @@ export function isLabUnlocked(state: LabState, unlock: LabUnlockId) {
 
 // --- Costs (per node, before the step shares) -------------------------------------------------
 
-// Ordinary research is paid in gold — `goldKills` regular kills' worth, priced off what one of
-// the current stage's mobs actually pays this player (`mobGold`, no food buffs), so it keeps
-// pace with real income instead of going trivial (or out of reach) as the run goes on; the big ones (offline II/III, most level IIIs and both caps) are paid in gems.
+// Ordinary research is paid in gold — `goldKills` regular kills' worth at the node's own
+// price stage (LAB_PRICE_STAGES), a fixed price that never moves with the stage being fought.
+// The lab opens at stage 10, so project 1 is priced from there and each row (and project)
+// after it sits on a later stage — gold per kill multiplies every stage, so the later nodes
+// climb steeply and a few stage clears can't buy the whole tree. The big ones (offline
+// II/III, most level IIIs and both caps) are paid in gems.
 type NodeCost = { durationMs: number } & ({ goldKills: number; gems?: undefined } | { gems: number; goldKills?: undefined });
 export type ResearchCost = { currency: "gold" | "gems"; amount: number; durationMs: number };
 
@@ -256,8 +259,22 @@ function maxSteps(id: LabResearchId) {
   return id in LAB_UNLOCKS ? STEPS_PER_NODE : LAB_TRACK_COSTS[id as LabTrackId].length * STEPS_PER_NODE;
 }
 
-// What the next step of `id` costs right now — undefined once it's all done.
-export function getResearchCost(state: LabState, id: LabResearchId, mobGold: number): ResearchCost | undefined {
+// The stage whose (reference) mob gold prices each project's rows 0–4.
+const LAB_PRICE_STAGES: Record<number, number[]> = {
+  1: [10, 11, 13, 14, 16],
+  2: [20, 22, 24, 26, 28],
+  3: [32, 35, 38, 41, 44],
+};
+
+function getPriceStage(id: LabResearchId, steps: number) {
+  const level = Math.floor(steps / STEPS_PER_NODE) + 1;
+  const node = LAB_TREE.find((item) => item.research === id && (item.level ?? 1) === level) ?? LAB_TREE.find((item) => item.research === id)!;
+  const rows = LAB_PRICE_STAGES[node.project];
+  return rows[Math.min(node.row, rows.length - 1)];
+}
+
+// What the next step of `id` costs — a set price (see above); undefined once it's all done.
+export function getResearchCost(state: LabState, id: LabResearchId): ResearchCost | undefined {
   const steps = getLabSteps(state, id);
   if (steps >= maxSteps(id)) return undefined;
   const node = id in LAB_UNLOCKS ? LAB_UNLOCKS[id as LabUnlockId] : LAB_TRACK_COSTS[id as LabTrackId][Math.floor(steps / STEPS_PER_NODE)];
@@ -266,7 +283,7 @@ export function getResearchCost(state: LabState, id: LabResearchId, mobGold: num
   const durationMs = Math.round(Math.min(MAX_STEP_MS, node.durationMs * STEP_TIME[step]) * (1 - getEffCut(state, "effTime")));
   const costScale = STEP_AMOUNT[step] * (1 - getEffCut(state, "effCost"));
   if (node.gems !== undefined) return { currency: "gems", amount: Math.round((node.gems * costScale) / 10) * 10, durationMs };
-  return { currency: "gold", amount: roundPrice(mobGold * node.goldKills * costScale), durationMs };
+  return { currency: "gold", amount: roundPrice(getReferenceMobGold(getPriceStage(id, steps)) * node.goldKills * costScale), durationMs };
 }
 
 export function isLabBusy(state: Pick<GameState, "labResearch">, now = Date.now()) {
@@ -290,13 +307,13 @@ export function getLabNodeDish(state: Pick<GameState, "inventory"> & LabState, n
   return { recipeId, name: recipe.name, image: recipe.image, count, have: getItemQuantity(state.inventory, recipe.name) };
 }
 
-export function startLabResearch(previous: GameState, id: LabResearchId, mobGold: number): GameState {
+export function startLabResearch(previous: GameState, id: LabResearchId): GameState {
   if (isLabBusy(previous)) return previous;
   const node = getNextLabNode(previous, id);
   if (!node || !isLabNodeOpen(previous, node)) return previous;
   const dish = getLabNodeDish(previous, node);
   if (dish.have < dish.count) return previous;
-  const cost = getResearchCost(previous, id, mobGold);
+  const cost = getResearchCost(previous, id);
   if (!cost) return previous;
   const wallet = cost.currency === "gold" ? previous.gold : previous.gems;
   if (wallet < cost.amount) return previous;

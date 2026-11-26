@@ -9,13 +9,26 @@ import { semanticBreak } from "./semanticBreak";
 // - Web: handled once for the whole page with CSS (`word-break: keep-all`, see
 //   installWebWordBreak) since react-native-web renders Text as plain DOM text.
 const HANGUL_PAIR = /([가-힣])(?=[가-힣])/g;
+// A number or Latin letter run straight into Hangul ("2개로", "Lv.5에") is one word too, but
+// iOS's hangul-word rule (and Android) will happily break between them — so they get the
+// same zero-width WORD JOINER on both.
+const MIXED_PAIR = /([0-9A-Za-z%)])(?=[가-힣])/g;
 
-function joinHangul(children: ReactNode): ReactNode {
+function joinWords(children: ReactNode, hangulToo: boolean): ReactNode {
+  // The previous plain piece, so `{count}개` (two pieces) is glued across the join as well.
+  let previous = "";
   return Children.map(children, (child) => {
-    if (typeof child === "string") return child.replace(HANGUL_PAIR, "$1⁠");
+    const last = previous;
+    previous = typeof child === "string" || typeof child === "number" ? String(child) : "";
+    if (typeof child === "string") {
+      const glued = /[0-9A-Za-z%)]$/.test(last) && /^[가-힣]/.test(child) ? "\u2060" + child : child;
+      const mixed = glued.replace(MIXED_PAIR, "$1\u2060");
+      return hangulToo ? mixed.replace(HANGUL_PAIR, "$1\u2060") : mixed;
+    }
+    if (typeof child === "number") return child;
     if (isValidElement(child) && child.type === RNText) {
       const props = child.props as TextProps;
-      return cloneElement(child, undefined, joinHangul(props.children));
+      return cloneElement(child, undefined, joinWords(props.children, hangulToo));
     }
     return child;
   });
@@ -59,7 +72,7 @@ export const Text = forwardRef<ElementRef<typeof RNText>, TextProps>(function Ga
   if (Platform.OS === "android") {
     return (
       <RNText ref={ref} {...props} style={[style, spacing]} onLayout={text !== null ? handleLayout : onLayout}>
-        {joinHangul(content)}
+        {joinWords(content, true)}
       </RNText>
     );
   }
@@ -71,7 +84,7 @@ export const Text = forwardRef<ElementRef<typeof RNText>, TextProps>(function Ga
       style={[style, spacing, Platform.OS === "web" && centered ? BALANCED : null]}
       onLayout={text !== null ? handleLayout : onLayout}
     >
-      {content}
+      {Platform.OS === "ios" ? joinWords(content, false) : content}
     </RNText>
   );
 });
