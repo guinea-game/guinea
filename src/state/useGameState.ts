@@ -38,7 +38,7 @@ import {
   COMPANION_SKILL_COOLDOWN_MS,
   COMPANION_SKILL_WINDOW_MS,
 } from "./companionSkills";
-import { BUFF_SLOT_PRICES, BUFFS, getOutfitName, GRADE_DURATION_MS, GRADE_GOLD_MULTIPLIER, INSTANT_DISHES, OUTFIT_FORCED_MANUAL, OUTFIT_NAMES, OUTFIT_SKILL_POWER, OUTFIT_SURE_DROPS, emptyBuffSlots, getOutfitStats, getBuffTotals, peekGrade, pushGrade, shiftGrade, type CookGrade } from "./buffs";
+import { BUFF_SLOT_PRICES, BUFFS, DISH_BUFF_DURATION_MS, getOutfitName, GRADE_GOLD_MULTIPLIER, INSTANT_DISHES, OUTFIT_FORCED_MANUAL, OUTFIT_NAMES, OUTFIT_SKILL_POWER, OUTFIT_SURE_DROPS, emptyBuffSlots, getOutfitStats, getBuffTotals, peekGrade, pushGrade, shiftGrade, type CookGrade } from "./buffs";
 import { GROCERY, applyDiscount, getSellPrice, getShortfall } from "./grocery";
 import { canCook, consumeIngredients, getKnownRecipes, isRecipeForSale, RECIPES } from "./recipes";
 import { playSfx } from "../sound";
@@ -254,7 +254,6 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   const foodBuffs = {
     ...dishBuffs,
     cookSpeed: dishBuffs.cookSpeed + (outfitBuff.cookSpeed ?? 0) + getLabCookSpeedBonus(state),
-    greatSuccess: dishBuffs.greatSuccess + (outfitBuff.greatSuccess ?? 0),
     dropRate: dishBuffs.dropRate + (outfitBuff.dropRate ?? 0),
   };
   // 가방 연구 (lab.ts): how many of one item a slot holds right now.
@@ -1440,20 +1439,22 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     return "ok";
   };
 
-  // Takes the dish at the minigame's `grade`. 망함 yields nothing (the ingredients were
-  // already spent when cooking started). Anything else needs bag room — a free slot, or
-  // space left in its last stack — and lands with its grade in `dishQuality` (a FIFO queue
-  // per recipe, see buffs.ts), plus the separate greatSuccess roll for a second one.
+  // Takes the dish at the minigame's `grade`, which now also decides how many units come out:
+  // 대성공 2개, 보통 1개, 망함 0개 (the ingredients were already spent when cooking started,
+  // so a 망함 just yields nothing). Anything else needs bag room — a free slot, or space left
+  // in its last stack — and lands with its grade in `dishQuality` (a FIFO queue per recipe,
+  // see buffs.ts).
   const finishCooking = (recipeId: string, grade: CookGrade): "ok" | "great" | "failed" | "full" => {
     const recipe = RECIPES.find((item) => item.id === recipeId);
     if (!recipe) return "failed";
     const failed = grade === "fail";
     if (!failed && fitItems(state.inventory, [{ name: recipe.name, quantity: 1 }], getBagCapacity(state.bagExpansions), bagStackSize).overflow.length > 0) return "full";
+    // A 대성공 that doesn't have room for both units still lands the one it has room for,
+    // same as the bag-full check above already does for a single unit.
     const great =
-      !failed &&
-      Math.random() * 100 < foodBuffs.greatSuccess &&
+      grade === "great" &&
       fitItems(state.inventory, [{ name: recipe.name, quantity: 2 }], getBagCapacity(state.bagExpansions), bagStackSize).overflow.length === 0;
-    const count = great ? 2 : 1;
+    const count = failed ? 0 : great ? 2 : 1;
     if (!failed) {
       setState((previous) => {
         const dish = previous.inventory.find((item) => item.name === recipe.name);
@@ -1614,11 +1615,11 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     if (buff.effect.skillReset) battle.resetSkillCooldown();
     const startedAt = Date.now();
     setState((previous) => {
-      // The grade this specific unit cooked at (FIFO — see buffs.ts) replaces the old
-      // tier-fixed duration; glutton still stretches it, 모험기니 still tacks on a flat bonus.
-      const grade = peekGrade(previous.dishQuality, recipeId);
+      // Every unit lasts the same flat DISH_BUFF_DURATION_MS now — the cook's grade decides
+      // how many units it yielded instead (finishCooking); glutton still stretches it,
+      // 모험기니 still tacks on a flat bonus.
       const foodDurationBonusMs = getOutfitStats(previous.equippedOutfit, getCompanionLevel(previous, previous.equippedOutfit)).foodBonusSec * 1000;
-      const durationMs = GRADE_DURATION_MS[grade] * (previous.equippedSkill === "glutton" ? GLUTTON_FOOD_MULTIPLIER : 1) + foodDurationBonusMs;
+      const durationMs = DISH_BUFF_DURATION_MS * (previous.equippedSkill === "glutton" ? GLUTTON_FOOD_MULTIPLIER : 1) + foodDurationBonusMs;
       const slots = previous.buffSlots ?? emptyBuffSlots();
       const running = (slot: (typeof slots)[number]) => slot && slot.expiresAt > startedAt;
       if (running(slots[slotIndex])) return previous;

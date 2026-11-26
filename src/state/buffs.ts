@@ -23,7 +23,6 @@ export type BuffEffect = {
   seafoodDrop?: number; // % more likely, seafood only
   bossDropSure?: number; // > 0: every boss drop is guaranteed
   cookSpeed?: number; // % wider cooking minigame target zone
-  greatSuccess?: number; // % chance a collected dish comes out as two
   ingredientSave?: number; // % chance, per ingredient, to use one less when cooking
   groceryDiscount?: number; // % off grandma's grocery
   offlineGold?: number; // % more offline gold, if running when the app closes
@@ -41,16 +40,16 @@ export const BUFF_SLOT_PRICES = [0, 500, 1000];
 
 const MINUTE = 60_000;
 
-// How long a dish lasts no longer depends on its tier — it depends on how well the cooking
-// minigame went (src/state/cookingMinigame.ts): 대성공/보통/망함. See CookGrade/
-// GRADE_DURATION_MS below, which replaced the old tier-fixed BUFF_DURATION_MS.
+// Every dish lasts a flat DISH_BUFF_DURATION_MS now — how many units a cook yields is what
+// depends on the minigame grade (src/state/cookingMinigame.ts): 대성공 2개/보통 1개/망함 0개
+// (finishCooking in useGameState.ts).
 
 // Effects are sized to a per-tier budget — common ~12, rare ~25, epic ~40, legendary ~95,
 // hidden ~130 points. Per point: 1% attack, attack speed or extra-hit chance; 1 point of
 // crit chance; 0.3% crit damage; 0.6% gold; 0.5% boss damage, exp or miss reduction;
 // 2 points of execute; 0.4% drop rate; 0.6% double drops; 0.25% category drops; 0.3s skill
-// cooldown; 0.3% wider minigame target zone (cookSpeed); 0.8% great success; 0.5% ingredient
-// save; 0.4% grocery discount; 0.3% offline gold; ~10–15 for each on/off perk.
+// cooldown; 0.3% wider minigame target zone (cookSpeed); 0.5% ingredient save; 0.4% grocery
+// discount; 0.3% offline gold; ~10–15 for each on/off perk.
 // Within a tier, dishes that unlock on later stages sit at the top of the budget.
 const EFFECTS: Record<string, { effect: BuffEffect; tint: string }> = {
   "green-jelly": { effect: { attack: 10 }, tint: "#bfe08a" },
@@ -68,7 +67,7 @@ const EFFECTS: Record<string, { effect: BuffEffect; tint: string }> = {
   "chicken-grill": { effect: { bossDamage: 40, attack: 5 }, tint: "#f3c27a" },
   "pork-belly": { effect: {}, tint: "#f0a98f" },
   "salmon-sashimi": { effect: { seafoodDrop: 60, criticalDamage: 80 }, tint: "#f9b48a" },
-  "shrimp-sashimi": { effect: { gold: 45, greatSuccess: 15 }, tint: "#f8c1a8" },
+  "shrimp-sashimi": { effect: { gold: 45 }, tint: "#f8c1a8" },
   "mussel-seaweed-soup": { effect: { offlineBuffs: 1, offlineGold: 50, gold: 25 }, tint: "#c9d69a" },
   "tuna-sashimi": { effect: { attack: 30, criticalChance: 10 }, tint: "#e98f8f" },
   steak: { effect: { bossDamage: 50, attack: 15 }, tint: "#d69f7c" },
@@ -88,7 +87,7 @@ const EFFECTS: Record<string, { effect: BuffEffect; tint: string }> = {
   "tteokbokki": { effect: { attackSpeed: 30, criticalChance: 10 }, tint: "#e8604a" },
   "braised-mackerel": { effect: { seafoodDrop: 60, bossDamage: 40 }, tint: "#c97a5a" },
   "squid-ink-risotto": { effect: { criticalDamage: 120, criticalChance: 10 }, tint: "#6a6a7a" },
-  "sakura-mochi": { effect: { greatSuccess: 20, gold: 40 }, tint: "#f7c6d4" },
+  "sakura-mochi": { effect: { gold: 40 }, tint: "#f7c6d4" },
   "inari-sushi": { effect: { execute: 12, attack: 30 }, tint: "#e3a95a" },
   "yuzu-sherbet": { effect: { offlineBuffs: 1, offlineGold: 60 }, tint: "#f6d76a" },
   "abalone-porridge": { effect: { exp: 50, attack: 40 }, tint: "#cfd6b8" },
@@ -101,7 +100,7 @@ const EFFECTS: Record<string, { effect: BuffEffect; tint: string }> = {
   "poke-bowl": { effect: { attack: 45, exp: 40, dropRate: 20 }, tint: "#f2b84b" },
   "pecan-bbq-ribs": { effect: { attack: 55, bossDamage: 40, criticalChance: 6 }, tint: "#8f3b1e" },
   "street-tacos": { effect: { attack: 40, gold: 60, extraHit: 15 }, tint: "#e9a23b" },
-  "choco-banana": { effect: { criticalDamage: 120, criticalChance: 10, greatSuccess: 20 }, tint: "#6b3a22" },
+  "choco-banana": { effect: { criticalDamage: 120, criticalChance: 10 }, tint: "#6b3a22" },
   "chilean-empanada": { effect: { attack: 50, gold: 50, exp: 30 }, tint: "#c8893e" },
   "golden-sun-soup": { effect: { attack: 70, gold: 70, criticalDamage: 80, bossDamage: 30 }, tint: "#f5c542" },
   "barley-tea": { effect: { exp: 8, attackSpeed: 5 }, tint: "#e2b98a" },
@@ -109,7 +108,7 @@ const EFFECTS: Record<string, { effect: BuffEffect; tint: string }> = {
   "grilled-sardine": { effect: { seafoodDrop: 25, criticalChance: 5 }, tint: "#c9d4dc" },
   "spicy-oyster": { effect: { criticalChance: 12, attack: 12 }, tint: "#f0a58c" },
   "five-grain-rice": { effect: { exp: 30, gold: 20 }, tint: "#d9c0b8" },
-  "patbingsu": { effect: { attackSpeed: 20, greatSuccess: 20 }, tint: "#dfe7f2" },
+  "patbingsu": { effect: { attackSpeed: 20 }, tint: "#dfe7f2" },
   "salmon-roe-bowl": { effect: { criticalDamage: 70, seafoodDrop: 30 }, tint: "#f7a27a" },
   // Well under the hidden budget on purpose: it's made from early-game dishes.
   "guinea-feast": { effect: { attack: 25, criticalChance: 10, gold: 25, exp: 30 }, tint: "#dab8a2" },
@@ -162,7 +161,6 @@ const CATEGORY_OF: Record<keyof BuffEffect, DishCategory> = {
   bossDropSure: "drop",
   groceryDiscount: "drop",
   cookSpeed: "cooking",
-  greatSuccess: "cooking",
   ingredientSave: "cooking",
 };
 
@@ -178,10 +176,12 @@ export const BUFFS: Record<string, { effect: BuffEffect; tint: string }> = Objec
 );
 
 // How the cooking minigame's result (src/state/cookingMinigame.ts) turns into what a dish
-// actually does once eaten — replaces the old tier-fixed BUFF_DURATION_MS entirely.
+// actually does: the grade no longer picks a duration (every unit lasts the same flat
+// DISH_BUFF_DURATION_MS) — it picks how many units the cook yields instead (finishCooking in
+// useGameState.ts: 대성공 2개, 보통 1개, 망함 0개).
 export type CookGrade = "great" | "good" | "fail";
-export const GRADE_DURATION_MS: Record<CookGrade, number> = { great: 10 * MINUTE, good: 5 * MINUTE, fail: 1 * MINUTE };
-// INSTANT_DISHES never run in a buff slot — their grade scales the one-off gold payout instead.
+export const DISH_BUFF_DURATION_MS = 10 * MINUTE;
+// INSTANT_DISHES never run in a buff slot — their grade still scales the one-off gold payout.
 export const GRADE_GOLD_MULTIPLIER: Record<CookGrade, number> = { great: 1.5, good: 1, fail: 0.5 };
 export const GRADE_LABEL: Record<CookGrade, string> = { great: "대성공", good: "보통", fail: "망함" };
 
@@ -304,10 +304,9 @@ export const OUTFIT_BUFFS: Partial<Record<Outfit, BuffEffect>> = {
   assassinGini: { attack: -45 },
   // Draws slowly — the price of OUTFIT_FIRST_STRIKE's one huge opening cut.
   samuraiGini: { attackSpeed: -35 },
-  // The kitchen companion: widens the cooking minigame's target zone a lot and lifts
-  // great-success odds, at a cost in the fight — the only companion that trades battle
-  // power for cooking.
-  chefGini: { cookSpeed: 50, greatSuccess: 20, attack: -15 },
+  // The kitchen companion: widens the cooking minigame's target zone a lot, at a cost in the
+  // fight — the only companion that trades battle power for cooking.
+  chefGini: { cookSpeed: 50, attack: -15 },
   witchGini: { criticalDamage: 20 },
   // ×1.3 damage. The drawback isn't a stat here — it's OUTFIT_SHOTS_BEFORE_RELOAD below:
   // every 6th shot, the gun has to reload.
@@ -429,8 +428,7 @@ export function getOutfitStats(outfit: Outfit, level = 0): OutfitStats {
     case "egenGini": // 스킬 쿨 -60초 → -105초
       stats.cooldownSec += L * 4.5;
       break;
-    case "chefGini": // 대성공 +20% → +40%, 공격 -15% → 0%
-      buff.greatSuccess = (buff.greatSuccess ?? 0) + L * 2;
+    case "chefGini": // 공격 -15% → 0%
       buff.attack = (buff.attack ?? 0) + L * 1.5;
       break;
     case "witchGini": // 치명 피해 +20 → +50, Lv10 치명 확률 +5
@@ -456,7 +454,7 @@ export const OUTFIT_GROWTH_HINT: Record<Outfit, [string, string, string, string]
   assassinGini: ["공격 페널티 -3% (Lv10 3연타)", "Attack penalty -3% (Lv10: triple hit)", "攻撃ペナルティ -3%（Lv10 3連撃）", "攻击惩罚 -3%（Lv10 三连击）"],
   samuraiGini: ["첫 타 +0.3배 · 공속 +2%", "First hit +0.3× · Speed +2%", "初撃 +0.3倍・攻速 +2%", "首击 +0.3倍 · 攻速 +2%"],
   egenGini: ["스킬 쿨 -4.5초", "Skill cooldown -4.5s", "スキルクール -4.5秒", "技能冷却 -4.5秒"],
-  chefGini: ["대성공 +2% · 공격 페널티 -1.5%", "Great success +2% · Attack penalty -1.5%", "大成功 +2%・攻撃ペナルティ -1.5%", "大成功 +2% · 攻击惩罚 -1.5%"],
+  chefGini: ["공격 페널티 -1.5%", "Attack penalty -1.5%", "攻撃ペナルティ -1.5%", "攻击惩罚 -1.5%"],
   witchGini: ["치명 피해 +3 (Lv10 치명 확률 +5)", "Crit damage +3 (Lv10: +5 crit chance)", "クリダメ +3（Lv10 クリ率 +5）", "暴伤 +3（Lv10 暴击率 +5）"],
   boxerGini: ["공격력 +5%", "Attack +5%", "攻撃力 +5%", "攻击力 +5%"],
   cowboyGini: ["재장전 -0.08초 (Lv5·10 탄창 +1)", "Reload -0.08s (Lv5/10: +1 round)", "リロード -0.08秒（Lv5・10 装弾数 +1）", "装填 -0.08秒（Lv5/10 弹仓 +1）"],
@@ -485,7 +483,6 @@ const EFFECT_LABELS: Record<keyof BuffEffect, (value: number) => string> = {
   seafoodDrop: (value) => t(`해산물 드롭 ${signed(value)}%`, `Seafood Drop ${signed(value)}%`, `海産物ドロップ ${signed(value)}%`, `海鲜掉落 ${signed(value)}%`),
   bossDropSure: () => t("보스 재료 확정", "Guaranteed Boss Drop", "ボス素材確定", "首领材料必掉"),
   cookSpeed: (value) => t(`성공 범위 +${value}%`, `Success Zone +${value}%`, `成功範囲 +${value}%`, `成功区域 +${value}%`),
-  greatSuccess: (value) => t(`요리 대성공 ${value}%`, `Great Success ${value}%`, `料理大成功 ${value}%`, `大成功概率 ${value}%`),
   ingredientSave: (value) => t(`재료 절약 ${value}%`, `Ingredient Save ${value}%`, `素材節約 ${value}%`, `食材节省 ${value}%`),
   groceryDiscount: (value) => t(`재료 상점 -${value}%`, `Grocery Discount -${value}%`, `食材店 -${value}%`, `食材商店 -${value}%`),
   offlineGold: (value) => t(`오프라인 골드 ${signed(value)}%`, `Offline Gold ${signed(value)}%`, `オフラインゴールド ${signed(value)}%`, `离线金币 ${signed(value)}%`),

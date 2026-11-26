@@ -19,9 +19,10 @@ import { StrokedText } from "./StrokedText";
 import { GRADE_LABEL, type CookGrade } from "../state/buffs";
 import { t } from "../i18n";
 
-// Badge color per cook-minigame grade — kept entirely separate from `great` below (the
-// pre-existing, orthogonal quantity-double roll): a dish can be 망함-graded and still double,
-// or 대성공-graded and still come out as one.
+// Badge color per cook-minigame grade. `great` (below) tracks the same grade now — a
+// 대성공 cook always yields two units — except when the bag only has room for one, in which
+// case finishCooking hands back "ok" instead of "great" even though `grade` still reads
+// 대성공, so the two stay separate props rather than one being derived from the other.
 const GRADE_COLOR: Record<CookGrade, string> = { great: "#ffd34d", good: "#bfe08a", fail: "#9a8f80" };
 
 const STAGE = 260; // square the burst radiates within, centered on the chef
@@ -49,8 +50,8 @@ const STARS = [
   { angle: 160, distance: 96, delay: 420, size: 14 },
 ];
 
-// Extra sparkle, only on a 대성공-grade cook (the minigame result, not the `great` ×2 roll
-// above) — a few more, bigger and later-timed stars layered over the regular STARS burst.
+// Extra sparkle, only on a 대성공-grade cook — a few more, bigger and later-timed stars
+// layered over the regular STARS burst.
 const GOLD_STARS = [
   { angle: -110, distance: 128, delay: 520, size: 22 },
   { angle: 40, distance: 134, delay: 600, size: 18 },
@@ -61,7 +62,7 @@ const GOLD_STARS = [
 // "완성!" — the head chef bounces in cheering while the finished dish floats up over their
 // head, inside the same glow + sunburst + sparks + stars recipe LevelUpBurst uses. Mount it
 // fresh (via `key`) for every dish collected.
-// `great`: a great-success double — a gold flash, the dish splitting in two and "×2"
+// `great`: the cook yielded two units — a gold flash, the dish splitting in two and "×2"
 // slammed on. `isNew`: the first time this dish was ever made — a "NEW!" stamp.
 export function CookCompleteBurst({
   dishName,

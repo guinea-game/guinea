@@ -5,7 +5,7 @@ import { kit } from "../assets";
 import { GameButton } from "./GameButton";
 import { ARROW_H, ARROW_W, GuideArrow } from "./GuideArrow";
 import { NineSlice, Panel } from "./NineSlice";
-import { BUFFS, GRADE_DURATION_MS, GRADE_LABEL, describeDish, describeDishLinks, formatDuration, INSTANT_DISHES, peekGrade, type BuffSlot, type DishQuality } from "../state/buffs";
+import { BUFFS, DISH_BUFF_DURATION_MS, GRADE_LABEL, describeDish, describeDishLinks, formatDuration, INSTANT_DISHES, peekGrade, type BuffSlot, type DishQuality } from "../state/buffs";
 import { getItemQuantity, RECIPES } from "../state/recipes";
 import type { GameState, Outfit } from "../types";
 import { t } from "../i18n";
@@ -23,8 +23,8 @@ export function DishPicker({
   guideRecipeId,
 }: {
   inventory: GameState["inventory"];
-  // The cooking minigame's grade for each dish's uneaten units (FIFO) — see buffs.ts.
-  // Decides the duration shown below, which varies per cook, not per recipe.
+  // The cooking minigame's grade for each dish's uneaten units (FIFO) — see buffs.ts. Every
+  // unit lasts the same flat DISH_BUFF_DURATION_MS now; the grade just labels it below.
   dishQuality: DishQuality | undefined;
   slots: BuffSlot[];
   now: number;
@@ -80,7 +80,7 @@ export function DishPicker({
                         {[
                           INSTANT_DISHES[recipe.id]
                             ? t(`즉시 효과 · ${GRADE_LABEL[grade]}`, `Instant Effect · ${t(GRADE_LABEL[grade])}`)
-                            : t(`${GRADE_LABEL[grade]} · ${formatDuration(GRADE_DURATION_MS[grade])} 지속`, `${t(GRADE_LABEL[grade])} · Lasts ${formatDuration(GRADE_DURATION_MS[grade])}`),
+                            : t(`${GRADE_LABEL[grade]} · ${formatDuration(DISH_BUFF_DURATION_MS)} 지속`, `${t(GRADE_LABEL[grade])} · Lasts ${formatDuration(DISH_BUFF_DURATION_MS)}`),
                           ...describeDishLinks(recipe.id),
                         ].join(" · ")}
                       </Text>

@@ -115,7 +115,6 @@ const EFFECT_ICONS: Partial<Record<keyof BuffEffect, number>> = {
   gold: statIcons.goldBonus,
   attackSpeed: icons.energy,
   cookSpeed: food.cookPotTrim,
-  greatSuccess: icons.star,
 };
 
 function companionEffects(outfit: Outfit, level = 0): { icon: number; text: string }[] {

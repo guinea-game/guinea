@@ -14,17 +14,24 @@ import {
   getDriftMargin,
   getRoundSweepMs,
   getZoneWidth,
+  gradeFromHoldTally,
   gradeFromRounds,
   HEAT_FALL_PER_SEC,
   HEAT_RISE_PER_SEC,
   HEAT_ROUND_MS,
+  HOLD_ROUND_MS,
   isDriftingRound,
+  MASH_MAX_TAPS,
+  MASH_ROUND_MS,
   MINIGAME_DIFFICULTY,
   MINIGAME_ROUNDS,
   PERFECT_SHARE,
+  pickMinigameKind,
   randomZoneCenter,
   ROUND_TIMEOUT_MS,
   sweepPosition,
+  type HoldTally,
+  type MinigameKind,
   type RoundResult,
 } from "../state/cookingMinigame";
 import type { Recipe } from "../state/recipes";
@@ -100,6 +107,9 @@ export function CookingMinigame({
   // keys the rounds so a retry remounts them fresh.
   const [retriesLeft, setRetriesLeft] = useState(FAIL_RETRIES);
   const [attempt, setAttempt] = useState(0);
+  // Picked once per cook (kept across retries, so a retry doesn't switch games under you) —
+  // equal odds regardless of recipe, see pickMinigameKind.
+  const [kind] = useState<MinigameKind>(() => pickMinigameKind());
   const difficulty = MINIGAME_DIFFICULTY[recipe.tier];
   const zoneWidth = getZoneWidth(recipe.tier, cookSpeedPercent);
   const showingResult = results.length > round;
@@ -134,6 +144,20 @@ export function CookingMinigame({
     }, RESULT_HOLD_MS);
   };
 
+  // 낚시's own finish path: one grade straight from the whole round's tally, no per-round
+  // ResultReveal to sit through first (there's only the one round).
+  const handleHoldFinish = (grade: CookGrade) => {
+    playHaptic(grade === "fail" ? "hit" : "crit");
+    playSfx(grade === "fail" ? "hit" : "crit", grade === "fail" ? 0.5 : 1);
+    if (grade === "fail") {
+      setFailed(true);
+      if (retriesLeft === 0) setTimeout(() => onFinish("fail"), FAIL_HOLD_MS);
+    } else {
+      playSfx("cookDone");
+      onFinish(grade);
+    }
+  };
+
   const retry = () => {
     setRetriesLeft((value) => value - 1);
     setAttempt((value) => value + 1);
@@ -164,11 +188,13 @@ export function CookingMinigame({
 
           <JigglingChef active={!failed} />
 
-          <View style={styles.dots}>
-            {Array.from({ length: MINIGAME_ROUNDS }, (_, index) => (
-              <Dot key={index} result={results[index]} />
-            ))}
-          </View>
+          {kind !== "hold" && (
+            <View style={styles.dots}>
+              {Array.from({ length: MINIGAME_ROUNDS }, (_, index) => (
+                <Dot key={index} result={results[index]} />
+              ))}
+            </View>
+          )}
 
           {failed ? (
             <View style={styles.failWrap}>
@@ -179,12 +205,21 @@ export function CookingMinigame({
                 {t("망함...", "Failed...")}
               </StrokedText>
             </View>
+          ) : kind === "hold" ? (
+            <HoldRound key={attempt} zoneWidth={zoneWidth} guideActive={guideActive && attempt === 0} onStop={handleHoldFinish} />
           ) : showingResult && lastResult ? (
             <ResultReveal key={`${attempt}-${results.length}`} result={lastResult} combo={combo} />
-          ) : recipe.minigame === "heat" ? (
+          ) : kind === "heat" ? (
             <HeatRound
               key={`${attempt}-${round}`}
               round={round}
+              zoneWidth={zoneWidth}
+              guideActive={guideActive && round === 0 && attempt === 0}
+              onStop={handleStop}
+            />
+          ) : kind === "tap" ? (
+            <MashRound
+              key={`${attempt}-${round}`}
               zoneWidth={zoneWidth}
               guideActive={guideActive && round === 0 && attempt === 0}
               onStop={handleStop}
@@ -328,10 +363,15 @@ function Round({
   const margin = drifting ? getDriftMargin(zoneWidth) : 0;
   const [zoneCenter] = useState(() => randomZoneCenter(zoneWidth, margin));
   const [startedAt] = useState(() => Date.now());
-  const [now, setNow] = useState(startedAt);
   const [channelWidth, setChannelWidth] = useState(0);
   const stoppedRef = useRef(false);
   const pulse = useSharedValue(0);
+  // Written straight from the tick loop below — a plain mutation, not React state, so the
+  // 60fps tick never triggers a re-render (that's what was reading as stutter: setState every
+  // 16ms was forcing the whole round to reconcile on every tick). useAnimatedStyle reads these
+  // on the UI thread and repaints the two bits that actually move without touching React at all.
+  const positionSV = useSharedValue(sweepPosition(0, sweepMs));
+  const zoneCenterSV = useSharedValue(driftingZoneCenter(0, zoneCenter, margin));
 
   const stop = () => {
     if (stoppedRef.current) return;
@@ -342,7 +382,11 @@ function Round({
   };
 
   useEffect(() => {
-    const tick = setInterval(() => setNow(Date.now()), 16);
+    const tick = setInterval(() => {
+      const elapsed = Date.now() - startedAt;
+      positionSV.value = sweepPosition(elapsed, sweepMs);
+      zoneCenterSV.value = driftingZoneCenter(elapsed, zoneCenter, margin);
+    }, 16);
     const timeout = setTimeout(stop, ROUND_TIMEOUT_MS);
     // A slow, continuous breathing pulse on the zone/indicator — just enough to keep the
     // track feeling alive while the player's tracking the sweep, not a gameplay signal.
@@ -354,10 +398,14 @@ function Round({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const position = sweepPosition(now - startedAt, sweepMs);
-  const liveZoneCenter = driftingZoneCenter(now - startedAt, zoneCenter, margin);
-  const zonePulseStyle = useAnimatedStyle(() => ({ opacity: 0.75 + pulse.value * 0.25 }));
-  const indicatorPulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: 1 + pulse.value * 0.12 }] }));
+  const zonePulseStyle = useAnimatedStyle(() => ({
+    left: (zoneCenterSV.value - zoneWidth / 2) * channelWidth,
+    opacity: 0.75 + pulse.value * 0.25,
+  }));
+  const indicatorPulseStyle = useAnimatedStyle(() => ({
+    left: positionSV.value * channelWidth - INDICATOR_SIZE / 2,
+    transform: [{ scale: 1 + pulse.value * 0.12 }],
+  }));
 
   return (
     <View style={styles.round}>
@@ -370,9 +418,7 @@ function Round({
         >
           {channelWidth > 0 && (
             <>
-              <Animated.View
-                style={[styles.zone, { left: (liveZoneCenter - zoneWidth / 2) * channelWidth, width: zoneWidth * channelWidth }, zonePulseStyle]}
-              >
+              <Animated.View style={[styles.zone, { width: zoneWidth * channelWidth }, zonePulseStyle]}>
                 {/* The 완벽 band — the middle PERFECT_SHARE of the zone (classifyStop). */}
                 <View
                   style={[
@@ -381,7 +427,7 @@ function Round({
                   ]}
                 />
               </Animated.View>
-              <Animated.View style={[styles.indicator, { left: position * channelWidth - INDICATOR_SIZE / 2 }, indicatorPulseStyle]} />
+              <Animated.View style={[styles.indicator, indicatorPulseStyle]} />
             </>
           )}
         </View>
@@ -401,8 +447,9 @@ function Round({
   );
 }
 
-// 불 조절: the grilled/steak/BBQ dishes' round (recipe.minigame === "heat"). Same track/zone
-// art and the same classifyStop/grading as Round above — only the indicator's own motion
+// 불 조절: one of the three minigame kinds a cook can roll (kind === "heat", see
+// pickMinigameKind). Same track/zone art and the same classifyStop/grading as Round above —
+// only the indicator's own motion
 // differs: held down it climbs toward 1, let go it cools back toward 0, simulated tick by
 // tick (unlike the sweep's closed-form sweepPosition, this depends on the player's own press
 // history, not just elapsed time). Nothing stops it early; it just samples wherever the gauge
@@ -422,19 +469,20 @@ function HeatRound({
   const margin = drifting ? getDriftMargin(zoneWidth) : 0;
   const [zoneCenter] = useState(() => randomZoneCenter(zoneWidth, margin));
   const [startedAt] = useState(() => Date.now());
-  const [now, setNow] = useState(startedAt);
-  const [position, setPosition] = useState(0.1);
   const [channelWidth, setChannelWidth] = useState(0);
   const heldRef = useRef(false);
-  const positionRef = useRef(0.1);
   const stoppedRef = useRef(false);
   const pulse = useSharedValue(0);
+  // Mutated directly from the tick loop (not React state — see the matching comment on
+  // Round's positionSV) so the 60fps rise/fall never forces a re-render.
+  const positionSV = useSharedValue(0.1);
+  const zoneCenterSV = useSharedValue(driftingZoneCenter(0, zoneCenter, margin));
 
   const finish = () => {
     if (stoppedRef.current) return;
     stoppedRef.current = true;
     const elapsed = Date.now() - startedAt;
-    onStop(classifyStop(positionRef.current, driftingZoneCenter(elapsed, zoneCenter, margin), zoneWidth));
+    onStop(classifyStop(positionSV.value, driftingZoneCenter(elapsed, zoneCenter, margin), zoneWidth));
   };
 
   useEffect(() => {
@@ -444,9 +492,8 @@ function HeatRound({
       const dtSec = (current - lastTick) / 1000;
       lastTick = current;
       const rate = heldRef.current ? HEAT_RISE_PER_SEC : -HEAT_FALL_PER_SEC;
-      positionRef.current = Math.min(1, Math.max(0, positionRef.current + rate * dtSec));
-      setPosition(positionRef.current);
-      setNow(current);
+      positionSV.value = Math.min(1, Math.max(0, positionSV.value + rate * dtSec));
+      zoneCenterSV.value = driftingZoneCenter(current - startedAt, zoneCenter, margin);
     }, 16);
     const timeout = setTimeout(finish, HEAT_ROUND_MS);
     pulse.value = withRepeat(withSequence(withTiming(1, { duration: 500, easing: Easing.inOut(Easing.quad) }), withTiming(0, { duration: 500, easing: Easing.inOut(Easing.quad) })), -1);
@@ -457,9 +504,14 @@ function HeatRound({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const liveZoneCenter = driftingZoneCenter(now - startedAt, zoneCenter, margin);
-  const zonePulseStyle = useAnimatedStyle(() => ({ opacity: 0.75 + pulse.value * 0.25 }));
-  const indicatorPulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: 1 + pulse.value * 0.12 }] }));
+  const zonePulseStyle = useAnimatedStyle(() => ({
+    left: (zoneCenterSV.value - zoneWidth / 2) * channelWidth,
+    opacity: 0.75 + pulse.value * 0.25,
+  }));
+  const indicatorPulseStyle = useAnimatedStyle(() => ({
+    left: positionSV.value * channelWidth - INDICATOR_SIZE / 2,
+    transform: [{ scale: 1 + pulse.value * 0.12 }],
+  }));
 
   return (
     <View style={styles.round}>
@@ -472,9 +524,7 @@ function HeatRound({
         >
           {channelWidth > 0 && (
             <>
-              <Animated.View
-                style={[styles.zone, { left: (liveZoneCenter - zoneWidth / 2) * channelWidth, width: zoneWidth * channelWidth }, zonePulseStyle]}
-              >
+              <Animated.View style={[styles.zone, { width: zoneWidth * channelWidth }, zonePulseStyle]}>
                 <View
                   style={[
                     styles.perfectZone,
@@ -482,7 +532,7 @@ function HeatRound({
                   ]}
                 />
               </Animated.View>
-              <Animated.View style={[styles.indicator, styles.heatIndicator, { left: position * channelWidth - INDICATOR_SIZE / 2 }, indicatorPulseStyle]} />
+              <Animated.View style={[styles.indicator, styles.heatIndicator, indicatorPulseStyle]} />
             </>
           )}
         </View>
@@ -505,6 +555,206 @@ function HeatRound({
           <>
             <GuideArrow direction="down" style={styles.guideArrow} />
             <Text style={styles.guideHint}>{t("눌러서 화력을 올려봐!", "Press it to turn up the heat!")}</Text>
+          </>
+        )}
+      </View>
+    </View>
+  );
+}
+
+// 두드리기: same track/zone art and classifyStop/grading as Round/HeatRound above — only the
+// indicator's own motion differs again: each tap nudges it one notch further along the track
+// (tapCount / MASH_MAX_TAPS), and after MASH_ROUND_MS it's classified exactly where it sits.
+// Taps are discrete, low-frequency events (a handful a round, not 60/sec), so plain React
+// state is fine here — no need for the shared-value tricks Round/HeatRound use to dodge their
+// continuous per-frame re-renders.
+function MashRound({
+  zoneWidth,
+  guideActive,
+  onStop,
+}: {
+  zoneWidth: number;
+  guideActive: boolean;
+  onStop: (result: RoundResult) => void;
+}) {
+  const [zoneCenter] = useState(() => randomZoneCenter(zoneWidth));
+  const [tapCount, setTapCount] = useState(0);
+  const [channelWidth, setChannelWidth] = useState(0);
+  const tapCountRef = useRef(0);
+  const stoppedRef = useRef(false);
+  const pulse = useSharedValue(0);
+
+  const finish = () => {
+    if (stoppedRef.current) return;
+    stoppedRef.current = true;
+    onStop(classifyStop(tapCountRef.current / MASH_MAX_TAPS, zoneCenter, zoneWidth));
+  };
+
+  const tap = () => {
+    if (stoppedRef.current) return;
+    tapCountRef.current += 1;
+    setTapCount(tapCountRef.current);
+  };
+
+  useEffect(() => {
+    const timeout = setTimeout(finish, MASH_ROUND_MS);
+    pulse.value = withRepeat(withSequence(withTiming(1, { duration: 500, easing: Easing.inOut(Easing.quad) }), withTiming(0, { duration: 500, easing: Easing.inOut(Easing.quad) })), -1);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const position = Math.min(tapCount / MASH_MAX_TAPS, 1);
+  const zonePulseStyle = useAnimatedStyle(() => ({ opacity: 0.75 + pulse.value * 0.25 }));
+  const indicatorPulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: 1 + pulse.value * 0.12 }] }));
+
+  return (
+    <View style={styles.round}>
+      <View style={styles.track}>
+        <NineSlice slice={frameKit.barFrame} scale={TRACK_SCALE} />
+        <View
+          style={[styles.channel, { top: CHANNEL_INSET_Y, bottom: CHANNEL_INSET_Y, left: CHANNEL_INSET_X, right: CHANNEL_INSET_X }]}
+          onLayout={(event) => setChannelWidth(event.nativeEvent.layout.width)}
+        >
+          {channelWidth > 0 && (
+            <>
+              <Animated.View
+                style={[styles.zone, { left: (zoneCenter - zoneWidth / 2) * channelWidth, width: zoneWidth * channelWidth }, zonePulseStyle]}
+              >
+                <View
+                  style={[
+                    styles.perfectZone,
+                    { left: ((1 - PERFECT_SHARE) / 2) * zoneWidth * channelWidth, width: PERFECT_SHARE * zoneWidth * channelWidth },
+                  ]}
+                />
+              </Animated.View>
+              <Animated.View style={[styles.indicator, { left: position * channelWidth - INDICATOR_SIZE / 2 }, indicatorPulseStyle]} />
+            </>
+          )}
+        </View>
+      </View>
+      <View style={styles.stopButtonWrap}>
+        <GameButton variant="beige" onPress={tap} style={styles.stopButton} textStyle={styles.stopButtonText}>
+          {t("두드려요!", "Tap!")}
+        </GameButton>
+        {guideActive && (
+          <>
+            <GuideArrow direction="down" style={styles.guideArrow} />
+            <Text style={styles.guideHint}>{t("알맞게 두드려 봐!", "Tap it just the right amount!")}</Text>
+          </>
+        )}
+      </View>
+    </View>
+  );
+}
+
+// 낚시: one longer round where the zone drifts the whole time (same sine wave as the sweep
+// game's own drifting round) and the grade comes from the tally of how long you kept the
+// indicator inside it, not a one-instant snapshot — see gradeFromHoldTally. Same
+// hold-to-rise/release-to-fall control as 불 조절. The tally lives in a plain ref, not React
+// state, so accumulating it every tick doesn't force a re-render any more than the
+// position/zone values above do.
+function HoldRound({
+  zoneWidth,
+  guideActive,
+  onStop,
+}: {
+  zoneWidth: number;
+  guideActive: boolean;
+  onStop: (grade: CookGrade) => void;
+}) {
+  const margin = getDriftMargin(zoneWidth);
+  const [zoneCenter] = useState(() => randomZoneCenter(zoneWidth, margin));
+  const [startedAt] = useState(() => Date.now());
+  const [channelWidth, setChannelWidth] = useState(0);
+  const heldRef = useRef(false);
+  const stoppedRef = useRef(false);
+  const pulse = useSharedValue(0);
+  const positionSV = useSharedValue(0.1);
+  const zoneCenterSV = useSharedValue(driftingZoneCenter(0, zoneCenter, margin));
+  const tallyRef = useRef<HoldTally>({ perfectMs: 0, missMs: 0, totalMs: 0 });
+
+  const finish = () => {
+    if (stoppedRef.current) return;
+    stoppedRef.current = true;
+    onStop(gradeFromHoldTally(tallyRef.current));
+  };
+
+  useEffect(() => {
+    let lastTick = Date.now();
+    const tick = setInterval(() => {
+      const current = Date.now();
+      const dtMs = current - lastTick;
+      lastTick = current;
+      const rate = heldRef.current ? HEAT_RISE_PER_SEC : -HEAT_FALL_PER_SEC;
+      positionSV.value = Math.min(1, Math.max(0, positionSV.value + rate * (dtMs / 1000)));
+      const center = driftingZoneCenter(current - startedAt, zoneCenter, margin);
+      zoneCenterSV.value = center;
+      const result = classifyStop(positionSV.value, center, zoneWidth);
+      const tally = tallyRef.current;
+      tally.totalMs += dtMs;
+      if (result === "perfect") tally.perfectMs += dtMs;
+      else if (result === "miss") tally.missMs += dtMs;
+    }, 16);
+    const timeout = setTimeout(finish, HOLD_ROUND_MS);
+    pulse.value = withRepeat(withSequence(withTiming(1, { duration: 500, easing: Easing.inOut(Easing.quad) }), withTiming(0, { duration: 500, easing: Easing.inOut(Easing.quad) })), -1);
+    return () => {
+      clearInterval(tick);
+      clearTimeout(timeout);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const zonePulseStyle = useAnimatedStyle(() => ({
+    left: (zoneCenterSV.value - zoneWidth / 2) * channelWidth,
+    opacity: 0.75 + pulse.value * 0.25,
+  }));
+  const indicatorPulseStyle = useAnimatedStyle(() => ({
+    left: positionSV.value * channelWidth - INDICATOR_SIZE / 2,
+    transform: [{ scale: 1 + pulse.value * 0.12 }],
+  }));
+
+  return (
+    <View style={styles.round}>
+      <Text style={styles.driftHint}>{t("타겟이 움직여요!", "The target is moving!")}</Text>
+      <View style={styles.track}>
+        <NineSlice slice={frameKit.barFrame} scale={TRACK_SCALE} />
+        <View
+          style={[styles.channel, { top: CHANNEL_INSET_Y, bottom: CHANNEL_INSET_Y, left: CHANNEL_INSET_X, right: CHANNEL_INSET_X }]}
+          onLayout={(event) => setChannelWidth(event.nativeEvent.layout.width)}
+        >
+          {channelWidth > 0 && (
+            <>
+              <Animated.View style={[styles.zone, { width: zoneWidth * channelWidth }, zonePulseStyle]}>
+                <View
+                  style={[
+                    styles.perfectZone,
+                    { left: ((1 - PERFECT_SHARE) / 2) * zoneWidth * channelWidth, width: PERFECT_SHARE * zoneWidth * channelWidth },
+                  ]}
+                />
+              </Animated.View>
+              <Animated.View style={[styles.indicator, styles.heatIndicator, indicatorPulseStyle]} />
+            </>
+          )}
+        </View>
+      </View>
+      <View style={styles.stopButtonWrap}>
+        <GameButton
+          variant="red"
+          onPressIn={() => {
+            heldRef.current = true;
+          }}
+          onPressOut={() => {
+            heldRef.current = false;
+          }}
+          style={styles.stopButton}
+          textStyle={styles.stopButtonText}
+        >
+          {t("꾹 눌러서 버텨요!", "Hold it there!")}
+        </GameButton>
+        {guideActive && (
+          <>
+            <GuideArrow direction="down" style={styles.guideArrow} />
+            <Text style={styles.guideHint}>{t("존 안에 최대한 오래 있어 봐!", "Stay in the zone as long as you can!")}</Text>
           </>
         )}
       </View>

@@ -12,10 +12,6 @@ export type Recipe = {
   tier: RecipeTier; // picks the scroll/book its recipe card is drawn on
   price: number; // gold to learn it; 0 = known from the start
   ingredients: { name: string; quantity: number }[];
-  // Which cooking minigame finishes this dish — omitted (the default) is the sweep-and-stop
-  // bar; "heat" is the hold-to-raise/release-to-cool gauge (cookingMinigame.ts), given to the
-  // 구이/스테이크/바비큐 (grilled/steak/BBQ) dishes for a little variety.
-  minigame?: "heat";
 };
 
 type RecipeDef = Omit<Recipe, "price">;
@@ -124,7 +120,6 @@ const RECIPE_DEFS: RecipeDef[] = [
     description: "달큰한 호박 위에 치즈가 사르르.",
     image: food.pumpkinRoast,
     tier: "rare",
-    minigame: "heat",
     ingredients: [
       { name: "호박", quantity: 1 },
       { name: "치즈", quantity: 1 },
@@ -136,7 +131,6 @@ const RECIPE_DEFS: RecipeDef[] = [
     description: "껍질은 바삭, 속은 촉촉. 큰 놈 잡기 전엔 이거지.",
     image: food.chickenGrilled,
     tier: "rare",
-    minigame: "heat",
     ingredients: [
       { name: "통다리살", quantity: 2 },
       { name: "고수", quantity: 1 },
@@ -172,7 +166,6 @@ const RECIPE_DEFS: RecipeDef[] = [
     description: "두툼한 생선살을 겉만 바삭하게.",
     image: food.dishSalmonSteak,
     tier: "epic",
-    minigame: "heat",
     ingredients: [
       { name: "결 고운 생선살", quantity: 1 },
       { name: "레몬", quantity: 1 },
@@ -186,7 +179,6 @@ const RECIPE_DEFS: RecipeDef[] = [
     description: "칼집 사이로 육즙이 주르륵.",
     image: food.dishSteak,
     tier: "epic",
-    minigame: "heat",
     ingredients: [
       { name: "두툼 살코기", quantity: 2 },
       { name: "토마토", quantity: 1 },
@@ -274,7 +266,6 @@ const RECIPE_DEFS: RecipeDef[] = [
     description: "뼈째 뜯는 순간 기운이 확 돌아와요.",
     image: food.lambGrilled,
     tier: "epic",
-    minigame: "heat",
     ingredients: [
       { name: "뼈 갈빗살", quantity: 2 },
       { name: "불꽃 고추", quantity: 1 },
@@ -286,7 +277,6 @@ const RECIPE_DEFS: RecipeDef[] = [
     description: "입안이 불타서 정신이 하나도 없어요. 대신 힘은 최고!",
     image: food.beefGrilled,
     tier: "epic",
-    minigame: "heat",
     ingredients: [
       { name: "두툼 살코기", quantity: 1 },
       { name: "불꽃 고추", quantity: 2 },
@@ -532,7 +522,6 @@ const RECIPE_DEFS: RecipeDef[] = [
     description: "비밀 바비큐 소스를 발라 천천히 훈연하고, 구운 피칸을 듬뿍 뿌린 협곡 목장의 갈비.",
     image: food.dishPecanBbqRibs,
     tier: "legendary",
-    minigame: "heat",
     ingredients: [
       { name: "뼈 갈빗살", quantity: 2 },
       { name: "바비큐 소스", quantity: 1 },
@@ -621,7 +610,6 @@ const RECIPE_DEFS: RecipeDef[] = [
     description: "노릇하게 구운 정어리에 레몬을 꾹.",
     image: food.dishGrilledSardine,
     tier: "rare",
-    minigame: "heat",
     ingredients: [
       { name: "정어리", quantity: 2 },
       { name: "레몬", quantity: 1 },
