@@ -55,11 +55,13 @@ export function ShopTopBar({
   showGold?: boolean;
 }) {
   return (
-    <View style={styles.topRow}>
+    // Only the back arrow (and gold pill) take taps: the row stretches the page's width, and
+    // on pages that lay things under it (일일 의뢰's speech bubble) it mustn't swallow them.
+    <View style={styles.topRow} pointerEvents="box-none">
       <Pressable ref={tutorialRef("shop-back")} onPress={onBack} accessibilityRole="button" accessibilityLabel={backLabel} hitSlop={6}>
         {({ pressed }) => <Image source={shopImages.arrowBack} style={[styles.back, pressed && styles.pressed]} />}
       </Pressable>
-      <View style={styles.titleCopy}>
+      <View style={styles.titleCopy} pointerEvents="none">
         <Text style={[styles.kicker, dark && styles.kickerDark]}>{kicker}</Text>
         <Text style={[styles.title, dark && styles.titleDark]}>{title}</Text>
       </View>

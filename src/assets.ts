@@ -770,6 +770,9 @@ export const currencyImages = {
 };
 
 export const uiImages = {
+  // 기니 상자: the paw-sealed gift box, shut and opened (glowing). Art is 360x333 / 357x360.
+  guineaBox: require("../assets/ui/guinea-box.webp"),
+  guineaBoxOpen: require("../assets/ui/guinea-box-open.webp"),
   coin: require("../assets/ui/coin.webp"),
   // 연구소: a fully researched node's crowned gold frame (built from panels/panel-25; the body below
   // the crown is square — 200px wide, crown on top makes it 221px tall).

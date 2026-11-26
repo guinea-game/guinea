@@ -105,7 +105,20 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
     setBgmTrack(bgmGroup, game.displayBoss);
   }, [bgmGroup, game.displayBoss]);
 
-  const onSelectTab = useCallback((selectedTab: Tab) => setState((previous) => ({ ...previous, selectedTab })), [setState]);
+  // A dish 일일 의뢰 sent the player to cook: the kitchen opens searched to it. Any ordinary
+  // tab change clears it, so the next normal visit opens unfiltered.
+  const [kitchenQuery, setKitchenQuery] = useState<string | null>(null);
+  const onSelectTab = useCallback(
+    (selectedTab: Tab) => {
+      setKitchenQuery(null);
+      setState((previous) => ({ ...previous, selectedTab }));
+    },
+    [setState],
+  );
+  const openKitchenFor = (recipeName: string) => {
+    setKitchenQuery(recipeName);
+    setState((previous) => ({ ...previous, selectedTab: "kitchen" }));
+  };
   // An ingredient tapped somewhere in cooking (a recipe card, its "i" info) — jumps straight to
   // the bag's ingredient codex, searched down to it. One-shot: InventoryScreen reads it once on
   // mount and immediately hands it back via onFocusHandled, so a later plain "가방" tap opens normally.
@@ -407,6 +420,7 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             onCollect={onCollect}
             guideRecipeId={state.tutorialDone && !state.recipeTutorialDone ? "green-jelly" : undefined}
             onOpenGrocery={() => onSelectTab("grocery")}
+            initialQuery={kitchenQuery ?? undefined}
             onOpenRecipes={() => onSelectTab("recipes")}
             recipesBadge={newRecipeOffer}
             potQueue={state.potQueue}
@@ -424,6 +438,7 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             priceStage={priceStage}
             onBack={() => onSelectTab("battle")}
             onDeliver={game.deliverDailyOrder}
+            onFindDish={openKitchenFor}
             header={headerElement}
           />
         );

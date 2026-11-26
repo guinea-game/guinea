@@ -1,10 +1,11 @@
-import { Image, Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Image, Modal, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./GameText";
 import { colors, fonts } from "../theme";
 import { kit } from "../assets";
 import { GameButton } from "./GameButton";
 import { Panel } from "./NineSlice";
 import { ModalFrame } from "./ModalFrame";
+import { FadedScroll } from "./FadedScroll";
 import { formatPotDuration } from "./PotPanel";
 import { getPotDurationMs, getPotIngredients, POT_BATCH_SIZE } from "../state/pot";
 import { canCook, getItemQuantity, getKnownRecipes, ITEM_IMAGES, RECIPES } from "../state/recipes";
@@ -34,8 +35,10 @@ export function PotRecipePicker({
 
   return (
     <Modal visible animationType="fade" transparent onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.panel} onPress={(event) => event.stopPropagation()}>
+      <View style={styles.backdrop}>
+        {/* A sibling behind the panel (not wrapped around it), so the list scrolls freely. */}
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t("닫기", "Close")} />
+        <View style={styles.panel}>
           <ModalFrame />
           <View style={styles.top}>
             <View>
@@ -49,7 +52,7 @@ export function PotRecipePicker({
               <Text style={styles.emptyText}>{t("아는 레시피가 없어요.", "You don't know any recipes yet.")}</Text>
             </Panel>
           ) : (
-            <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
+            <FadedScroll style={styles.list} contentContainerStyle={styles.listContent}>
               {recipes.map(({ recipe, ready }) => {
                 const ingredients = getPotIngredients(recipe);
                 return (
@@ -91,24 +94,24 @@ export function PotRecipePicker({
                   </Panel>
                 );
               })}
-            </ScrollView>
+            </FadedScroll>
           )}
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, paddingHorizontal: 14, justifyContent: "center", backgroundColor: "#263024cf" },
-  panel: { maxHeight: "80%", width: "100%", maxWidth: 410, alignSelf: "center", paddingHorizontal: 34, paddingTop: 48, paddingBottom: 36 },
+  panel: { maxHeight: "80%", width: "100%", maxWidth: 410, alignSelf: "center", paddingHorizontal: 34, paddingTop: 48, paddingBottom: 22 },
   top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
   eyebrow: { color: colors.green, fontWeight: "800", fontFamily: fonts.bold, fontSize: 12, letterSpacing: 1.5 },
   title: { fontSize: 24, fontWeight: "800", fontFamily: fonts.bold, color: colors.ink, letterSpacing: -0.5 },
   closeButton: { paddingHorizontal: 12 },
   empty: { alignItems: "center", paddingVertical: 20, paddingHorizontal: 14 },
   emptyText: { fontSize: 14, fontWeight: "800", fontFamily: fonts.bold, color: colors.brown },
-  list: { flexGrow: 0 },
+  list: { flexGrow: 0, flexShrink: 1 },
   listContent: { gap: 8 },
   item: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 11, paddingTop: 9, paddingBottom: 11 },
   dish: { width: 40, height: 40 },

@@ -48,12 +48,15 @@ export function DailyScreen({
   priceStage,
   onBack,
   onDeliver,
+  onFindDish,
   header,
 }: {
   state: GameState;
   priceStage: number;
   onBack: () => void;
   onDeliver: (index: number) => void;
+  // To the kitchen, filtered to this dish (tapping its name, or 제출 while short of it).
+  onFindDish: (recipeName: string) => void;
   // The game header, drawn over the top of the restaurant instead of on its own cream strip.
   header?: ReactNode;
 }) {
@@ -111,7 +114,7 @@ export function DailyScreen({
             <Customer key={`customer-${shownKey}`} source={current.customerImage} companion={current.companion} sceneWidth={width} top={customerTop} leaving={leaving} />
           )}
           {width > 0 && <Image source={dailyImages.counter} style={[styles.counter, { width, height: counterHeight }]} />}
-          {width > 0 && current && <OrderBubble key={`bubble-${shownKey}`} order={current} />}
+          {width > 0 && current && <OrderBubble key={`bubble-${shownKey}`} order={current} onFindDish={onFindDish} />}
           {width > 0 && !current && (
             <View style={styles.closedSign}>
               <Panel slice={kit.panelBrown} scale={0.4} style={styles.closedPlank}>
@@ -122,7 +125,7 @@ export function DailyScreen({
               </Panel>
             </View>
           )}
-          <View style={styles.topBar}>
+          <View style={styles.topBar} pointerEvents="box-none">
             <ShopTopBar kicker="ORDERS" title={t("일일 의뢰", "Daily Orders")} gold={state.gold} onBack={onBack} backLabel={t("전투로 돌아가기", "Back to Battle")} dark showGold={false} />
           </View>
           </View>
@@ -140,8 +143,9 @@ export function DailyScreen({
       )}
 
       {current && (
-        // 제출 have/need: green once the bag holds enough, gray (not pressable) until then.
-        <GameButton variant={enough ? "green" : "gray"} onPress={submit} disabled={!enough || leaving} style={styles.submit}>
+        // 제출 have/need: green once the bag holds enough; gray until then, and tapping it
+        // then goes to the kitchen to cook the missing dish.
+        <GameButton variant={enough ? "green" : "gray"} onPress={enough ? submit : () => onFindDish(current.recipe.name)} disabled={leaving} style={styles.submit}>
           <View style={styles.submitRow}>
             <Text style={[styles.submitText, !enough && styles.submitTextShort]}>
               {t(`제출 ${current.have}/${current.count}`, `Submit ${current.have}/${current.count}`)}
@@ -197,7 +201,7 @@ function Customer({
 // The customer's line over the counter ("안녕하세요~ 당근 수프 2개 부탁드려도 될까요?"), tail
 // toward them. Pops in each time a
 // new customer steps up.
-function OrderBubble({ order }: { order: DailyOrderView }) {
+function OrderBubble({ order, onFindDish }: { order: DailyOrderView; onFindDish: (recipeName: string) => void }) {
   const pop = useSharedValue(0);
   useEffect(() => {
     pop.value = withSequence(withTiming(0, { duration: 300 }), withTiming(1, { duration: 260, easing: Easing.out(Easing.back(1.6)) }));
@@ -208,7 +212,7 @@ function OrderBubble({ order }: { order: DailyOrderView }) {
     <Animated.View style={[styles.bubble, style]}>
       <NineSlice slice={shopKit.bubble} scale={0.32} />
       <Text style={styles.bubbleLine}>
-        <HighlightDish line={order.line} dish={t(order.recipe.name)} />
+        <HighlightDish line={order.line} dish={t(order.recipe.name)} onPress={() => onFindDish(order.recipe.name)} />
       </Text>
       {/* What it pays, under the line — gems from a companion. */}
       {order.companion ? (
@@ -226,7 +230,7 @@ function OrderBubble({ order }: { order: DailyOrderView }) {
 // may break the line, splitting "수프를" into "수프" / "를".
 const WORD_JOINER = "\u2060";
 
-function HighlightDish({ line, dish }: { line: string; dish: string }) {
+function HighlightDish({ line, dish, onPress }: { line: string; dish: string; onPress: () => void }) {
   const at = line.indexOf(dish);
   if (at < 0) return <>{line}</>;
   const before = line.slice(0, at);
@@ -236,7 +240,10 @@ function HighlightDish({ line, dish }: { line: string; dish: string }) {
   return (
     <>
       {glueBefore ? before + WORD_JOINER : before}
-      <Text style={styles.bubbleDish}>{dish}</Text>
+      {/* Tapping the dish's name goes to the kitchen, filtered to it. */}
+      <Text style={styles.bubbleDish} onPress={onPress} suppressHighlighting accessibilityRole="link">
+        {dish}
+      </Text>
       {glueAfter ? WORD_JOINER + after : after}
     </>
   );

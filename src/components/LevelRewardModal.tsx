@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     maxHeight: "90%",
     paddingHorizontal: 34,
     paddingTop: 48,
-    paddingBottom: 36,
+    paddingBottom: 22,
   },
   // A little room either side inside the scroller (given back by the negative margin), so the
   // "모두 받기" count badge poking past the button's corner isn't clipped by the scroll view.

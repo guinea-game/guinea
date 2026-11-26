@@ -34,6 +34,8 @@ export function RewardedAdModal({
   onCancel,
   autoStart = true,
   secondary,
+  plain = false,
+  title,
   embedded = false,
 }: {
   message: string;
@@ -44,6 +46,10 @@ export function RewardedAdModal({
   // A no-ad alternative shown beside the ad button on the prompt (e.g. the boss retry's
   // "그냥 다시 도전"), so skipping the ad is a clear choice rather than a hidden dismiss.
   secondary?: { label: string; onPress: () => void };
+  // Just the message and buttons — no lightning icon or "광고 안내" eyebrow (the boss retry).
+  plain?: boolean;
+  // A heading above the message ("앗! 보스를 무찌르지 못했어요").
+  title?: string;
   // Drawn inside the caller's own Modal (a plain overlay, no Modal of its own). For popups
   // that offer an ad themselves (출석 보상, 오프라인 보상): swapping their Modal out for this
   // one used to dismiss one native modal while presenting another in the same instant — on a
@@ -156,8 +162,12 @@ export function RewardedAdModal({
     <Pressable style={styles.backdrop} onPress={() => dismiss?.()}>
       <Pressable style={styles.panel} onPress={(event) => event.stopPropagation()}>
         <ModalFrame />
-        <Image source={icons.energy} style={styles.heroIcon} />
-        <Text style={styles.eyebrow}>{t("광고 안내", "Ad")}</Text>
+        {!plain && (
+          <>
+            <Image source={icons.energy} style={styles.heroIcon} />
+            <Text style={styles.eyebrow}>{t("광고 안내", "Ad")}</Text>
+          </>
+        )}
         {phase === "loading" && (
           <>
             <Text style={styles.title}>{t("광고를 불러오는 중이에요", "Loading the ad")}</Text>
@@ -169,7 +179,8 @@ export function RewardedAdModal({
         )}
         {phase === "prompt" && (
           <>
-            <Text style={styles.message}>{message}</Text>
+            {title && <Text style={styles.title}>{title}</Text>}
+            <Text style={[styles.message, plain && styles.messagePlain, title !== undefined && styles.messageUnderTitle]}>{message}</Text>
             {secondary ? (
               <View style={styles.choiceRow}>
                 <GameButton variant="beige" onPress={secondary.onPress} style={styles.choiceButton} textStyle={styles.choiceLabel}>
@@ -238,6 +249,10 @@ const styles = StyleSheet.create({
   eyebrow: { color: colors.green, fontWeight: "800", fontFamily: fonts.bold, fontSize: 12, letterSpacing: 1.5 },
   title: { marginTop: 2, fontSize: 18, fontWeight: "800", fontFamily: fonts.bold, color: colors.ink, textAlign: "center" },
   message: { fontFamily: fonts.light, letterSpacing: -0.36, marginTop: 8, fontSize: 12, color: colors.brown, textAlign: "center", lineHeight: 16 },
+  // Under a heading the line steps back a level (thin, brown) but keeps its size.
+  messageUnderTitle: { marginTop: 8, fontFamily: fonts.light, fontWeight: "400", color: colors.brown },
+  // The plain (boss retry) one-liner: it's the whole message, so it reads at body size.
+  messagePlain: { marginTop: 0, fontFamily: fonts.bold, fontWeight: "800", fontSize: 16, lineHeight: 23, color: colors.ink },
   spinner: { marginTop: 14, marginBottom: 4 },
   claimButton: { marginTop: 16, minWidth: 140 },
   cancelButton: { marginTop: 12, minWidth: 110 },

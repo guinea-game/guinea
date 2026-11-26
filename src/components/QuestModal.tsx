@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     maxHeight: "90%",
     paddingHorizontal: 34,
     paddingTop: 48,
-    paddingBottom: 36,
+    paddingBottom: 22,
   },
   top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   topEyebrow: { color: colors.green, fontWeight: "800", fontFamily: fonts.bold, fontSize: 12, letterSpacing: 1.5 },

@@ -41,6 +41,7 @@ export function KitchenScreen({
   onCollect,
   guideRecipeId,
   onOpenGrocery,
+  initialQuery,
   onOpenRecipes,
   recipesBadge = false,
   potQueue,
@@ -69,6 +70,8 @@ export function KitchenScreen({
   // During the recipe tutorial: the dish whose minigame gets the first-round guide arrow.
   guideRecipeId?: string;
   onOpenGrocery: () => void;
+  // Opens with the search already filled in (일일 의뢰 sends the dish a customer wants).
+  initialQuery?: string;
   onOpenRecipes: () => void;
   // A recipe went on sale that the shop hasn't been opened to see yet.
   recipesBadge?: boolean;
@@ -99,7 +102,7 @@ export function KitchenScreen({
     .map(({ recipe }) => recipe);
   const unlearned = RECIPES.length - recipes.length;
   // Search by dish name or any ingredient in it.
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery ?? "");
   // The recipe whose "!" details are open.
   const [infoRecipeId, setInfoRecipeId] = useState<string | null>(null);
   const infoRecipe = RECIPES.find((recipe) => recipe.id === infoRecipeId);
