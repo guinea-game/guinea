@@ -41,6 +41,7 @@ import {
 import { BUFF_SLOT_PRICES, BUFFS, DISH_BUFF_DURATION_MS, getOutfitName, GRADE_GOLD_MULTIPLIER, INSTANT_DISHES, OUTFIT_FORCED_MANUAL, OUTFIT_NAMES, OUTFIT_SKILL_POWER, OUTFIT_SURE_DROPS, emptyBuffSlots, getOutfitStats, getBuffTotals, peekGrade, pushGrade, shiftGrade, type CookGrade } from "./buffs";
 import { GROCERY, applyDiscount, getSellPrice, getShortfall } from "./grocery";
 import { canCook, consumeIngredients, getKnownRecipes, isRecipeForSale, RECIPES } from "./recipes";
+import { canQueuePotJob, collectPotJob, queuePotJob, rushPotJob } from "./pot";
 import { playSfx } from "../sound";
 import { playHaptic } from "../haptics";
 import { simulateOfflineProgress, type OfflineSummary } from "./offline";
@@ -1476,6 +1477,33 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     return failed ? "failed" : great ? "great" : "ok";
   };
 
+  // 냄비 (state/pot.ts): a separate idle batch cooker from the instant minigame cook above —
+  // queue a known recipe, pay 10x its ingredients up front, and it turns into 10 dishes after
+  // simmering on its own for a tier-based stretch of wall-clock time.
+  const queuePot = (recipeId: string): "ok" | "unavailable" => {
+    if (!canQueuePotJob(state, recipeId)) return "unavailable";
+    setState((previous) => queuePotJob(previous, recipeId));
+    return "ok";
+  };
+  const collectPot = (): "ok" | "full" | "none" => {
+    const { result } = collectPotJob(state, bagStackSize, now);
+    if (result === "ok") {
+      setState((previous) => collectPotJob(previous, bagStackSize, Date.now()).state);
+      playSfx("cookDone");
+      playHaptic("claim");
+    }
+    return result;
+  };
+  const rushPot = (): "ok" | "gems" | "full" | "none" => {
+    const { result } = rushPotJob(state, bagStackSize, now);
+    if (result === "ok") {
+      setState((previous) => rushPotJob(previous, bagStackSize, Date.now()).state);
+      playSfx("cookDone");
+      playHaptic("claim");
+    }
+    return result;
+  };
+
   // Reports why a purchase failed (or "ok"), so the shop can react either way.
   const buyIngredient = (name: string, listPrice: number): "ok" | "gold" | "full" => {
     const price = applyDiscount(listPrice, foodBuffs.groceryDiscount);
@@ -1814,6 +1842,9 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     cook,
     foodBuffs,
     finishCooking,
+    queuePot,
+    collectPot,
+    rushPot,
     buyIngredient,
     sellIngredient,
     buyMissingAndCook,

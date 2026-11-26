@@ -111,6 +111,10 @@ export interface GameState {
   potsUnlocked?: number;
   // Unused leftover from when pots could be rushed with an ad — kept so older saves still parse.
   adRushes?: { day: string; count: number };
+  // The 냄비 idle batch cooker (state/pot.ts) — up to 3 deep, index 0 is the one actually
+  // simmering (has startedAt/readyAt); the rest wait their turn with neither. Missing on older
+  // saves = empty.
+  potQueue?: { recipeId: string; startedAt?: number; readyAt?: number }[];
   // A FIFO queue per recipe of its uneaten units' cook-minigame grades ("great"/"good"/
   // "fail" — state/buffs.ts's CookGrade) — pushed on finishCooking, shifted on eatDish/eatSnack.
   // Decides that specific unit's buff duration (or, for an instant dish, its gold payout)

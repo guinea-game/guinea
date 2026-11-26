@@ -254,6 +254,14 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
     if (result === "full") game.notifyBagFull();
   };
   const collectedRecipe = collected && RECIPES.find((recipe) => recipe.id === collected.recipeId);
+  // 냄비: both just flag a full bag the same way the minigame cook above does; rushPot already
+  // falls back to a free collect by itself once its job is actually ready.
+  const onCollectPot = () => {
+    if (game.collectPot() === "full") game.notifyBagFull();
+  };
+  const onRushPot = () => {
+    if (game.rushPot() === "full") game.notifyBagFull();
+  };
 
   // Once the burst closes, the dish flies from the middle of the screen into its recipe card.
   const finishCollect = () => {
@@ -378,6 +386,7 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             knownRecipes={state.knownRecipes}
             cookSpeedPercent={game.foodBuffs.cookSpeed}
             gold={state.gold}
+            gems={state.gems}
             groceryDiscount={game.foodBuffs.groceryDiscount}
             priceStage={priceStage}
             onCook={game.cook}
@@ -387,6 +396,11 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             onOpenGrocery={() => onSelectTab("grocery")}
             onOpenRecipes={() => onSelectTab("recipes")}
             recipesBadge={newRecipeOffer}
+            potQueue={state.potQueue}
+            now={game.now}
+            onQueuePot={game.queuePot}
+            onCollectPot={onCollectPot}
+            onRushPot={onRushPot}
           />
         );
       case "daily":

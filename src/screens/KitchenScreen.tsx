@@ -6,6 +6,9 @@ import { matchesSearch } from "../state/search";
 import { colors, fonts } from "../theme";
 import { chef, grandma, kit, kitImages } from "../assets";
 import { CookingMinigame } from "../components/CookingMinigame";
+import { PotPanel } from "../components/PotPanel";
+import { PotRecipePicker } from "../components/PotRecipePicker";
+import type { PotJob } from "../state/pot";
 import { SEALED_RECIPE } from "../state/recipeTiers";
 import { describeDish, getDishCategories, type CookGrade, type DishCategory } from "../state/buffs";
 import { RecipeInfoModal } from "../components/RecipeInfoModal";
@@ -30,6 +33,7 @@ export function KitchenScreen({
   knownRecipes,
   cookSpeedPercent,
   gold,
+  gems,
   groceryDiscount,
   priceStage,
   onCook,
@@ -39,12 +43,18 @@ export function KitchenScreen({
   onOpenGrocery,
   onOpenRecipes,
   recipesBadge = false,
+  potQueue,
+  now,
+  onQueuePot,
+  onCollectPot,
+  onRushPot,
 }: {
   inventory: GameState["inventory"];
   knownRecipes: string[] | undefined;
   // Widens the cooking minigame's target zone — see state/cookingMinigame.ts's getZoneWidth.
   cookSpeedPercent: number;
   gold: number;
+  gems: number;
   // Food-buff % off grocery prices, for the "buy what's missing" cost.
   groceryDiscount: number;
   // The stage grocery prices are set by (see getGroceryPrice).
@@ -61,7 +71,14 @@ export function KitchenScreen({
   onOpenRecipes: () => void;
   // A recipe went on sale that the shop hasn't been opened to see yet.
   recipesBadge?: boolean;
+  // 냄비 (state/pot.ts): the idle batch cooker up top, separate from the minigame cook below.
+  potQueue: PotJob[] | undefined;
+  now: number;
+  onQueuePot: (recipeId: string) => void;
+  onCollectPot: () => void;
+  onRushPot: () => void;
 }) {
+  const [potPickerOpen, setPotPickerOpen] = useState(false);
   const known = getKnownRecipes(knownRecipes);
   const startCooking = (recipe: (typeof RECIPES)[number], buyMissing = false) => {
     const result = buyMissing ? onBuyAndCook(recipe.id) : onCook(recipe.id);
@@ -113,6 +130,7 @@ export function KitchenScreen({
         </View>
       </View>
 
+      <PotPanel queue={potQueue ?? []} now={now} gems={gems} onAdd={() => setPotPickerOpen(true)} onCollect={onCollectPot} onRush={onRushPot} />
 
       <View style={styles.toolbar}>
         <Text style={styles.toolbarText}>{t(`아는 레시피 ${recipes.length}개`, `${recipes.length} Known Recipes`)}</Text>
@@ -243,6 +261,17 @@ export function KitchenScreen({
         )}
       </View>
       {infoRecipe && <RecipeInfoModal recipe={infoRecipe} owned={getItemQuantity(inventory, infoRecipe.name)} onClose={() => setInfoRecipeId(null)} />}
+      {potPickerOpen && (
+        <PotRecipePicker
+          inventory={inventory}
+          knownRecipes={knownRecipes}
+          onQueue={(recipeId) => {
+            onQueuePot(recipeId);
+            setPotPickerOpen(false);
+          }}
+          onClose={() => setPotPickerOpen(false)}
+        />
+      )}
       {cookingRecipe && (
         <CookingMinigame
           recipe={cookingRecipe}
