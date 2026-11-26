@@ -783,14 +783,14 @@ export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = 
       },
       {
         image: comics.slimeroad3,
-        aspect: 502 / 768,
+        aspect: 516 / 768,
         bubbles: [
-          { text: "으앗, 미끄러워!", right: 0.03, top: 0.06, maxWidth: 0.3, tail: "left", tailAt: 0.7 },
+          { text: "으앗, 미끄러워!", right: 0.03, top: 0.12, maxWidth: 0.3, tail: "left", tailAt: 0.8 },
         ],
       },
       {
         image: comics.slimeroad4,
-        aspect: 502 / 768,
+        aspect: 516 / 768,
         sfx: "levelup",
         bubbles: [
           { text: "여긴... 버섯 늪?", left: 0.03, top: 0.05, maxWidth: 0.34, tail: "bottom", tailAt: 0.8 },
