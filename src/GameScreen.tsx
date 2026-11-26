@@ -238,6 +238,10 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
   const markComicSeen = (id: ComicId) =>
     setState((previous) => ({ ...previous, seenComics: [...new Set([...(previous.seenComics ?? []), id])] }));
   const collectCount = useRef(0);
+  // The page scroller, and how tall its window is — the map uses both to open with the
+  // stage being fought in the middle of the screen.
+  const contentScroll = useRef<ScrollView>(null);
+  const contentHeight = useRef(0);
   // The cooking minigame resolved with `grade` (see CookingMinigame/KitchenScreen) — takes
   // the dish out at that grade and plays the "완성!" burst (nothing on a 망함).
   const onCollect = (recipeId: string, grade: CookGrade) => {
@@ -427,10 +431,12 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             onSelectStage={game.selectStage}
             seenStage={state.mapSeenStage}
             onSeen={(mapSeenStage) => setState((previous) => ({ ...previous, mapSeenStage }))}
-            onBack={() => onSelectTab("battle")}
             onOpenComics={() => onSelectTab("comics")}
             codexStageNumber={getPeakAreaStage(state)}
             stageStars={state.stageStars}
+            stageStarsClaimed={state.stageStarsClaimed}
+            onClaimStars={game.claimStars}
+            onFocusStage={(y, height) => contentScroll.current?.scrollTo({ y: Math.max(0, y + height / 2 - contentHeight.current / 2), animated: false })}
           />
         );
       case "comics":
@@ -482,6 +488,10 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
         {state.selectedTab !== "daily" && headerElement}
         <ScrollView
           key={state.selectedTab}
+          ref={contentScroll}
+          onLayout={(event) => {
+            contentHeight.current = event.nativeEvent.layout.height;
+          }}
           style={[styles.content, state.selectedTab === "daily" && { backgroundColor: DAILY_LOWER_COLOR }]}
           contentContainerStyle={styles.contentContainer}
         >

@@ -395,7 +395,7 @@ export function BattleScene({
   golden?: boolean;
   goldenReward?: { id: number; gold: number; gems: number } | null;
   // What the last boss cleared paid beyond its drops (for its toast).
-  bossReward?: { id: number; stars: number; gems: number; companion: string | null } | null;
+  bossReward?: { id: number; stars: number; companion: string | null } | null;
   enemyKind: EnemyKind;
   // The regular mob actually on screen, when it's not the stage's own (a stray from the stage
   // before); the stage's look (backdrop, ambience, boss) still follows `enemyKind`.
@@ -789,7 +789,7 @@ export function BattleScene({
           )}
           {bossFledKey > 0 && <BossFleeBanner key={bossFledKey} />}
           {goldenReward && <GoldenRewardToast key={goldenReward.id} gold={goldenReward.gold} gems={goldenReward.gems} />}
-          {bossReward && <BossRewardToast key={bossReward.id} stars={bossReward.stars} gems={bossReward.gems} companion={bossReward.companion} />}
+          {bossReward && <BossRewardToast key={bossReward.id} stars={bossReward.stars} companion={bossReward.companion} />}
           {streakMilestone && <KillStreakBanner key={streakMilestone.id} count={streakMilestone.count} />}
           {/* Same camera layer as the backdrop, so the two zoom as one picture. */}
           <Animated.View style={[StyleSheet.absoluteFill, styles.camLayer, styles.camFighters, camStyle]} pointerEvents="box-none">
@@ -1460,7 +1460,7 @@ function GoldenRewardToast({ gold, gems }: { gold: number; gems: number }) {
 }
 
 // The shards this boss drops, plus any stars this clear newly earned. Over the stage-clear banner.
-function BossRewardToast({ stars, gems, companion }: { stars: number; gems: number; companion: string | null }) {
+function BossRewardToast({ stars, companion }: { stars: number; companion: string | null }) {
   const t = useSharedValue(0);
   useEffect(() => {
     t.value = withTiming(1, { duration: 2600, easing: Easing.out(Easing.quad) });
@@ -1476,7 +1476,7 @@ function BossRewardToast({ stars, gems, companion }: { stars: number; gems: numb
       )}
       {stars > 0 && (
         <StrokedText style={styles.goldenToastTitle} strokeColor="#5a3a06" strokeWidth={2.5}>
-          {tr(`${"★".repeat(stars)} 보석 +${gems}`, `${"★".repeat(stars)} Gems +${gems}`)}
+          {tr(`${"★".repeat(stars)} 달성!`, `${"★".repeat(stars)} Earned!`)}
         </StrokedText>
       )}
     </Animated.View>

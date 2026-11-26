@@ -5,6 +5,8 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "
 import { colors, fonts } from "../theme";
 import { buttonKit, frameKit, kit, uiImages, shopImages, kitImages } from "../assets";
 import { NineSlice, Panel } from "./NineSlice";
+import { ModalFrame } from "./ModalFrame";
+import { CountBadge } from "./CountBadge";
 import { ProgressBar } from "./ProgressBar";
 import { formatGameNumber } from "../state/gameMath";
 import { GameButton } from "./GameButton";
@@ -102,8 +104,8 @@ export function QuestModal({
             the scrollbar strip would scroll the list. */}
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t("닫기", "Close")} />
         <View style={styles.panel}>
-          <NineSlice slice={kit.panelLarge} />
-          <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+          <ModalFrame />
+          <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.top}>
               <View>
                 <Text style={styles.topEyebrow}>{t("오늘의 할 일", "Today's To-Do")}</Text>
@@ -231,9 +233,7 @@ export function QuestModal({
                       </View>
                     </GameButton>
                     {/* How many are waiting, as a red count badge on the button's corner. */}
-                    <View style={styles.countBadge} pointerEvents="none">
-                      <Text style={styles.countBadgeText}>{chapterClaimable.length}</Text>
-                    </View>
+                    <CountBadge count={chapterClaimable.length} style={styles.countBadge} />
                   </View>
                 )}
                 <View style={styles.list}>
@@ -317,9 +317,9 @@ const styles = StyleSheet.create({
   },
   panel: {
     maxHeight: "90%",
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 24,
+    paddingHorizontal: 34,
+    paddingTop: 48,
+    paddingBottom: 36,
   },
   top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   topEyebrow: { color: colors.green, fontWeight: "800", fontFamily: fonts.bold, fontSize: 12, letterSpacing: 1.5 },
@@ -366,22 +366,10 @@ const styles = StyleSheet.create({
   info: { flex: 1 },
   infoTitle: { fontSize: 12, fontWeight: "800", fontFamily: fonts.bold, color: colors.ink },
   claimAllWrap: { marginBottom: 10 },
-  scroll: { flexGrow: 0 },
-  countBadge: {
-    position: "absolute",
-    top: -7,
-    right: -5,
-    minWidth: 24,
-    height: 24,
-    paddingHorizontal: 6,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.red,
-    borderWidth: 2,
-    borderColor: colors.cream,
-  },
-  countBadgeText: { fontSize: 11, fontWeight: "900", fontFamily: fonts.bold, color: colors.cream },
+  // Side room inside the scroller (given back by the margin) so the count badges aren't clipped.
+  scroll: { flexGrow: 0, marginHorizontal: -8 },
+  scrollContent: { paddingHorizontal: 8 },
+  countBadge: { position: "absolute", top: -8, right: -6 },
   chapterList: { marginTop: 14 },
   chapterItem: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 12 },
   chapterBadge: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: colors.gold, borderWidth: 2, borderColor: colors.line },

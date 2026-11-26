@@ -1,8 +1,8 @@
 import { Image, Modal, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./GameText";
 import { colors, fonts } from "../theme";
-import { buttonImages, kit } from "../assets";
-import { NineSlice } from "./NineSlice";
+import { buttonImages } from "../assets";
+import { ModalFrame } from "./ModalFrame";
 import { GameButton } from "./GameButton";
 import { VolumeSlider } from "./VolumeSlider";
 import { playSfx, setBgmVolume, setCalmBgm, setSfxVolume, useBgmVolume, useCalmBgm, useSfxVolume } from "../sound";
@@ -60,7 +60,7 @@ export function SettingsModal({
     <Modal visible animationType="fade" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable style={styles.panel} onPress={(event) => event.stopPropagation()}>
-          <NineSlice slice={kit.panelLarge} />
+          <ModalFrame />
           <Text style={styles.title}>{t("설정", "Settings")}</Text>
           <Pressable
             onPress={() => {
@@ -307,9 +307,9 @@ const styles = StyleSheet.create({
   closePressed: { transform: [{ scale: 0.9 }] },
   closeIcon: { width: 36, height: 36 },
   panel: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 24,
+    paddingHorizontal: 34,
+    paddingTop: 48,
+    paddingBottom: 36,
     alignItems: "center",
   },
   title: { fontSize: 19, fontWeight: "800", fontFamily: fonts.bold, color: colors.ink, textAlign: "center" },

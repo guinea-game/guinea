@@ -733,6 +733,8 @@ export const icons = {
   potionBlue: require("../assets/icons/icon-potion-blue.webp"),
   compass: require("../assets/icons/icon-compass.webp"),
   star: require("../assets/icons/icon-star.webp"),
+  // The star in black and white — a stage challenge not yet earned (map).
+  starGray: require("../assets/icons/icon-star-gray.webp"),
   heart: require("../assets/icons/icon-heart.webp"),
   shop: require("../assets/icons/icon-shop.webp"),
   key: require("../assets/icons/icon-key.webp"),
@@ -1499,7 +1501,6 @@ export const panelArt = [
   require("../assets/panels/panel-14.webp"),
   require("../assets/panels/panel-15.webp"),
   require("../assets/panels/panel-16.webp"),
-  require("../assets/panels/panel-17.webp"),
   require("../assets/panels/panel-18.webp"),
   require("../assets/panels/panel-19.webp"),
   require("../assets/panels/panel-20.webp"),
@@ -1512,6 +1513,16 @@ export const panelArt = [
   require("../assets/panels/panel-27.webp"),
   require("../assets/panels/panel-28.webp"),
 ];
+
+// Every modal's outer frame (see ModalFrame): the gold-trimmed parchment frame, and its
+// diamond gem laid on top-centre separately so stretching the frame never stretches it.
+export const modalKit = {
+  // No flat centre fill: it reached up over the rail's inner lip (and the gem's lower half); the parchment art itself stretches fine.
+  frame: slice(require("../assets/modal/modal-frame.webp"), 686, 326, [74, 64, 64, 64]),
+  gem: require("../assets/modal/modal-gem.webp"),
+  gemWidth: 98,
+  gemHeight: 85,
+};
 
 // The ones used as stretchy frames, with insets that keep their corners and trim intact.
 export const panelSlices = {

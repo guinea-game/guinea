@@ -51,6 +51,9 @@ export interface GameState {
   companionLevels?: Partial<Record<Outfit, number>>;
   shardAds?: { day: string; count: number };
   stageStars?: Record<string, number>;
+  // Of those stars, the ones whose gems were collected (from the map's "i"). Older saves had
+  // every star paid on the spot, so a missing record means all of stageStars is collected.
+  stageStarsClaimed?: Record<string, number>;
   // Ingredients got from monsters, for the codex's gold bonus (buying one doesn't count).
   // Saves from before this start from everything their codex already held.
   droppedItems?: string[];

@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { Image, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { colors, fonts } from "../theme";
-import { chef, frameKit, kit } from "../assets";
+import { chef, frameKit } from "../assets";
 import { NineSlice } from "./NineSlice";
+import { ModalFrame } from "./ModalFrame";
 import { GameButton } from "./GameButton";
 import { StrokedText } from "./StrokedText";
 import { GuideArrow } from "./GuideArrow";
@@ -172,7 +173,7 @@ export function CookingMinigame({
     <Modal visible animationType="fade" transparent onRequestClose={giveUp}>
       <View style={styles.backdrop}>
         <View style={styles.panel}>
-          <NineSlice slice={kit.panelLarge} />
+          <ModalFrame />
           <View style={styles.top}>
             <Text style={styles.eyebrow}>COOKING</Text>
             <Text style={styles.title}>{t(recipe.name)}</Text>
@@ -628,7 +629,7 @@ function HoldRound({
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, padding: 22, paddingHorizontal: 14, justifyContent: "center", backgroundColor: "#263024cf" },
-  panel: { width: "100%", maxWidth: 410, alignSelf: "center", paddingHorizontal: 20, paddingTop: 18, paddingBottom: 22, alignItems: "center" },
+  panel: { width: "100%", maxWidth: 410, alignSelf: "center", paddingHorizontal: 34, paddingTop: 48, paddingBottom: 36, alignItems: "center" },
   top: { alignItems: "center" },
   eyebrow: { color: colors.green, fontWeight: "800", fontFamily: fonts.bold, fontSize: 12, letterSpacing: 1.5 },
   title: { marginTop: 2, fontSize: 20, fontWeight: "800", fontFamily: fonts.bold, color: colors.ink, letterSpacing: -0.5 },

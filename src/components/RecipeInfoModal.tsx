@@ -1,8 +1,9 @@
 import { Image, Modal, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./GameText";
 import { colors, fonts } from "../theme";
-import { frameKit, kit } from "../assets";
-import { NineSlice, Panel } from "./NineSlice";
+import { kit } from "../assets";
+import { Panel } from "./NineSlice";
+import { ModalFrame } from "./ModalFrame";
 import { GameButton } from "./GameButton";
 import { describeDish, describeDishLinks } from "../state/buffs";
 import { MINIGAME_DIFFICULTY } from "../state/cookingMinigame";
@@ -50,7 +51,7 @@ export function RecipeInfoModal({ recipe, owned, onClose }: { recipe: Recipe; ow
       <View style={styles.backdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t("닫기", "Close")} />
         <View style={styles.panel}>
-          <NineSlice slice={frameKit.woodSquare} scale={0.4} />
+          <ModalFrame />
           <Image source={recipe.image} style={styles.dish} />
           <Text style={styles.name}>{t(recipe.name)}</Text>
           <Text style={styles.description}>{t(recipe.description)}</Text>
@@ -92,7 +93,7 @@ export function RecipeInfoModal({ recipe, owned, onClose }: { recipe: Recipe; ow
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, padding: 22, paddingHorizontal: 24, justifyContent: "center", backgroundColor: "#263024cf" },
-  panel: { alignItems: "center", paddingHorizontal: 30, paddingTop: 30, paddingBottom: 30 },
+  panel: { alignItems: "center", paddingHorizontal: 34, paddingTop: 48, paddingBottom: 36 },
   dish: { width: 84, height: 84 },
   name: { marginTop: 6, fontSize: 20, fontWeight: "900", fontFamily: fonts.bold, color: colors.ink, textAlign: "center" },
   description: { marginTop: 4, fontFamily: fonts.light, letterSpacing: -0.42, fontSize: 14, lineHeight: 20, color: colors.brown, textAlign: "center" },

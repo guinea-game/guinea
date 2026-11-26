@@ -2,7 +2,8 @@ import { Modal, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./GameText";
 import { colors, fonts } from "../theme";
 import { kit } from "../assets";
-import { NineSlice, Panel } from "./NineSlice";
+import { Panel } from "./NineSlice";
+import { ModalFrame } from "./ModalFrame";
 import { GameButton } from "./GameButton";
 import { EnemySprite } from "./EnemySprite";
 import { BOSS_LORE, MOB_LORE } from "../state/bestiary";
@@ -28,7 +29,7 @@ export function MonsterStoryModal({
     <Modal visible animationType="fade" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable style={styles.panel} onPress={(event) => event.stopPropagation()}>
-          <NineSlice slice={kit.panelLarge} />
+          <ModalFrame />
           <View style={styles.top}>
             <View style={[styles.tag, boss ? styles.tagBoss : styles.tagMob]}>
               <Text style={styles.tagText}>{boss ? t("보스", "Boss") : t("일반", "Normal")}</Text>
@@ -62,7 +63,7 @@ export function MonsterStoryModal({
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, paddingHorizontal: 16, justifyContent: "center", backgroundColor: "#263024cf" },
-  panel: { width: "100%", maxWidth: 400, alignSelf: "center", alignItems: "center", paddingHorizontal: 24, paddingTop: 24, paddingBottom: 24 },
+  panel: { width: "100%", maxWidth: 400, alignSelf: "center", alignItems: "center", paddingHorizontal: 34, paddingTop: 48, paddingBottom: 36 },
   top: { alignSelf: "stretch", flexDirection: "row", alignItems: "center", gap: 6 },
   tag: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 },
   tagMob: { backgroundColor: colors.green },

@@ -9,6 +9,7 @@ import { initialState } from "./initialState";
 import {
   addCompanionShards,
   applyCompanionUpgrade,
+  claimStageStars,
   countStars,
   getCodexGoldBonus,
   getCompanionLevel,
@@ -16,7 +17,6 @@ import {
   SHARDS_PER_BOSS,
   STAR_CLEAR,
   STAR_FAST,
-  STAR_GEMS,
   STAR_NO_FOOD,
 } from "./progression";
 import { applyUpgradeLevels, BOSS_PHASE_TWO_TIME_LIMIT_MS, GEM_STATS, getBossTimeLimitMs, getExpReward, getGoldReward, getExpToLevel, getStatLevel, getStatValue, getUpgradeQuote } from "./gameMath";
@@ -150,7 +150,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   // Bumped when a golden mid-boss falls, with what it paid, for the battle's reward toast.
   const [goldenReward, setGoldenReward] = useState<{ id: number; gold: number; gems: number } | null>(null);
   // What the last boss cleared paid beyond its drops, for the battle's reward toast.
-  const [bossReward, setBossReward] = useState<{ id: number; stars: number; gems: number; companion: string | null } | null>(null);
+  const [bossReward, setBossReward] = useState<{ id: number; stars: number; companion: string | null } | null>(null);
   const [defeatedStrayKind, setDefeatedStrayKind] = useState<EnemyKind | null>(null);
   const [defeatedBoss, setDefeatedBoss] = useState(false);
   // When the current boss fight started (wall-clock) and how long it gets before the boss
@@ -616,7 +616,6 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
         setBossReward((previous) => ({
           id: (previous?.id ?? 0) + 1,
           stars,
-          gems: stars * STAR_GEMS,
           companion: shardCompanion ? getOutfitName(shardCompanion, { bossesCleared: state.bossesCleared }) : null,
         }));
       }
@@ -739,14 +738,16 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
       const purchasedOutfits = loopGrantedOutfits.length > 0 ? [...stageUnlockedOutfits, ...loopGrantedOutfits] : stageUnlockedOutfits;
       const starKey = String(previous.stageNumber);
       const starsBefore = previous.stageStars?.[starKey] ?? 0;
-      const starGems = countStars(earnedStars & ~starsBefore) * STAR_GEMS;
       const shardOwner = boss ? getShardCompanion(previous.stageNumber) : undefined;
       const withShard = shardOwner ? addCompanionShards(previous, shardOwner, SHARDS_PER_BOSS) : previous;
       return {
         ...withShard,
         stageStars: boss ? { ...previous.stageStars, [starKey]: starsBefore | earnedStars } : previous.stageStars,
+        // New stars wait on the map to be collected; pin what was already paid (older saves
+        // had every star paid on the spot) before the first new one lands.
+        stageStarsClaimed: boss ? (previous.stageStarsClaimed ?? previous.stageStars ?? {}) : previous.stageStarsClaimed,
         gold: previous.gold + creditedGold + goldenGold,
-        gems: previous.gems + (wasGolden ? GOLDEN_GEMS : 0) + starGems,
+        gems: previous.gems + (wasGolden ? GOLDEN_GEMS : 0),
         giftKills: gift ? Math.max(0, (previous.giftKills ?? 0) - 1) : previous.giftKills,
         bossesCleared: paysFirstClear ? [...cleared, previous.stageNumber] : previous.bossesCleared,
         stageKillsSaved: boss && previous.stageKillsSaved?.[String(previous.stageNumber)] ? { ...previous.stageKillsSaved, [String(previous.stageNumber)]: 0 } : previous.stageKillsSaved,
@@ -1252,6 +1253,8 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     setState((previous) => (/^c\d+-/.test(id) ? claimMission(previous, id) : claimHiddenQuest(previous, id)));
 
   const claimLevelReward = (level: number) => setState((previous) => payLevelReward(previous, level));
+  // A stage's challenge-star gems, collected from the map's "i".
+  const claimStars = (stage: number) => setState((previous) => claimStageStars(previous, stage));
 
   // What one of the current stage's mobs pays this player, food buffs left out — 연구소's gold
   // prices are counted in these, so they stay steady while a buff runs.
@@ -1722,6 +1725,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     upgradeStat,
     claimQuest,
     claimLevelReward,
+    claimStars,
     bagStackSize,
     deliverDailyOrder,
     priceStage,

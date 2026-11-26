@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./GameText";
 import { colors, fonts } from "../theme";
-import { kit, icons } from "../assets";
-import { NineSlice } from "./NineSlice";
+import { icons } from "../assets";
+import { ModalFrame } from "./ModalFrame";
 import { GameButton } from "./GameButton";
 import { AdBadge } from "./AdBadge";
 import { cancelRewardedWait, getLastAdError, showRewardedAd } from "../ads";
@@ -155,7 +155,7 @@ export function RewardedAdModal({
   const content = (
     <Pressable style={styles.backdrop} onPress={() => dismiss?.()}>
       <Pressable style={styles.panel} onPress={(event) => event.stopPropagation()}>
-        <NineSlice slice={kit.panelLarge} />
+        <ModalFrame />
         <Image source={icons.energy} style={styles.heroIcon} />
         <Text style={styles.eyebrow}>{t("광고 안내", "Ad")}</Text>
         {phase === "loading" && (
@@ -229,9 +229,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#263024cf",
   },
   panel: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 24,
+    paddingHorizontal: 34,
+    paddingTop: 48,
+    paddingBottom: 36,
     alignItems: "center",
   },
   heroIcon: { width: 44, height: 44, marginBottom: 6 },

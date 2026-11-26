@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Image, Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "./GameText";
 import { colors, fonts } from "../theme";
-import { buttonKit, food, frameKit, icons, kit, statIcons, uiImages } from "../assets";
+import { buttonKit, food, frameKit, icons, statIcons, uiImages } from "../assets";
 import { NineSlice, Panel } from "./NineSlice";
+import { ModalFrame } from "./ModalFrame";
 import { GameButton } from "./GameButton";
 import { formatGameNumber } from "../state/gameMath";
 import {
@@ -145,7 +146,7 @@ export function LabModal({
       <View style={styles.backdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t("닫기", "Close")} />
         <View style={styles.panel}>
-          <NineSlice slice={kit.panelLarge} />
+          <ModalFrame />
           <View style={styles.top}>
             <View>
               <Text style={styles.topEyebrow}>{t("기니 연구소", "Gini's Lab")}</Text>
@@ -384,7 +385,7 @@ const GOLD_OUTLINE: [number, number][] = [
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, padding: 22, paddingHorizontal: 14, justifyContent: "center", backgroundColor: "#263024cf" },
-  panel: { maxHeight: "92%", paddingHorizontal: 22, paddingTop: 22, paddingBottom: 22 },
+  panel: { maxHeight: "92%", paddingHorizontal: 34, paddingTop: 48, paddingBottom: 36 },
   scroll: { flexGrow: 0, marginTop: 10 },
   project: { marginBottom: 12 },
   projectHead: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 },

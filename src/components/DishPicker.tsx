@@ -4,7 +4,8 @@ import { colors, fonts } from "../theme";
 import { kit } from "../assets";
 import { GameButton } from "./GameButton";
 import { ARROW_H, ARROW_W, GuideArrow } from "./GuideArrow";
-import { NineSlice, Panel } from "./NineSlice";
+import { Panel } from "./NineSlice";
+import { ModalFrame } from "./ModalFrame";
 import { BUFFS, DISH_BUFF_DURATION_MS, GRADE_LABEL, describeDish, describeDishLinks, formatDuration, INSTANT_DISHES, peekGrade, type BuffSlot, type DishQuality } from "../state/buffs";
 import { getItemQuantity, RECIPES } from "../state/recipes";
 import type { GameState, Outfit } from "../types";
@@ -44,7 +45,7 @@ export function DishPicker({
     <Modal visible animationType="fade" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable style={styles.panel} onPress={(event) => event.stopPropagation()}>
-          <NineSlice slice={kit.panelLarge} />
+          <ModalFrame />
           <View style={styles.top}>
             <View>
               <Text style={styles.eyebrow}>FOOD BUFF</Text>
@@ -112,7 +113,7 @@ const styles = StyleSheet.create({
   // Points in from the left — the list scrolls, so anything above the row gets clipped.
   guideArrow: { right: "100%", marginRight: 2, top: "50%", marginTop: -ARROW_H / 2, width: ARROW_W },
   backdrop: { flex: 1, paddingHorizontal: 14, justifyContent: "center", backgroundColor: "#263024cf" },
-  panel: { maxHeight: "80%", width: "100%", maxWidth: 410, alignSelf: "center", paddingHorizontal: 24, paddingTop: 24, paddingBottom: 24 },
+  panel: { maxHeight: "80%", width: "100%", maxWidth: 410, alignSelf: "center", paddingHorizontal: 34, paddingTop: 48, paddingBottom: 36 },
   top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
   eyebrow: { color: colors.green, fontWeight: "800", fontFamily: fonts.bold, fontSize: 12, letterSpacing: 1.5 },
   title: { fontSize: 24, fontWeight: "800", fontFamily: fonts.bold, color: colors.ink, letterSpacing: -0.5 },

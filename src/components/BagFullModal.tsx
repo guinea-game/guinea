@@ -1,8 +1,8 @@
 import { Image, Modal, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./GameText";
 import { colors, fonts } from "../theme";
-import { icons, kit } from "../assets";
-import { NineSlice } from "./NineSlice";
+import { icons } from "../assets";
+import { ModalFrame } from "./ModalFrame";
 import { GameButton } from "./GameButton";
 import { t } from "../i18n";
 
@@ -13,7 +13,7 @@ export function BagFullModal({ onOpenBag, onClose }: { onOpenBag: () => void; on
     <Modal visible animationType="fade" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable style={styles.panel} onPress={(event) => event.stopPropagation()}>
-          <NineSlice slice={kit.panelLarge} />
+          <ModalFrame />
           <Image source={icons.backpackTrim} style={styles.icon} resizeMode="contain" />
           <Text style={styles.title}>{t("가방이 꽉 찼어요!", "Bag is Full!")}</Text>
           <Text style={styles.message}>
@@ -43,7 +43,7 @@ export function BagFullModal({ onOpenBag, onClose }: { onOpenBag: () => void; on
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, padding: 22, paddingHorizontal: 14, justifyContent: "center", backgroundColor: "#263024cf" },
-  panel: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 24, alignItems: "center" },
+  panel: { paddingHorizontal: 34, paddingTop: 48, paddingBottom: 36, alignItems: "center" },
   icon: { width: 64, height: 64 },
   title: { marginTop: 6, fontSize: 20, fontWeight: "900", fontFamily: fonts.bold, color: colors.ink, textAlign: "center" },
   message: { fontFamily: fonts.light, letterSpacing: -0.36, marginTop: 8, fontSize: 12, color: colors.brown, textAlign: "center", lineHeight: 16 },

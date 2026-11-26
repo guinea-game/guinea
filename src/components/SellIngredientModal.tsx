@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Image, Modal, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./GameText";
 import { colors, fonts } from "../theme";
-import { kit } from "../assets";
-import { NineSlice } from "./NineSlice";
+import { ModalFrame } from "./ModalFrame";
 import { GameButton } from "./GameButton";
 import { CoinPrice } from "./CoinPrice";
 import { ITEM_IMAGES } from "../state/recipes";
@@ -35,7 +34,7 @@ export function SellIngredientModal({
     <Modal visible animationType="fade" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable style={styles.panel} onPress={(event) => event.stopPropagation()}>
-          <NineSlice slice={kit.panelLarge} />
+          <ModalFrame />
           <Text style={styles.eyebrow}>{t("재료 팔기", "Sell Ingredient")}</Text>
           {image !== undefined ? <Image source={image} style={styles.image} /> : <View style={styles.material} />}
           <Text style={styles.name}>{t(name)}</Text>
@@ -105,7 +104,7 @@ function StepButton({ label, onPress, disabled, accessibilityLabel }: { label: s
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, padding: 22, paddingHorizontal: 14, justifyContent: "center", backgroundColor: "#263024cf" },
-  panel: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 24, alignItems: "center" },
+  panel: { paddingHorizontal: 34, paddingTop: 48, paddingBottom: 36, alignItems: "center" },
   eyebrow: { color: colors.green, fontWeight: "800", fontFamily: fonts.bold, fontSize: 12, letterSpacing: 1.5 },
   image: { marginTop: 6, width: 56, height: 56 },
   material: { marginTop: 10, width: 46, height: 36, backgroundColor: "#9b9587", borderWidth: 3, borderColor: colors.line, borderRadius: 18 },

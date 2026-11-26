@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Modal, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./GameText";
 import { colors, fonts } from "../theme";
-import { kit } from "../assets";
-import { NineSlice } from "./NineSlice";
+import { ModalFrame } from "./ModalFrame";
 import { GameButton } from "./GameButton";
 import { BattleScene } from "../screens/BattleScene";
 import { BEAM_TIMING, CARROT_THROW_HIT_MS, CHILI_THROW_DOT_TICK_MS, CHILI_THROW_DOT_TICKS, CHILI_THROW_HIT_MS, getSkill, METEOR_HIT_MS, type SkillId } from "../state/skills";
@@ -175,7 +174,7 @@ export function SkillPreviewModal({
     <Modal visible animationType="fade" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable style={styles.panel} onPress={(event) => event.stopPropagation()}>
-          <NineSlice slice={kit.panelLarge} />
+          <ModalFrame />
           <Text style={styles.eyebrow}>{t("스킬 미리보기", "Skill Preview")}</Text>
           <Text style={styles.title}>{t(skill.name)}</Text>
           <Text style={styles.message}>{t(skill.description)}</Text>
@@ -239,7 +238,7 @@ const noCoin = () => ({ gold: 0, gems: 0 });
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, padding: 14, justifyContent: "center", backgroundColor: "#263024cf" },
-  panel: { width: "100%", maxWidth: 430, alignSelf: "center", paddingHorizontal: 24, paddingTop: 24, paddingBottom: 24, alignItems: "center" },
+  panel: { width: "100%", maxWidth: 430, alignSelf: "center", paddingHorizontal: 34, paddingTop: 48, paddingBottom: 36, alignItems: "center" },
   eyebrow: { color: colors.green, fontWeight: "800", fontFamily: fonts.bold, fontSize: 12, letterSpacing: 1.5 },
   title: { marginTop: 2, fontSize: 19, fontWeight: "800", fontFamily: fonts.bold, color: colors.ink, textAlign: "center" },
   message: { fontFamily: fonts.light, letterSpacing: -0.36, marginTop: 4, paddingHorizontal: 8, fontSize: 12, color: colors.brown, textAlign: "center", lineHeight: 16 },

@@ -5,6 +5,8 @@ import { Text } from "./GameText";
 import { colors, fonts } from "../theme";
 import { buttonKit, frameKit, kit, kitImages, uiImages } from "../assets";
 import { NineSlice, Panel } from "./NineSlice";
+import { ModalFrame } from "./ModalFrame";
+import { CountBadge } from "./CountBadge";
 import { GameButton } from "./GameButton";
 import { formatGameNumber } from "../state/gameMath";
 import { getLevelRewards } from "../state/levelRewards";
@@ -57,8 +59,8 @@ export function LevelRewardModal({
         {/* A sibling behind the panel, not a Pressable wrapped around it — see QuestModal. */}
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t("닫기", "Close")} />
         <View style={styles.panel}>
-          <NineSlice slice={kit.panelLarge} />
-          <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+          <ModalFrame />
+          <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.top}>
               <View>
                 <Text style={styles.topEyebrow}>{t("레벨을 올릴수록", "The higher you climb")}</Text>
@@ -88,9 +90,7 @@ export function LevelRewardModal({
                     <RewardLabel gems={claimableGems} />
                   </View>
                 </GameButton>
-                <View style={styles.countBadge} pointerEvents="none">
-                  <Text style={styles.countBadgeText}>{claimableRows.length}</Text>
-                </View>
+                <CountBadge count={claimableRows.length} style={styles.countBadge} />
               </View>
             )}
 
@@ -150,11 +150,14 @@ const styles = StyleSheet.create({
   },
   panel: {
     maxHeight: "90%",
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 24,
+    paddingHorizontal: 34,
+    paddingTop: 48,
+    paddingBottom: 36,
   },
-  scroll: { flexGrow: 0 },
+  // A little room either side inside the scroller (given back by the negative margin), so the
+  // "모두 받기" count badge poking past the button's corner isn't clipped by the scroll view.
+  scroll: { flexGrow: 0, marginHorizontal: -8 },
+  scrollContent: { paddingHorizontal: 8 },
   top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   topEyebrow: { color: colors.green, fontWeight: "800", fontFamily: fonts.bold, fontSize: 12, letterSpacing: 1.5 },
   topTitle: { fontSize: 24, fontWeight: "800", fontFamily: fonts.bold, color: colors.ink, letterSpacing: -0.5 },
@@ -167,21 +170,7 @@ const styles = StyleSheet.create({
   claimAll: { minHeight: 40 },
   claimAllContent: { flexDirection: "row", alignItems: "center", gap: 10 },
   claimAllText: { fontSize: 15, fontWeight: "900", fontFamily: fonts.bold, color: colors.cream },
-  countBadge: {
-    position: "absolute",
-    top: -7,
-    right: -5,
-    minWidth: 24,
-    height: 24,
-    paddingHorizontal: 6,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.red,
-    borderWidth: 2,
-    borderColor: colors.cream,
-  },
-  countBadgeText: { fontSize: 11, fontWeight: "900", fontFamily: fonts.bold, color: colors.cream },
+  countBadge: { position: "absolute", top: -8, right: -6 },
   list: { marginTop: 10, gap: 8 },
   item: {
     flexDirection: "row",

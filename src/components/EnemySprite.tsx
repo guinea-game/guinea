@@ -590,6 +590,7 @@ export function EnemySprite({
   size,
   restartKey,
   tintColor,
+  still = false,
 }: {
   boss: boolean;
   kind?: EnemyKind;
@@ -597,6 +598,8 @@ export function EnemySprite({
   size: number;
   restartKey?: string | number;
   tintColor?: string;
+  // Just the first frame, no breathing (e.g. the map's challenge popup).
+  still?: boolean;
 }) {
   const bossKind = BOSS_SHEET_FOR[kind];
   const sheet = boss ? spriteSheets[bossKind] : spriteSheets[kind];
@@ -614,7 +617,7 @@ export function EnemySprite({
         frameCount={config.frameCount}
         displaySize={size}
         durationMs={config.durationMs}
-        mode={config.mode}
+        mode={still ? "still" : config.mode}
         restartKey={restartKey}
         tintColor={tintColor}
       />

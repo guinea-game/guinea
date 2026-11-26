@@ -70,6 +70,27 @@ export function countStars(mask: number) {
   return (mask & STAR_CLEAR ? 1 : 0) + (mask & STAR_FAST ? 1 : 0) + (mask & STAR_NO_FOOD ? 1 : 0);
 }
 
+// Stars earned at a stage whose gems haven't been collected yet (collected from the map's
+// "i"; older saves without the record had them all paid already).
+export function getUnclaimedStars(state: Pick<GameState, "stageStars" | "stageStarsClaimed">, stage: number) {
+  const key = String(stage);
+  const earned = state.stageStars?.[key] ?? 0;
+  const claimed = (state.stageStarsClaimed ?? state.stageStars)?.[key] ?? 0;
+  return earned & ~claimed;
+}
+
+// Collects a stage's unclaimed star gems (STAR_GEMS each).
+export function claimStageStars<S extends GameState>(state: S, stage: number): S {
+  const unclaimed = getUnclaimedStars(state, stage);
+  if (!unclaimed) return state;
+  const key = String(stage);
+  return {
+    ...state,
+    gems: state.gems + countStars(unclaimed) * STAR_GEMS,
+    stageStarsClaimed: { ...(state.stageStarsClaimed ?? state.stageStars), [key]: state.stageStars?.[key] ?? 0 },
+  };
+}
+
 // --- 완성 보상: read straight off how full each book is, so there's nothing to claim. ------
 const TIERS = 4;
 export const CODEX_GOLD_PER_TIER = 10;

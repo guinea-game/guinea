@@ -1,8 +1,7 @@
 import { Modal, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./GameText";
 import { colors, fonts } from "../theme";
-import { kit } from "../assets";
-import { NineSlice } from "./NineSlice";
+import { ModalFrame } from "./ModalFrame";
 import { GameButton } from "./GameButton";
 import { t } from "../i18n";
 
@@ -32,7 +31,7 @@ export function ConfirmModal({
     <Modal visible animationType="fade" transparent onRequestClose={onCancel}>
       <Pressable style={styles.backdrop} onPress={onCancel}>
         <Pressable style={styles.panel} onPress={(event) => event.stopPropagation()}>
-          <NineSlice slice={kit.panelLarge} />
+          <ModalFrame />
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.message}>{message}</Text>
           {children}
@@ -55,9 +54,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#263024cf",
   },
   panel: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 24,
+    paddingHorizontal: 34,
+    paddingTop: 48,
+    paddingBottom: 36,
     alignItems: "center",
   },
   title: { fontSize: 19, fontWeight: "800", fontFamily: fonts.bold, color: colors.ink, textAlign: "center" },

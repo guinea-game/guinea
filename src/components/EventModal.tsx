@@ -3,7 +3,8 @@ import { Image, Modal, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "./GameText";
 import { colors, fonts } from "../theme";
 import { icons, kit } from "../assets";
-import { NineSlice, Panel } from "./NineSlice";
+import { Panel } from "./NineSlice";
+import { ModalFrame } from "./ModalFrame";
 import { GameButton } from "./GameButton";
 import { getEventStatus, type EventStatus } from "../state/remoteEvent";
 import { getLanguage, t } from "../i18n";
@@ -40,7 +41,7 @@ export function EventModal({ onClose }: { onClose: () => void }) {
       <View style={styles.backdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t("닫기", "Close")} />
         <View style={styles.panel}>
-          <NineSlice slice={kit.panelLarge} />
+          <ModalFrame />
           <View style={styles.top}>
             <View>
               <Text style={styles.topEyebrow}>{t("시즌마다 한 번", "Once a Season")}</Text>
@@ -88,9 +89,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#263024cf",
   },
   panel: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 28,
+    paddingHorizontal: 34,
+    paddingTop: 48,
+    paddingBottom: 36,
   },
   top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   topEyebrow: { color: colors.green, fontWeight: "800", fontFamily: fonts.bold, fontSize: 12, letterSpacing: 1.5 },
