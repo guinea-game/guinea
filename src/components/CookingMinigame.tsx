@@ -10,23 +10,23 @@ import { GuideArrow } from "./GuideArrow";
 import { RewardedAdModal } from "./RewardedAdModal";
 import {
   classifyStop,
+  classifyTaps,
   driftingZoneCenter,
   getDriftMargin,
   getRoundSweepMs,
   getZoneWidth,
   gradeFromHoldTally,
   gradeFromRounds,
-  HEAT_FALL_PER_SEC,
-  HEAT_RISE_PER_SEC,
-  HEAT_ROUND_MS,
+  HOLD_FALL_PER_SEC,
+  HOLD_RISE_PER_SEC,
   HOLD_ROUND_MS,
   isDriftingRound,
-  MASH_MAX_TAPS,
   MASH_ROUND_MS,
   MINIGAME_DIFFICULTY,
   MINIGAME_ROUNDS,
   PERFECT_SHARE,
   pickMinigameKind,
+  randomMashTarget,
   randomZoneCenter,
   ROUND_TIMEOUT_MS,
   sweepPosition,
@@ -209,14 +209,6 @@ export function CookingMinigame({
             <HoldRound key={attempt} zoneWidth={zoneWidth} guideActive={guideActive && attempt === 0} onStop={handleHoldFinish} />
           ) : showingResult && lastResult ? (
             <ResultReveal key={`${attempt}-${results.length}`} result={lastResult} combo={combo} />
-          ) : kind === "heat" ? (
-            <HeatRound
-              key={`${attempt}-${round}`}
-              round={round}
-              zoneWidth={zoneWidth}
-              guideActive={guideActive && round === 0 && attempt === 0}
-              onStop={handleStop}
-            />
           ) : kind === "tap" ? (
             <MashRound
               key={`${attempt}-${round}`}
@@ -447,127 +439,12 @@ function Round({
   );
 }
 
-// 불 조절: one of the three minigame kinds a cook can roll (kind === "heat", see
-// pickMinigameKind). Same track/zone art and the same classifyStop/grading as Round above —
-// only the indicator's own motion
-// differs: held down it climbs toward 1, let go it cools back toward 0, simulated tick by
-// tick (unlike the sweep's closed-form sweepPosition, this depends on the player's own press
-// history, not just elapsed time). Nothing stops it early; it just samples wherever the gauge
-// sits once HEAT_ROUND_MS runs out.
-function HeatRound({
-  round,
-  zoneWidth,
-  guideActive,
-  onStop,
-}: {
-  round: number;
-  zoneWidth: number;
-  guideActive: boolean;
-  onStop: (result: RoundResult) => void;
-}) {
-  const drifting = isDriftingRound(round);
-  const margin = drifting ? getDriftMargin(zoneWidth) : 0;
-  const [zoneCenter] = useState(() => randomZoneCenter(zoneWidth, margin));
-  const [startedAt] = useState(() => Date.now());
-  const [channelWidth, setChannelWidth] = useState(0);
-  const heldRef = useRef(false);
-  const stoppedRef = useRef(false);
-  const pulse = useSharedValue(0);
-  // Mutated directly from the tick loop (not React state — see the matching comment on
-  // Round's positionSV) so the 60fps rise/fall never forces a re-render.
-  const positionSV = useSharedValue(0.1);
-  const zoneCenterSV = useSharedValue(driftingZoneCenter(0, zoneCenter, margin));
-
-  const finish = () => {
-    if (stoppedRef.current) return;
-    stoppedRef.current = true;
-    const elapsed = Date.now() - startedAt;
-    onStop(classifyStop(positionSV.value, driftingZoneCenter(elapsed, zoneCenter, margin), zoneWidth));
-  };
-
-  useEffect(() => {
-    let lastTick = Date.now();
-    const tick = setInterval(() => {
-      const current = Date.now();
-      const dtSec = (current - lastTick) / 1000;
-      lastTick = current;
-      const rate = heldRef.current ? HEAT_RISE_PER_SEC : -HEAT_FALL_PER_SEC;
-      positionSV.value = Math.min(1, Math.max(0, positionSV.value + rate * dtSec));
-      zoneCenterSV.value = driftingZoneCenter(current - startedAt, zoneCenter, margin);
-    }, 16);
-    const timeout = setTimeout(finish, HEAT_ROUND_MS);
-    pulse.value = withRepeat(withSequence(withTiming(1, { duration: 500, easing: Easing.inOut(Easing.quad) }), withTiming(0, { duration: 500, easing: Easing.inOut(Easing.quad) })), -1);
-    return () => {
-      clearInterval(tick);
-      clearTimeout(timeout);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const zonePulseStyle = useAnimatedStyle(() => ({
-    left: (zoneCenterSV.value - zoneWidth / 2) * channelWidth,
-    opacity: 0.75 + pulse.value * 0.25,
-  }));
-  const indicatorPulseStyle = useAnimatedStyle(() => ({
-    left: positionSV.value * channelWidth - INDICATOR_SIZE / 2,
-    transform: [{ scale: 1 + pulse.value * 0.12 }],
-  }));
-
-  return (
-    <View style={styles.round}>
-      {drifting && <Text style={styles.driftHint}>{t("타겟이 움직여요!", "The target is moving!")}</Text>}
-      <View style={styles.track}>
-        <NineSlice slice={frameKit.barFrame} scale={TRACK_SCALE} />
-        <View
-          style={[styles.channel, { top: CHANNEL_INSET_Y, bottom: CHANNEL_INSET_Y, left: CHANNEL_INSET_X, right: CHANNEL_INSET_X }]}
-          onLayout={(event) => setChannelWidth(event.nativeEvent.layout.width)}
-        >
-          {channelWidth > 0 && (
-            <>
-              <Animated.View style={[styles.zone, { width: zoneWidth * channelWidth }, zonePulseStyle]}>
-                <View
-                  style={[
-                    styles.perfectZone,
-                    { left: ((1 - PERFECT_SHARE) / 2) * zoneWidth * channelWidth, width: PERFECT_SHARE * zoneWidth * channelWidth },
-                  ]}
-                />
-              </Animated.View>
-              <Animated.View style={[styles.indicator, styles.heatIndicator, indicatorPulseStyle]} />
-            </>
-          )}
-        </View>
-      </View>
-      <View style={styles.stopButtonWrap}>
-        <GameButton
-          variant="red"
-          onPressIn={() => {
-            heldRef.current = true;
-          }}
-          onPressOut={() => {
-            heldRef.current = false;
-          }}
-          style={styles.stopButton}
-          textStyle={styles.stopButtonText}
-        >
-          {t("꾹 눌러요!", "Press!")}
-        </GameButton>
-        {guideActive && (
-          <>
-            <GuideArrow direction="down" style={styles.guideArrow} />
-            <Text style={styles.guideHint}>{t("눌러서 화력을 올려봐!", "Press it to turn up the heat!")}</Text>
-          </>
-        )}
-      </View>
-    </View>
-  );
-}
-
-// 두드리기: same track/zone art and classifyStop/grading as Round/HeatRound above — only the
-// indicator's own motion differs again: each tap nudges it one notch further along the track
-// (tapCount / MASH_MAX_TAPS), and after MASH_ROUND_MS it's classified exactly where it sits.
+// 두드리기: its own count display + button, not the sweep game's track/zone bar — see
+// pickMinigameKind for the other kinds. Unlike the other games, the target tap count is shown
+// up front (there's no moving indicator for the player to read a hidden zone off of), so
+// classifyTaps grades a plain integer distance instead of classifyStop's continuous math.
 // Taps are discrete, low-frequency events (a handful a round, not 60/sec), so plain React
-// state is fine here — no need for the shared-value tricks Round/HeatRound use to dodge their
-// continuous per-frame re-renders.
+// state is fine for the count — only the time-left bar needs a shared value.
 function MashRound({
   zoneWidth,
   guideActive,
@@ -577,60 +454,47 @@ function MashRound({
   guideActive: boolean;
   onStop: (result: RoundResult) => void;
 }) {
-  const [zoneCenter] = useState(() => randomZoneCenter(zoneWidth));
+  const [target] = useState(() => randomMashTarget());
   const [tapCount, setTapCount] = useState(0);
-  const [channelWidth, setChannelWidth] = useState(0);
   const tapCountRef = useRef(0);
   const stoppedRef = useRef(false);
-  const pulse = useSharedValue(0);
+  const pop = useSharedValue(1);
+  const timeLeft = useSharedValue(1);
 
   const finish = () => {
     if (stoppedRef.current) return;
     stoppedRef.current = true;
-    onStop(classifyStop(tapCountRef.current / MASH_MAX_TAPS, zoneCenter, zoneWidth));
+    onStop(classifyTaps(tapCountRef.current, target, zoneWidth));
   };
 
   const tap = () => {
     if (stoppedRef.current) return;
     tapCountRef.current += 1;
     setTapCount(tapCountRef.current);
+    pop.value = 1.3;
+    pop.value = withTiming(1, { duration: 160, easing: Easing.out(Easing.back(2)) });
   };
 
   useEffect(() => {
     const timeout = setTimeout(finish, MASH_ROUND_MS);
-    pulse.value = withRepeat(withSequence(withTiming(1, { duration: 500, easing: Easing.inOut(Easing.quad) }), withTiming(0, { duration: 500, easing: Easing.inOut(Easing.quad) })), -1);
+    timeLeft.value = withTiming(0, { duration: MASH_ROUND_MS, easing: Easing.linear });
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const position = Math.min(tapCount / MASH_MAX_TAPS, 1);
-  const zonePulseStyle = useAnimatedStyle(() => ({ opacity: 0.75 + pulse.value * 0.25 }));
-  const indicatorPulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: 1 + pulse.value * 0.12 }] }));
+  const countStyle = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));
+  const timeBarStyle = useAnimatedStyle(() => ({ width: `${timeLeft.value * 100}%` }));
 
   return (
     <View style={styles.round}>
-      <View style={styles.track}>
-        <NineSlice slice={frameKit.barFrame} scale={TRACK_SCALE} />
-        <View
-          style={[styles.channel, { top: CHANNEL_INSET_Y, bottom: CHANNEL_INSET_Y, left: CHANNEL_INSET_X, right: CHANNEL_INSET_X }]}
-          onLayout={(event) => setChannelWidth(event.nativeEvent.layout.width)}
-        >
-          {channelWidth > 0 && (
-            <>
-              <Animated.View
-                style={[styles.zone, { left: (zoneCenter - zoneWidth / 2) * channelWidth, width: zoneWidth * channelWidth }, zonePulseStyle]}
-              >
-                <View
-                  style={[
-                    styles.perfectZone,
-                    { left: ((1 - PERFECT_SHARE) / 2) * zoneWidth * channelWidth, width: PERFECT_SHARE * zoneWidth * channelWidth },
-                  ]}
-                />
-              </Animated.View>
-              <Animated.View style={[styles.indicator, { left: position * channelWidth - INDICATOR_SIZE / 2 }, indicatorPulseStyle]} />
-            </>
-          )}
-        </View>
+      <Text style={styles.mashTarget}>{t(`${target}번 두드려 봐!`, `Tap it ${target} times!`)}</Text>
+      <Animated.View style={countStyle}>
+        <StrokedText style={styles.mashCount} strokeColor={colors.line} strokeWidth={2}>
+          {t(`${tapCount}회!`, `${tapCount}!`)}
+        </StrokedText>
+      </Animated.View>
+      <View style={styles.mashTimeTrack}>
+        <Animated.View style={[styles.mashTimeFill, timeBarStyle]} />
       </View>
       <View style={styles.stopButtonWrap}>
         <GameButton variant="beige" onPress={tap} style={styles.stopButton} textStyle={styles.stopButtonText}>
@@ -649,10 +513,10 @@ function MashRound({
 
 // 낚시: one longer round where the zone drifts the whole time (same sine wave as the sweep
 // game's own drifting round) and the grade comes from the tally of how long you kept the
-// indicator inside it, not a one-instant snapshot — see gradeFromHoldTally. Same
-// hold-to-rise/release-to-fall control as 불 조절. The tally lives in a plain ref, not React
-// state, so accumulating it every tick doesn't force a re-render any more than the
-// position/zone values above do.
+// indicator inside it, not a one-instant snapshot — see gradeFromHoldTally. Held down, the
+// indicator climbs toward 1; let go, it falls back toward 0 (HOLD_RISE_PER_SEC/
+// HOLD_FALL_PER_SEC). The tally lives in a plain ref, not React state, so accumulating it
+// every tick doesn't force a re-render any more than the position/zone values above do.
 function HoldRound({
   zoneWidth,
   guideActive,
@@ -685,7 +549,7 @@ function HoldRound({
       const current = Date.now();
       const dtMs = current - lastTick;
       lastTick = current;
-      const rate = heldRef.current ? HEAT_RISE_PER_SEC : -HEAT_FALL_PER_SEC;
+      const rate = heldRef.current ? HOLD_RISE_PER_SEC : -HOLD_FALL_PER_SEC;
       positionSV.value = Math.min(1, Math.max(0, positionSV.value + rate * (dtMs / 1000)));
       const center = driftingZoneCenter(current - startedAt, zoneCenter, margin);
       zoneCenterSV.value = center;
@@ -732,7 +596,7 @@ function HoldRound({
                   ]}
                 />
               </Animated.View>
-              <Animated.View style={[styles.indicator, styles.heatIndicator, indicatorPulseStyle]} />
+              <Animated.View style={[styles.indicator, styles.holdIndicator, indicatorPulseStyle]} />
             </>
           )}
         </View>
@@ -787,9 +651,15 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.line,
   },
-  // 불 조절's own indicator — same shape as the sweep's, just flame-colored instead of gold.
-  heatIndicator: { backgroundColor: "#ff6b3a" },
+  // 낚시's own indicator — same shape as the sweep's, just flame-colored instead of gold.
+  holdIndicator: { backgroundColor: "#ff6b3a" },
   resultWrap: { width: "100%", height: TRACK_HEIGHT + 56, marginTop: 14, alignItems: "center", justifyContent: "center", gap: 4 },
+  // Fairly thick but not as heavy as 900 — at mashCount's size, the stroke fake (StrokedText
+  // stacks 8 offset copies) plus 900-weight glyphs filled in Korean counters like 회 solid.
+  mashTarget: { fontSize: 15, fontWeight: "800", fontFamily: fonts.bold, color: colors.green, letterSpacing: -0.2 },
+  mashCount: { marginTop: 4, fontSize: 44, fontWeight: "800", fontFamily: fonts.bold, color: colors.ink, letterSpacing: 1 },
+  mashTimeTrack: { width: 160, height: 6, borderRadius: 3, marginTop: 10, backgroundColor: colors.paper, borderWidth: 1.5, borderColor: colors.line, overflow: "hidden" },
+  mashTimeFill: { height: "100%", backgroundColor: colors.gold, borderRadius: 3 },
   resultText: { fontSize: 28, fontWeight: "900", fontFamily: fonts.bold },
   comboText: { fontSize: 15, fontWeight: "900", fontFamily: fonts.bold, color: colors.gold },
   driftHint: { marginBottom: -4, fontSize: 11, fontWeight: "800", fontFamily: fonts.bold, color: colors.red, letterSpacing: -0.2 },

@@ -275,7 +275,7 @@ export const COMICS_DICT: Record<string, string> = {
   // alpinetrain
   "치즈를 찾아 산악 열차로": "By Mountain Train in Search of Cheese",
   "내 피자...\n치즈가 부족했어.": "My pizza...\ndidn't have enough cheese.",
-  "최고의 피자엔\n알프스 치즈가 필요해!": "The best pizza\nneeds Alpine cheese!",
+  "최고의 피자엔\n산골 치즈가 필요해!": "The best pizza\nneeds mountain cheese!",
   "산이다~!": "Mountains~!",
   "치즈가\n산처럼 쌓였어!": "The cheese is piled up\nlike a mountain!",
   "음매~?": "Mooo~?",

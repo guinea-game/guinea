@@ -34,7 +34,7 @@ export const STAGES_DICT: Record<string, string> = {
   "용궁 가는 바닷길": "The Sea Road to the Dragon Palace",
   "용궁": "Dragon Palace",
   "운하의 미식 도시": "Canal Food City",
-  "알프스 목장 마을": "Alpine Pasture Village",
+  "초록 목장 마을": "Green Pasture Village",
   "빵집 골목": "Bakery Alley",
   "기니 대도시": "Guinea Metropolis",
   "수상한 집": "The Suspicious House",
@@ -42,9 +42,9 @@ export const STAGES_DICT: Record<string, string> = {
   "꿀향기 귀갓길": "The Honey-Scented Way Home",
   "기니 대도시 귀환길": "The Road Back to Guinea Metropolis",
   "무너진 성채": "The Fallen Fortress",
-  "인도 향신료 바자르": "Indian Spice Bazaar",
-  "히말라야 차밭": "Himalayan Tea Fields",
-  "타지마할 정원": "Taj Mahal Garden",
+  "향신료 바자르": "Spice Bazaar",
+  "만년설 차밭": "Snowcap Tea Fields",
+  "사프란 대리석 정원": "Saffron Marble Garden",
 
   // ENEMY_NAME
   "뒷산 슬라임": "Hillside Slime",
@@ -263,48 +263,48 @@ export const STAGES_DICT: Record<string, string> = {
     "A mountain village of terraced tea fields beneath snow-capped peaks, where prayer flags flutter and basket-laden baby yaks doze off mid-harvest.",
   "새벽 안개 속 하얀 대리석 궁전 앞, 분수 물길 따라 보랏빛 사프란 꽃이 핀 무굴 정원. 터번 쓴 앵무새들이 붉은 꽃실을 물어다 황제의 창고로 나른다.":
     "Before a white marble palace in the dawn mist, a Mughal garden where purple saffron blossoms line the fountain's water channels. Turbaned parrots carry red stigmas off to the emperor's storehouse.",
-  // 43 태국 수상시장
-  "태국 수상시장": "Thai Floating Market",
+  // 43 수상시장
+  "수상시장": "Floating Market",
   "코코넛 게": "Coconut Crab",
   "똠얌 악어 선장": "Captain Tom Yum Croc",
   "국자 휘두르기 전에 끝내자, 국물 튄다!": "Finish him before that ladle swings — the soup splashes!",
   "운하 위로 긴 꼬리배가 빼곡히 떠 있는 아침 수상시장. 코코넛 껍질을 등에 진 게들이 레몬그라스를 물고 배 사이를 옆걸음으로 건너다닌다.": "A morning floating market where long-tail boats crowd the canal. Crabs wearing coconut shells scuttle sideways from boat to boat, lemongrass in their claws.",
-  // 44 발리 계단식 논
-  "발리 계단식 논": "Bali Rice Terraces",
+  // 44 계단식 논
+  "계단식 논": "Rice Terraces",
   "논두렁 오리": "Paddy Duck",
   "바롱 사자 수호신": "Barong, Lion Guardian",
   "탈춤에 홀리지 마! 박자 맞춰 때려!": "Don't get lost in the mask dance! Hit on the beat!",
   "화산 기슭을 따라 초록 계단처럼 층층이 내려가는 논. 삿갓을 쓴 오리 떼가 논두렁을 줄지어 걸으며 떨어진 벼 이삭과 팜슈가를 주워 모은다.": "Rice paddies stepping down the volcano's slopes like a green staircase. Flocks of ducks in little straw hats march single file along the dikes, gathering fallen rice and palm sugar.",
-  // 45 하와이 화산 해변
-  "하와이 화산 해변": "Hawaiian Volcano Beach",
+  // 45 노을 지는 화산 해변
+  "노을 지는 화산 해변": "Sunset Volcano Beach",
   "훌라 파인애플": "Hula Pineapple",
   "티키 석상 골렘": "Tiki Golem",
   "몸속에 용암이 끓어! 식기 전에 부숴!": "There's lava boiling inside it! Smash it before it cools!",
   "검은 모래 위로 노을이 지는 화산섬 해변. 꽃목걸이를 건 파인애플들이 훌라를 추고, 용암 빛이 새어 나오는 나무 석상이 마카다미아 바구니를 지킨다.": "A volcanic island beach where the sun sets over black sand. Pineapples in flower leis dance the hula, and a wooden statue glowing with lava light guards a basket of macadamia nuts.",
-  // 46 텍사스 바비큐 협곡
-  "텍사스 바비큐 협곡": "Texas BBQ Canyon",
+  // 46 바비큐 협곡
+  "바비큐 협곡": "BBQ Canyon",
   "협곡 프레리도그": "Canyon Prairie Dog",
   "바비큐 곰 보안관": "BBQ Bear Sheriff",
   "보안관 배지가 번쩍! 집게에 잡히지 마!": "The sheriff's badge is flashing! Don't get caught in those tongs!",
   "붉은 바위 절벽 사이로 훈연 냄새가 피어오르는 목장 협곡. 카우보이 모자를 쓴 프레리도그들이 피칸 나무 아래 굴을 파고, 곰 보안관이 바비큐 화로를 지킨다.": "A ranch canyon where the smell of smoke rises between red rock cliffs. Prairie dogs in cowboy hats dig burrows under the pecan trees, and a bear sheriff guards the barbecue pit.",
-  // 47 멕시코 타코 축제
-  "멕시코 타코 축제": "Mexican Taco Fiesta",
+  // 47 타코 축제
+  "타코 축제": "Taco Festival",
   "피냐타 당나귀": "Piñata Donkey",
   "아르마딜로 악단장": "Mariachi Armadillo",
   "기타 소리에 맞춰 굴러온다! 등껍질 조심!": "It rolls in to the beat of the guitar! Watch that shell!",
   "알록달록한 종이 깃발이 하늘을 덮은 축제 광장. 피냐타 당나귀들이 사탕을 흘리며 뛰어다니고, 마리아치 악단장이 토르티야를 끼고 노래한다.": "A festival plaza with colorful paper banners covering the sky. Piñata donkeys run about spilling candy, and a mariachi bandleader sings with tortillas tucked under his arm.",
-  // 48 아마존 카카오 정글
-  "아마존 카카오 정글": "Amazon Cacao Jungle",
+  // 48 카카오 정글
+  "카카오 정글": "Cacao Jungle",
   "카카오 나무늘보": "Cacao Sloth",
   "재규어 쇼콜라티에": "Jaguar Chocolatier",
   "초콜릿 거품기다! 녹아내리기 전에 쳐!": "That's a chocolate whisk! Strike before you melt!",
   "거대한 나무 줄기마다 카카오 열매가 주렁주렁 매달린 깊은 밀림. 나무늘보들이 열매를 끌어안고 졸고, 재규어 쇼콜라티에가 초콜릿 냄비를 젓는다.": "A deep jungle where cacao pods hang in clusters from every giant trunk. Sloths doze hugging the pods, and a jaguar chocolatier stirs a pot of chocolate.",
-  // 49 칠레 안데스 포도밭
-  "칠레 안데스 포도밭": "Chilean Andes Vineyard",
+  // 49 고산 포도밭
+  "고산 포도밭": "Highland Vineyard",
   "포도송이 달팽이": "Grape Snail",
   "포도 밟기 퓨마": "Grape-Stomping Puma",
   "포도즙이 튄다! 미끄러지지 마!": "Grape juice is flying! Don't slip!",
-  "눈 덮인 안데스 봉우리 아래 포도 넝쿨이 언덕을 덮은 수확철 포도밭. 포도송이 껍데기를 진 달팽이들이 이랑 사이를 기어가고, 퓨마가 통 속에서 포도를 밟는다.": "A vineyard at harvest time, vines blanketing the hills beneath the snowy Andes. Snails carrying grape-cluster shells crawl between the rows, and a puma stomps grapes in a barrel.",
+  "눈 덮인 봉우리 아래 포도 넝쿨이 언덕을 덮은 수확철 포도밭. 포도송이 껍데기를 진 달팽이들이 이랑 사이를 기어가고, 퓨마가 통 속에서 포도를 밟는다.": "A vineyard at harvest time, vines blanketing the hills beneath snow-capped peaks. Snails carrying grape-cluster shells crawl between the rows, and a puma stomps grapes in a barrel.",
   // 50 태양의 공중도시
   "태양의 공중도시": "City of the Sun in the Sky",
   "라마 요리사": "Llama Cook",

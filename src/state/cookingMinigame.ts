@@ -29,31 +29,41 @@ export const ROUND_TIMEOUT_MS = 6000;
 
 // Which finishing game a cook gets — picked fresh, with equal odds, every time a dish starts
 // cooking (see CookingMinigame.tsx), rather than being tied to the recipe itself.
-export type MinigameKind = "sweep" | "heat" | "hold" | "tap";
-const MINIGAME_KINDS: MinigameKind[] = ["sweep", "heat", "hold", "tap"];
+export type MinigameKind = "sweep" | "hold" | "tap";
+const MINIGAME_KINDS: MinigameKind[] = ["sweep", "hold", "tap"];
 export function pickMinigameKind(): MinigameKind {
   return MINIGAME_KINDS[Math.floor(Math.random() * MINIGAME_KINDS.length)];
 }
 
 // 두드리기: three rounds like the sweep/heat games above (same gradeFromRounds), but each
 // round is a fixed 1.5s window where the player just taps a button a number of times instead
-// of timing a moving indicator. The "position" on the 0–1 track is how many taps landed, out
-// of MASH_MAX_TAPS — reusing classifyStop/randomZoneCenter exactly as-is, so tapping too few
-// *or* too many both drift away from the hidden target the same way undershooting/overshooting
-// does in the other games; there's no bonus for mashing past it.
+// of timing a moving indicator. Unlike the other games, the target is shown to the player
+// (there's no moving indicator to read a hidden zone off of) — so classification works off a
+// plain integer tap-count distance (classifyTaps) rather than classifyStop's continuous 0–1
+// math, which doesn't fit a scale with only MASH_MAX_TAPS+1 reachable positions anyway.
 export const MASH_ROUND_MS = 1500;
 export const MASH_MAX_TAPS = 7;
 
-// 불 조절: same zoneWidth/drift/classifyStop/grading as the sweep game above (so difficulty and
-// rewards line up tier-for-tier); only how the indicator moves differs — held down, it climbs
-// toward 1 (more heat); let go, it cools back toward 0. The round doesn't end on a tap: it just
-// samples wherever the gauge sits once HEAT_ROUND_MS is up, same as sweepPosition is sampled at
-// the moment of a manual stop.
-export const HEAT_ROUND_MS = 2600;
-// Per second. Rises a little faster than it falls, so holding it down too long overshoots —
-// landing in the zone takes a tap-release rhythm, not just a single well-timed hold.
-export const HEAT_RISE_PER_SEC = 0.9;
-export const HEAT_FALL_PER_SEC = 0.6;
+// Never the extremes (0 or MASH_MAX_TAPS) so there's always room to over- or under-shoot.
+export function randomMashTarget(): number {
+  return 1 + Math.floor(Math.random() * (MASH_MAX_TAPS - 1));
+}
+
+// zoneWidth (the tier's difficulty, same knob the other games use) converts to a tolerance in
+// tap counts instead of a track fraction — tighter tiers forgive a smaller miscount.
+export function classifyTaps(tapCount: number, target: number, zoneWidth: number): RoundResult {
+  const tolerance = (zoneWidth * MASH_MAX_TAPS) / 2;
+  const distance = Math.abs(tapCount - target);
+  if (distance <= Math.round(tolerance * PERFECT_SHARE)) return "perfect";
+  if (distance <= Math.round(tolerance)) return "good";
+  return "miss";
+}
+
+// 낚시's hold-to-rise/release-to-fall control (per second). Rises a little faster than it
+// falls, so holding it down too long overshoots — landing in the zone takes a tap-release
+// rhythm, not just a single well-timed hold.
+export const HOLD_RISE_PER_SEC = 0.9;
+export const HOLD_FALL_PER_SEC = 0.6;
 
 // cookSpeed (see buffs.ts) widens the zone by its % — easier, not faster — capped so the
 // hardest tier never trivializes into a free pass.
@@ -128,9 +138,7 @@ export function gradeFromRounds(rounds: RoundResult[]): "great" | "good" | "fail
 // for the whole round, same sine wave as the sweep game's own drifting round, and the grade
 // comes from how much of that time you kept the indicator inside the zone rather than one
 // instant's snapshot, so it doesn't need repeating 3x the way a single stop would.
-export const HOLD_ROUND_MS = 9000;
-// Same hold-to-rise/release-to-fall control feel as 불 조절 (HEAT_RISE_PER_SEC/HEAT_FALL_PER_SEC
-// above), reused rather than duplicated.
+export const HOLD_ROUND_MS = 6000;
 
 // Share-of-time thresholds replacing gradeFromRounds' discrete perfect/miss counts: spending
 // most of the round dead-center is a 대성공, spending a lot of it outside the zone entirely is

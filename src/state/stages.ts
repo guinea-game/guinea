@@ -55,9 +55,9 @@ export const BGM_GROUP: Record<EnemyKind, BgmGroupId> = {
   bee: "fantasy",
   angryCandyBasketSlime: "fantasy",
   thiefCrow: "fantasy",
-  // 인도 향신료 바자르: a new region past the dragon's lair.
+  // 향신료 바자르: a new region past the dragon's lair.
   spiceElephant: "india",
-  // 히말라야 차밭: 바자르에서 이어지는 산길이라 인도 BGM을 함께 쓴다.
+  // 만년설 차밭: 바자르에서 이어지는 산길이라 같은 BGM 그룹을 함께 쓴다.
   teaYak: "india",
   saffronParrot: "india",
   coconutCrab: "tropical",
@@ -267,7 +267,7 @@ export const STAGES: { area: string; enemyKind: EnemyKind; story: string }[] = [
   { area: "용궁 가는 바닷길", enemyKind: "lanternAngler", story: "빛나는 산호가 길을 이루는 깊은 바닷속, 등롱을 매단 아귀들이 저 멀리 용궁으로 가는 길을 밝힌다." },
   { area: "용궁", enemyKind: "clamMaid", story: "산호 기둥과 진주 장식이 빛나는 바닷속 궁궐, 쟁반을 든 조개 시녀들이 잔칫상 사이를 바쁘게 오간다." },
   { area: "운하의 미식 도시", enemyKind: "gondolaDuck", story: "알록달록한 집들 사이로 운하가 흐르는 미식 도시, 줄무늬 셔츠를 입은 오리들이 곤돌라를 저으며 손님을 부른다." },
-  { area: "알프스 목장 마을", enemyKind: "bellCalf", story: "눈 덮인 봉우리 아래 초록 목장이 펼쳐진 산골 마을, 방울을 단 송아지들이 딸랑딸랑 풀밭을 누빈다." },
+  { area: "초록 목장 마을", enemyKind: "bellCalf", story: "눈 덮인 봉우리 아래 초록 목장이 펼쳐진 산골 마을, 방울을 단 송아지들이 딸랑딸랑 풀밭을 누빈다." },
   { area: "빵집 골목", enemyKind: "croissantKid", story: "갓 구운 빵 냄새가 골목을 가득 채운 돌길 거리, 베레모를 쓴 크루아상들이 진열장 앞을 뽐내며 걸어 다닌다." },
   { area: "기니 대도시", enemyKind: "sleepyGini", story: "기니들만 모여 사는 번화한 대도시, 당근 분수 광장 너머로 낮잠과 안마가 일상인 느긋한 기니들이 거리를 오간다." },
   { area: "수상한 집", enemyKind: "sleepwalkerGini", story: "달빛 아래 보랏빛 커튼이 드리운 수상한 집, 몽유병에 걸린 기니들이 밤마다 홀린 듯 계단을 오르내린다." },
@@ -275,16 +275,16 @@ export const STAGES: { area: string; enemyKind: EnemyKind; story: string }[] = [
   { area: "꿀향기 귀갓길", enemyKind: "bee", story: "호박등 숲에서 챙긴 호박을 들고 돌아가던 기니들. 달콤한 호박 냄새를 맡은 꿀벌 떼가 벌집을 나와 바짝 뒤쫓고, 길목에는 여왕벌이 날아든다." },
   { area: "기니 대도시 귀환길", enemyKind: "angryCandyBasketSlime", story: "기니 대도시로 돌아온 일행 앞에 호박죽 냄새를 따라온 분노한 사탕바구니 슬라임이 나타난다. 죽 냄비를 노리고 광장에 내려앉은 그리핀까지 막아야 한다." },
   { area: "무너진 성채", enemyKind: "thiefCrow", story: "그리핀의 등에 올라 용을 찾아 떠난 기니들. 무너진 성채에는 훔친 식재료를 나르는 도둑 까마귀들과 음식을 숨겨 둔 배고픈 드래곤이 기다리고 있다." },
-  { area: "인도 향신료 바자르", enemyKind: "spiceElephant", story: "용에게서 숨겨 둔 재료를 되찾은 기니들이 요리책 커리에 들어갈 향신료를 찾아 닿은 시끌벅적한 바자르. 터번 두른 꼬마코끼리들이 향신료 자루를 코로 슬쩍하고 다닌다." },
-  { area: "히말라야 차밭", enemyKind: "teaYak", story: "만년설 봉우리 아래 계단식 차밭이 펼쳐진 산마을, 룽다 깃발이 펄럭이는 사이로 찻잎 바구니를 멘 꼬마야크들이 찻잎을 따다 말고 낮잠을 잔다." },
-  { area: "타지마할 정원", enemyKind: "saffronParrot", story: "새벽 안개 속 하얀 대리석 궁전 앞, 분수 물길 따라 보랏빛 사프란 꽃이 핀 무굴 정원. 터번 쓴 앵무새들이 붉은 꽃실을 물어다 황제의 창고로 나른다." },
-  { area: "태국 수상시장", enemyKind: "coconutCrab", story: "운하 위로 긴 꼬리배가 빼곡히 떠 있는 아침 수상시장. 코코넛 껍질을 등에 진 게들이 레몬그라스를 물고 배 사이를 옆걸음으로 건너다닌다." },
-  { area: "발리 계단식 논", enemyKind: "paddyDuck", story: "화산 기슭을 따라 초록 계단처럼 층층이 내려가는 논. 삿갓을 쓴 오리 떼가 논두렁을 줄지어 걸으며 떨어진 벼 이삭과 팜슈가를 주워 모은다." },
-  { area: "하와이 화산 해변", enemyKind: "hulaPineapple", story: "검은 모래 위로 노을이 지는 화산섬 해변. 꽃목걸이를 건 파인애플들이 훌라를 추고, 용암 빛이 새어 나오는 나무 석상이 마카다미아 바구니를 지킨다." },
-  { area: "텍사스 바비큐 협곡", enemyKind: "prairieDog", story: "붉은 바위 절벽 사이로 훈연 냄새가 피어오르는 목장 협곡. 카우보이 모자를 쓴 프레리도그들이 피칸 나무 아래 굴을 파고, 곰 보안관이 바비큐 화로를 지킨다." },
-  { area: "멕시코 타코 축제", enemyKind: "pinataDonkey", story: "알록달록한 종이 깃발이 하늘을 덮은 축제 광장. 피냐타 당나귀들이 사탕을 흘리며 뛰어다니고, 마리아치 악단장이 토르티야를 끼고 노래한다." },
-  { area: "아마존 카카오 정글", enemyKind: "cacaoSloth", story: "거대한 나무 줄기마다 카카오 열매가 주렁주렁 매달린 깊은 밀림. 나무늘보들이 열매를 끌어안고 졸고, 재규어 쇼콜라티에가 초콜릿 냄비를 젓는다." },
-  { area: "칠레 안데스 포도밭", enemyKind: "grapeSnail", story: "눈 덮인 안데스 봉우리 아래 포도 넝쿨이 언덕을 덮은 수확철 포도밭. 포도송이 껍데기를 진 달팽이들이 이랑 사이를 기어가고, 퓨마가 통 속에서 포도를 밟는다." },
+  { area: "향신료 바자르", enemyKind: "spiceElephant", story: "용에게서 숨겨 둔 재료를 되찾은 기니들이 요리책 커리에 들어갈 향신료를 찾아 닿은 시끌벅적한 바자르. 터번 두른 꼬마코끼리들이 향신료 자루를 코로 슬쩍하고 다닌다." },
+  { area: "만년설 차밭", enemyKind: "teaYak", story: "만년설 봉우리 아래 계단식 차밭이 펼쳐진 산마을, 룽다 깃발이 펄럭이는 사이로 찻잎 바구니를 멘 꼬마야크들이 찻잎을 따다 말고 낮잠을 잔다." },
+  { area: "사프란 대리석 정원", enemyKind: "saffronParrot", story: "새벽 안개 속 하얀 대리석 궁전 앞, 분수 물길 따라 보랏빛 사프란 꽃이 핀 무굴 정원. 터번 쓴 앵무새들이 붉은 꽃실을 물어다 황제의 창고로 나른다." },
+  { area: "수상시장", enemyKind: "coconutCrab", story: "운하 위로 긴 꼬리배가 빼곡히 떠 있는 아침 수상시장. 코코넛 껍질을 등에 진 게들이 레몬그라스를 물고 배 사이를 옆걸음으로 건너다닌다." },
+  { area: "계단식 논", enemyKind: "paddyDuck", story: "화산 기슭을 따라 초록 계단처럼 층층이 내려가는 논. 삿갓을 쓴 오리 떼가 논두렁을 줄지어 걸으며 떨어진 벼 이삭과 팜슈가를 주워 모은다." },
+  { area: "노을 지는 화산 해변", enemyKind: "hulaPineapple", story: "검은 모래 위로 노을이 지는 화산섬 해변. 꽃목걸이를 건 파인애플들이 훌라를 추고, 용암 빛이 새어 나오는 나무 석상이 마카다미아 바구니를 지킨다." },
+  { area: "바비큐 협곡", enemyKind: "prairieDog", story: "붉은 바위 절벽 사이로 훈연 냄새가 피어오르는 목장 협곡. 카우보이 모자를 쓴 프레리도그들이 피칸 나무 아래 굴을 파고, 곰 보안관이 바비큐 화로를 지킨다." },
+  { area: "타코 축제", enemyKind: "pinataDonkey", story: "알록달록한 종이 깃발이 하늘을 덮은 축제 광장. 피냐타 당나귀들이 사탕을 흘리며 뛰어다니고, 마리아치 악단장이 토르티야를 끼고 노래한다." },
+  { area: "카카오 정글", enemyKind: "cacaoSloth", story: "거대한 나무 줄기마다 카카오 열매가 주렁주렁 매달린 깊은 밀림. 나무늘보들이 열매를 끌어안고 졸고, 재규어 쇼콜라티에가 초콜릿 냄비를 젓는다." },
+  { area: "고산 포도밭", enemyKind: "grapeSnail", story: "눈 덮인 봉우리 아래 포도 넝쿨이 언덕을 덮은 수확철 포도밭. 포도송이 껍데기를 진 달팽이들이 이랑 사이를 기어가고, 퓨마가 통 속에서 포도를 밟는다." },
   { area: "태양의 공중도시", enemyKind: "llamaCook", story: "구름 바다 위에 솟은 잉카의 돌 도시. 돌벽마다 동그란 기니피그 조각이 새겨져 있고, 앞치마를 두른 라마들이 손님을 볼 때마다 군침을 흘린다." },
 ];
 

@@ -1241,7 +1241,7 @@ export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = 
         image: comics.alpinetrain2,
         aspect: 496 / 768,
         bubbles: [
-          { text: "최고의 피자엔\n알프스 치즈가 필요해!", right: 0.03, top: 0.08, maxWidth: 0.4, tail: "bottom", tailAt: 0.3 },
+          { text: "최고의 피자엔\n산골 치즈가 필요해!", right: 0.03, top: 0.08, maxWidth: 0.4, tail: "bottom", tailAt: 0.3 },
         ],
       },
       {

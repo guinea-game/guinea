@@ -158,8 +158,8 @@ export const BESTIARY_DICT: Record<string, string> = {
     "A duck that rows a gondola along the canal. Once it has a passenger aboard, it quacks out a song for them — for an extra fee, of course. It brags about knowing a shortcut, but always ends up passing under the same bridge three times.",
   "큰 방울 목걸이": "Big Bell Necklace",
   "꽃 한 송이": "A Single Flower",
-  "알프스 목장의 꼬마 송아지. 목에 단 방울이 너무 커서 걸을 때마다 딸랑딸랑 온 동네에 소문이 난다. 풀밭에서 낮잠 자는 게 제일 좋아서, 누가 깨우면 고개를 홱 돌리고 꿈쩍도 안 한다.":
-    "A little calf from the alpine pasture. The bell around its neck is so big that every step it takes jingles the news to the whole village. Napping in the grass is its favorite thing in the world, and if anyone tries to wake it, it just whips its head away and refuses to budge.",
+  "초록 목장의 꼬마 송아지. 목에 단 방울이 너무 커서 걸을 때마다 딸랑딸랑 온 동네에 소문이 난다. 풀밭에서 낮잠 자는 게 제일 좋아서, 누가 깨우면 고개를 홱 돌리고 꿈쩍도 안 한다.":
+    "A little calf from the green pasture. The bell around its neck is so big that every step it takes jingles the news to the whole village. Napping in the grass is its favorite thing in the world, and if anyone tries to wake it, it just whips its head away and refuses to budge.",
   "바삭한 결": "Flaky Layers",
   "베레모 멋쟁이": "Beret Fashionista",
   "부스러기 흘림": "Drops Crumbs",
@@ -203,12 +203,12 @@ export const BESTIARY_DICT: Record<string, string> = {
   "찻잎 바구니": "Tea Leaf Basket",
   "덥수룩한 앞머리": "Shaggy Bangs",
   "방울 목도리": "Bell Scarf",
-  "히말라야 차밭에서 찻잎 따는 일을 돕는 꼬마야크. 앞머리가 눈을 덮어 찻잎과 잡초를 자주 헷갈리고, 바구니가 차면 그대로 차밭에 누워 낮잠부터 잔다.":
+  "만년설 차밭에서 찻잎 따는 일을 돕는 꼬마야크. 앞머리가 눈을 덮어 찻잎과 잡초를 자주 헷갈리고, 바구니가 차면 그대로 차밭에 누워 낮잠부터 잔다.":
     "A baby yak that helps pick tea leaves in the Himalayan tea fields. Its shaggy bangs cover its eyes, so it often mixes up tea leaves with weeds, and the moment its basket fills up, it just lies right down in the tea field for a nap.",
   "사프란 배달꾼": "Saffron Courier",
   "작은 터번": "Little Turban",
   "말대꾸 장인": "Backtalk Master",
-  "타지마할 정원의 사프란 꽃밭에서 붉은 꽃실을 물어다 공작 황제의 창고로 나르는 앵무새. 꽃실을 몰래 하나씩 빼돌리다 들키면 사람 말투로 '내 거 아닌데?' 하고 시치미를 뗀다.":
+  "대리석 정원의 사프란 꽃밭에서 붉은 꽃실을 물어다 공작 황제의 창고로 나르는 앵무새. 꽃실을 몰래 하나씩 빼돌리다 들키면 사람 말투로 '내 거 아닌데?' 하고 시치미를 뗀다.":
     "A parrot that carries red saffron stigmas from the garden's flower fields to the peacock emperor's storehouse. When caught secretly skimming a stigma off the top, it plays innocent in a perfectly human voice: 'This isn't mine, is it?'",
 
   // ---- BOSS_LORE traits + story ----
@@ -369,8 +369,8 @@ export const BESTIARY_DICT: Record<string, string> = {
   "구조용 나무통": "Rescue Barrel",
   "눈사태 전문가": "Avalanche Specialist",
   "침 많이 흘림": "Drools a Lot",
-  "알프스 산길을 지키는 세인트버나드 구조대장. 목에 단 나무통에는 언 몸을 녹이는 따끈한 우유가 들어 있다. 길 잃은 나그네는 끝까지 찾아내지만, 반가운 마음에 얼굴을 핥아 대서 다들 침범벅이 된다.":
-    "The Saint Bernard rescue captain who watches over the alpine trail. The little barrel around its neck holds warm milk to thaw out frozen travelers. It never gives up looking for anyone lost, but it's so happy to find them that it licks their whole face, leaving everyone soaked in drool.",
+  "산길을 지키는 세인트버나드 구조대장. 목에 단 나무통에는 언 몸을 녹이는 따끈한 우유가 들어 있다. 길 잃은 나그네는 끝까지 찾아내지만, 반가운 마음에 얼굴을 핥아 대서 다들 침범벅이 된다.":
+    "The Saint Bernard rescue captain who watches over the mountain trail. The little barrel around its neck holds warm milk to thaw out frozen travelers. It never gives up looking for anyone lost, but it's so happy to find them that it licks their whole face, leaving everyone soaked in drool.",
   "바게트 검": "Baguette Sword",
   "파이 방패": "Pie Shield",
   "아침 일찍 기상": "Up Bright and Early",
@@ -610,7 +610,7 @@ export const BESTIARY_DICT: Record<string, string> = {
   "줄 서서 걷기": "Walks in Single File",
   "대나무 삿갓": "Bamboo Straw Hat",
   "벼 이삭 줍기": "Rice Gleaner",
-  "발리 계단식 논에서 벼 사이 벌레를 잡아먹으며 농사를 돕는 오리. 언제나 한 줄로 서서 걷는데, 맨 앞 오리가 멈추면 뒤에서 줄줄이 부딪힌다.": "A duck that helps on Bali's rice terraces by eating the bugs between the rice plants. They always walk in a single line, so when the lead duck stops, the rest bump into each other one after another.",
+  "계단식 논에서 벼 사이 벌레를 잡아먹으며 농사를 돕는 오리. 언제나 한 줄로 서서 걷는데, 맨 앞 오리가 멈추면 뒤에서 줄줄이 부딪힌다.": "A duck that helps on the rice terraces by eating the bugs between the rice plants. They always walk in a single line, so when the lead duck stops, the rest bump into each other one after another.",
   "논의 수호신": "Guardian of the Paddies",
   "황금 거울 왕관": "Golden Mirror Crown",
   "흥겨운 탈춤": "Merry Mask Dance",
@@ -674,12 +674,12 @@ export const BESTIARY_DICT: Record<string, string> = {
   // 49 칠레 안데스 포도밭
   "포도송이 껍데기": "Grape-Cluster Shell",
   "느릿느릿 수확꾼": "Slowpoke Harvester",
-  "안데스 목도리": "Andean Scarf",
+  "고산 목도리": "Highland Scarf",
   "껍데기 대신 포도송이를 지고 다니는 달팽이. 하루 종일 포도밭 이랑을 기어 다니며 잘 익은 포도를 하나씩 등에 붙이는데, 너무 무거워지면 그 자리에서 낮잠을 잔다.": "A snail that carries a bunch of grapes instead of a shell. It crawls the vineyard rows all day sticking ripe grapes onto its back one by one, and when it gets too heavy, it naps right where it is.",
   "포도밭 지기": "Vineyard Keeper",
   "포도 밟기 장인": "Master Grape Stomper",
   "판초와 가우초 모자": "Poncho and Gaucho Hat",
-  "안데스 기슭 포도밭을 지키는 퓨마. 수확한 포도를 통에 넣고 하루 종일 밟아 즙을 내는 게 낙이라, 제일 좋은 거봉과 샤인머스캣은 전부 자기 통으로 가져간다. 패배하면 아껴 둔 포도송이를 내놓는다.": "A puma that guards the vineyards at the foot of the Andes. Stomping harvested grapes into juice all day is its greatest joy, so it hauls every best Kyoho and Shine Muscat bunch into its own barrel. Defeated, it gives up its treasured grape bunches.",
+  "고산 기슭 포도밭을 지키는 퓨마. 수확한 포도를 통에 넣고 하루 종일 밟아 즙을 내는 게 낙이라, 제일 좋은 거봉과 샤인머스캣은 전부 자기 통으로 가져간다. 패배하면 아껴 둔 포도송이를 내놓는다.": "A puma that guards the vineyards in the highlands. Stomping harvested grapes into juice all day is its greatest joy, so it hauls every best Kyoho and Shine Muscat bunch into its own barrel. Defeated, it gives up its treasured grape bunches.",
   "포도 하나만 더... 영차...": "Just one more grape... heave-ho...",
   "등이 무거워... 낮잠 잘래...": "My back's so heavy... nap time...",
   "좋은 포도는 전부 내 통으로!": "All the good grapes go in my barrel!",
