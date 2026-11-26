@@ -480,6 +480,7 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             stageStarsClaimed={state.stageStarsClaimed}
             onClaimStars={game.claimStars}
             onFocusStage={(y, height) => contentScroll.current?.scrollTo({ y: Math.max(0, y + height / 2 - contentHeight.current / 2), animated: false })}
+            loopsCompleted={state.loopsCompleted}
           />
         );
       case "comics":
@@ -611,6 +612,23 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
               game.dismissFirstClear();
               if (comic && !(state.seenComics ?? []).includes(comic)) setPlayingComic(comic);
             }}
+          />
+        )}
+        {/* Waits for the first-clear celebration to close first — they can land on the same
+            kill (looping past the very first time clearing this boss), and FirstClearCelebration
+            isn't an RN Modal (unlike this), so stacking them bare would show this on top of it
+            mid-animation. */}
+        {!game.firstClear && game.loopPrompt && (
+          <ConfirmModal
+            title={t("다음 회차로 넘어갈까요?", "Move on to the next loop?")}
+            message={t(
+              "공격력·치명타 피해·치명타 확률·골드 획득이 처음 값으로 돌아가고, 몬스터도 1스테이지만큼 약해져요. 대신 몇몇 동료·이야기는 회차를 넘어야 열려요.",
+              "Attack, crit damage, crit chance and gold gain all reset to their starting values, and the monsters go back to stage-1 strength too. Some companions and story beats only open once you move on, though.",
+            )}
+            confirmLabel={t("예", "Yes")}
+            cancelLabel={t("아니요", "No")}
+            onConfirm={() => game.confirmLoopAdvance(true)}
+            onCancel={() => game.confirmLoopAdvance(false)}
           />
         )}
         {game.bagFullAt !== null && (

@@ -186,6 +186,11 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     stage: "gold" | "goldFlying" | "items" | "itemsFlying";
   } | null>(null);
   const [firstClear, setFirstClear] = useState<{ key: number; stageNumber: number; bossName: string; gems: number; companions: string[] } | null>(null);
+  // Beating the very last stage's boss while already there doesn't auto-loop any more — it
+  // asks first (see handleEnemyDefeat's atLastStage branch and confirmLoopAdvance below).
+  // Declining just leaves the state exactly as a normal boss kill with nowhere new to go
+  // would: still on the last stage, free to keep fighting it.
+  const [loopPrompt, setLoopPrompt] = useState(false);
   const [upgradeMode, setUpgradeMode] = useState<UpgradeMode>(1);
   const [upgraded, setUpgraded] = useState<StatKey | null>(null);
   // Set when the player jumps stages from the milestone map, so the stageNumber change
@@ -719,24 +724,18 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
       const creditedGold = holdLoot ? 0 : goldReward;
       const totalGoldEarned = previous.totalGoldEarned + creditedGold + goldenGold;
       const bossKills = (previous.bossKills ?? 0) + (boss ? 1 : 0);
-      // Clearing the last implemented boss loops back to stage 1; keep this dynamic as
-      // each new region is added. highestStageNumber re-locks with it (the map and grocery
-      // shelves gate off it) — but loopsCompleted keeps climbing, so getDifficultyStage can
-      // keep scaling enemies up past where the map art loops.
-      const wrapped = boss && previous.stageNumber >= LAST_STAGE_NUMBER;
-      const stageNumber = boss ? (wrapped ? 0 : previous.stageNumber + 1) : previous.stageNumber;
-      const loopsCompleted = wrapped ? (previous.loopsCompleted ?? 0) + 1 : previous.loopsCompleted ?? 0;
+      // Clearing the last implemented boss doesn't auto-loop any more — it asks first
+      // (confirmLoopAdvance, below), so a kill right here just stands still: stageNumber,
+      // loopsCompleted and highestStageNumber all stay put, same as beating a boss with
+      // nowhere new to walk into would. Saying 예 there is what actually loops it.
+      const atLastStage = boss && previous.stageNumber >= LAST_STAGE_NUMBER;
+      if (atLastStage) setLoopPrompt(true);
+      const stageNumber = boss && !atLastStage ? previous.stageNumber + 1 : previous.stageNumber;
+      const loopsCompleted = previous.loopsCompleted ?? 0;
       // Saves from before the milestone map have no record — what they're on is the floor.
       const reachedStageNumber = Math.max(previous.highestStageNumber ?? previous.stageNumber, stageNumber);
-      const highestStageNumber = wrapped ? stageNumber : reachedStageNumber;
-      // Companions join by reaching their stage — lock that in for good before the reset
-      // above re-locks highestStageNumber, or they'd have to be walked back to each loop.
-      const stageUnlockedOutfits = syncStageUnlockedOutfits(reachedStageNumber, previous.purchasedOutfits);
-      // Loop-granted ones (currently just 복서기니, see unlocks.ts's OUTFIT_LOOP_GRANT) join
-      // outright the instant loopsCompleted first reaches their number — same beat as
-      // comics.ts's LOOP_COMICS plays their evolution/reveal comic.
-      const loopGrantedOutfits = getOutfitsGrantedByLoop(loopsCompleted).filter((outfit) => !stageUnlockedOutfits.includes(outfit));
-      const purchasedOutfits = loopGrantedOutfits.length > 0 ? [...stageUnlockedOutfits, ...loopGrantedOutfits] : stageUnlockedOutfits;
+      const highestStageNumber = reachedStageNumber;
+      const purchasedOutfits = syncStageUnlockedOutfits(reachedStageNumber, previous.purchasedOutfits);
       const starKey = String(previous.stageNumber);
       const starsBefore = previous.stageStars?.[starKey] ?? 0;
       const shardOwner = boss ? getShardCompanion(previous.stageNumber) : undefined;
@@ -772,6 +771,45 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
       };
     });
   }, [boss, bossPhase, bossHasPhaseTwo, miniBoss, goldenMini, strayKind, state.stageKills, state.stageMiniBosses, state.bossKills, state.runSeed, state.stageNumber, state.inventory, state.bagExpansions, state.bossesCleared, state.highestStageNumber, state.loopsCompleted, state.purchasedOutfits, state.equippedOutfit, dropRate, vegetableDrop, seafoodDrop, dropDouble, bossDropSure, expBonus, startBossFight, state.giftKills, state.giftLootExplained, bossTimeLimitMs, state.buffSlots, state.stageStars, companionChefDropBoost, bagStackSize, labBossDoubleBonus, goldenChance, labBossTimeMs]);
+
+  // Answers loopPrompt (see handleEnemyDefeat's atLastStage branch). 아니요 just closes it —
+  // the state's already sitting on the last stage, same as a boss kill with nowhere new to
+  // go would leave it. 예 is what actually loops: stage 1, highestStageNumber re-locked,
+  // loopsCompleted +1 (still climbing forever, for the loop-gated outfits/comics below —
+  // only the difficulty curve itself no longer scales off it, see getDifficultyStage), and
+  // 공격력/치명타 피해/치명타 확률/골드 획득 reset to their fresh-save values so every loop
+  // climbs the exact same curve instead of starting instantly overpowered — 공속(보석 스탯)은 그대로 둠.
+  const confirmLoopAdvance = (proceed: boolean) => {
+    setLoopPrompt(false);
+    if (!proceed) return;
+    setState((previous) => {
+      const loopsCompleted = (previous.loopsCompleted ?? 0) + 1;
+      // Loop-granted outfits (currently just 복서기니, see unlocks.ts's OUTFIT_LOOP_GRANT)
+      // join outright the instant loopsCompleted first reaches their number — same beat as
+      // comics.ts's LOOP_COMICS plays their evolution/reveal comic.
+      const loopGrantedOutfits = getOutfitsGrantedByLoop(loopsCompleted).filter((outfit) => !(previous.purchasedOutfits ?? []).includes(outfit));
+      const purchasedOutfits = loopGrantedOutfits.length > 0 ? [...(previous.purchasedOutfits ?? []), ...loopGrantedOutfits] : previous.purchasedOutfits;
+      return {
+        ...previous,
+        stageNumber: 0,
+        highestStageNumber: 0,
+        loopsCompleted,
+        purchasedOutfits,
+        currentStage: getStageLabel(0),
+        attack: initialState.attack,
+        criticalDamage: initialState.criticalDamage,
+        criticalChance: initialState.criticalChance,
+        goldBonus: initialState.goldBonus,
+        statLevels: { ...previous.statLevels, attack: 1, criticalDamage: 1, criticalChance: 1, goldBonus: 1 },
+      };
+    });
+    // The enemy already on screen (the last stage's own mob, respawned right after the final
+    // boss died, before this prompt was even answered) only has its *sprite* react to the
+    // stageNumber reset above — its HP was set from the old stage's difficulty and doesn't
+    // rescale on its own. Force a fresh one at stage 1's real HP, the same way selectStage/
+    // leaveBossFight do after any other stage jump that isn't a natural kill-chain respawn.
+    battle.resetEnemy(getEnemyMaxHp(0, false) * mobHpScale);
+  };
 
   // Gold that isn't a kill reward (the Steal skill) still counts toward the gold quest.
   const addBonusGold = useCallback((amount: number) => {
@@ -862,7 +900,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   // kill's loot is being explained. !appActive covers the app/tab being backgrounded — see its
   // declaration above.
   const battlePaused =
-    skillTutorialActive || bossRetryAvailable || bossIntroPending || stageAnnouncement !== null || firstClear !== null || externallyPaused || !state.tutorialDone || heldLoot !== null || !appActive || adShowing;
+    skillTutorialActive || bossRetryAvailable || bossIntroPending || stageAnnouncement !== null || firstClear !== null || loopPrompt || externallyPaused || !state.tutorialDone || heldLoot !== null || !appActive || adShowing;
 
   // The boss clock stands still with the fight: time spent paused (an ad for 2x speed, the app
   // in the background, ...) is added back onto the fight's start. Kept per fight — keyed by
@@ -1729,6 +1767,8 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     stageAnnouncement,
     continueStage,
     firstClear,
+    loopPrompt,
+    confirmLoopAdvance,
     // What's been opened in the album and the recipe shop stays open.
     clearedStages: getClearedBosses(state),
     // Closing without the ad still pays the base gems.

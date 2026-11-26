@@ -47,6 +47,8 @@ export function BattleScreen({ game }: { game: UseGameState }) {
   // Derived live from stageNumber rather than the saved `state.currentStage` string, so a
   // save written before a stage-label wording change can't show a stale label.
   const stageLabel = getStageLabel(displayStageNumber);
+  // loopsCompleted starts at 0 (the first time through) — the label counts from 1.
+  const loopNumber = (state.loopsCompleted ?? 0) + 1;
   // Which empty buff slot the dish picker is filling, if it's open.
   const [pickingSlot, setPickingSlot] = useState<number | null>(null);
   // A locked food slot that was tapped: confirm the gem price (slots open in order).
@@ -91,13 +93,13 @@ export function BattleScreen({ game }: { game: UseGameState }) {
         onContinueStage={game.continueStage}
         battleSpeed={game.battleSpeed}
         stageLabel={
-          game.bossEnraged
+          (game.bossEnraged
             ? `${stageLabel} · ${t("분노한 보스", "Enraged Boss")}`
             : boss
               ? `${stageLabel} · ${t("보스", "Boss")}`
               : game.displayMiniBoss
                 ? `${stageLabel} · ${game.displayGolden ? t("황금 ", "Golden ") : ""}${t("중간 보스", "Mid-Boss")}`
-                : stageLabel
+                : stageLabel) + ` · ${t(`${loopNumber}회차`, `Loop ${loopNumber}`)}`
         }
         stageKills={state.stageKills}
         onOpenMap={() => game.setState((previous) => ({ ...previous, selectedTab: "milestone" }))}

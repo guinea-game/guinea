@@ -20,11 +20,11 @@ type Page = "map" | "monsters";
 
 // A function (not a module-level constant) so every field re-translates on each render —
 // t() needs to run at render/call time to react to a language switch.
-function getHeadings(): Record<Page, { kicker: string; title: string; description: string; icon: number; open: string; caption: string }> {
+function getHeadings(loopNumber: number): Record<Page, { kicker: string; title: string; description: string; icon: number; open: string; caption: string }> {
   return {
     map: {
       kicker: "MILESTONE",
-      title: t("모험 지도", "Adventure Map"),
+      title: `${t("모험 지도", "Adventure Map")} · ${t(`${loopNumber}회차`, `Loop ${loopNumber}`)}`,
       description: t("보스를 쓰러뜨리면 다음 스테이지가 열려요.", "Defeat the boss to open the next stage."),
       icon: icons.map,
       open: t("모험 지도로 돌아가기", "Back to Adventure Map"),
@@ -53,6 +53,7 @@ export function MilestoneScreen({
   stageStarsClaimed,
   onClaimStars,
   onFocusStage,
+  loopsCompleted,
 }: {
   // Each stage's stars (STAR_* bits in state/progression.ts).
   stageStars: Record<string, number> | undefined;
@@ -72,11 +73,13 @@ export function MilestoneScreen({
   // Which stars' gems were already collected, and collecting a stage's waiting ones.
   stageStarsClaimed: Record<string, number> | undefined;
   onClaimStars: (stage: number) => void;
+  // loopsCompleted starts at 0 (the first time through) — the map's title counts from 1.
+  loopsCompleted: number | undefined;
 }) {
   const [view, setView] = useState<Page>("map");
   // The stage whose three challenges are open in the "i" popup.
   const [starInfo, setStarInfo] = useState<number | null>(null);
-  const headings = getHeadings();
+  const headings = getHeadings((loopsCompleted ?? 0) + 1);
   const heading = headings[view];
   // A stage opened since the last visit: its path draws in and its badge drops onto the map.
   const [newStage] = useState(() => (seenStage !== undefined && highestStageNumber > seenStage ? highestStageNumber : null));

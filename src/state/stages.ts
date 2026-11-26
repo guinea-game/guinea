@@ -301,23 +301,21 @@ export function getClearedBosses(state: Pick<GameState, "bossesCleared" | "highe
   return Array.from({ length: peak }, (_, index) => index);
 }
 
-// Clearing the last stage's boss loops back to stage 1 (stageNumber resets, see
-// useGameState's kill handler) so the map, companions-by-stage and grocery shelves all
-// re-lock behind highestStageNumber each time around — but the enemies you meet shouldn't
-// get easier just because the area art looped. This is the stage index to scale their HP,
-// exp and gold against instead: it never drops, so stage 1 of a second lap is exactly as
-// tough as stage 40 would be.
-export function getDifficultyStage(stageNumber: number, loopsCompleted: number) {
-  return stageNumber + loopsCompleted * (LAST_STAGE_NUMBER + 1);
+// Clearing the last stage's boss no longer auto-loops straight into harder territory — the
+// player is asked first (useGameState's confirmLoopAdvance), and saying 예 resets 공격력/
+// 치명타 피해/치명타 확률/골드 획득 back to their fresh-save values in the same stroke. So
+// mob HP/exp/gold stay keyed on `stageNumber` alone now: a reset player meeting stage 1 of
+// loop 5 faces exactly the same fight stage 1 of loop 1 did, not something 5 laps tougher.
+// `loopsCompleted` is kept as a parameter (ignored) rather than touching every call site —
+// it still matters to loop-gated unlocks (getOutfitsGrantedByLoop) and comics, just not here.
+export function getDifficultyStage(stageNumber: number, _loopsCompleted: number) {
+  return stageNumber;
 }
 
-// The difficulty actually used for combat/rewards right now: full current-loop scaling while
-// at or past the furthest stage reached this loop, but dropped back to that stage's very own
-// first-loop baseline once MilestoneScreen's "이동" has walked you behind your frontier — so a
-// maxed-out save can deliberately 양학 (farm) an early stage's drops at that stage's own HP/exp/
-// gold instead of the current loop's inflated ones. No history has to be stored for this: it's
-// just which of the two inputs getDifficultyStage already takes to use, picked fresh each time
-// off stageNumber vs. highestStageNumber (both already tracked).
+// The difficulty actually used for combat/rewards right now. Now that getDifficultyStage
+// ignores loopsCompleted, this collapses to just stageNumber either way — kept as its own
+// function so every caller (and the frontier concept: farming behind highestStageNumber
+// doesn't get harder for it) still reads the same as before.
 export function getEffectiveDifficultyStage(state: Pick<GameState, "stageNumber" | "highestStageNumber" | "loopsCompleted">) {
   const frontier = state.highestStageNumber ?? state.stageNumber;
   return getDifficultyStage(state.stageNumber, state.stageNumber < frontier ? 0 : (state.loopsCompleted ?? 0));
