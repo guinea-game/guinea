@@ -16,6 +16,14 @@ export const SYSTEMS_DICT: Record<string, string> = {
     "A guinea pig who studied magic in the Suspicious House. Every attack is magic — it fights from where it stands, casting fire, ice, poison, lightning, light, and ghost-fire spells.",
   "글러브를 벗는 법이 없는 열혈 복서. 2회차를 마칠 때쯤 단련 끝에 합류한다.": "A hot-blooded boxer who never takes off the gloves. Joins after training through to the end of the second loop.",
   "총을 뽑아 든 서부의 총잡이 기니. 3회차를 마치면 합류한다.": "A Wild West gunslinger, six-shooter drawn. Joins once the third loop is complete.",
+  // 기니상자 전용 코스메틱 동료 (BOX_RESCUE_OUTFITS)
+  "눈에 거의 안 보이는 투명한 기니. 4회차부터 기니상자에서 무작위로 나타난다.": "A guinea pig so transparent it's barely visible. Appears at random from the Gini Box starting at loop 4.",
+  "주사기를 든 상냥한 간호사 기니. 기니상자에서 무작위로 나타난다.": "A gentle nurse guinea pig holding a syringe. Appears at random from the Gini Box.",
+  "활과 화살을 다루는 숲의 궁수 기니. 기니상자에서 무작위로 나타난다.": "A forest archer guinea pig wielding a bow and arrows. Appears at random from the Gini Box.",
+  "돋보기를 든 명탐정 기니. 기니상자에서 무작위로 나타난다.": "A master detective guinea pig holding a magnifying glass. Appears at random from the Gini Box.",
+  "아무 꾸밈도 없는 그냥 기니. 기니상자에서 무작위로 나타난다.": "A completely plain, undecorated guinea pig. Appears at random from the Gini Box.",
+  "검과 방패를 든 용맹한 기사 기니. 기니상자에서 무작위로 나타난다.": "A valiant knight guinea pig bearing a sword and shield. Appears at random from the Gini Box.",
+  "지팡이와 마법서를 든 늙은 현자 기니. 기니상자에서 무작위로 나타난다.": "An old sage guinea pig carrying a staff and spellbook. Appears at random from the Gini Box.",
 
   // buffs.ts OUTFIT_NAMES
   "모험기니": "Adventurer Gini",
@@ -29,6 +37,13 @@ export const SYSTEMS_DICT: Record<string, string> = {
   "복서기니": "Boxer Gini",
   "카우보이기니": "Cowboy Gini",
   "마녀기니": "Witch Gini",
+  "투명기니": "Invisible Gini",
+  "간호사기니": "Nurse Gini",
+  "궁수기니": "Archer Gini",
+  "탐정기니": "Detective Gini",
+  "그냥기니": "Plain Gini",
+  "기사기니": "Knight Gini",
+  "현자기니": "Sage Gini",
 
   // buffs.ts DISH_SETS names
   "바다 한 상": "Seaside Spread",
@@ -169,6 +184,13 @@ export const SYSTEMS_DICT: Record<string, string> = {
   "새 지역: 꿀향기 귀갓길 · 기니 대도시 귀환길 · 무너진 성채 (37~39 스테이지)": "New areas: The Honey-Scented Way Home · The Road Back to Guinea Metropolis · The Fallen Fortress (Stages 37–39)",
   "새 동료 마녀기니 — 모든 공격이 마법!": "New companion Witch Gini — every attack is magic!",
   "새 스킬 운석 낙하 — 몹 5마리를 한 번에!": "New skill Meteor Fall — takes out 5 mobs at once!",
+  "새 동료들과 기니상자가 찾아왔어요!": "New companions and the Gini Box have arrived!",
+  "4회차부터 클리어하면 기니상자 등장 — 랜덤 동료를 구출해 보세요!": "Clear a run from loop 4 onward and a Gini Box appears — rescue a random companion!",
+  "기니상자 전용 동료 6종 추가 — 누가 나올지는 열어 봐야 알아요!": "6 new Gini-Box-only companions — open it to find out who shows up!",
+  "새 스토리 만화: 아가기니 유괴 사건": "New story comic: The Baby Gini Kidnapping",
+  "2회차부터는 텔레포트 스테이지 제한이 풀려요": "Teleport's stage restriction is lifted from loop 2 onward",
+  "동남아·서부·라틴 지역에 새 배경음악 적용": "New background music for the Southeast Asia, Western, and Latin regions",
+  "낚시 요리 미니게임 손맛이 더 좋아졌어요": "The fishing minigame feels snappier now",
   "매일 받는 출석 보상과 더 풍성해진 오프라인 보상": "Daily attendance rewards, and richer offline rewards",
   "기니의 발자취 · 게임 가이드 · 세이브 백업 추가": "Added Gini's Footprints, the Game Guide, and Save Backup",
   "시작 화면과 판타지 지역의 새 음악": "New music for the title screen and the fantasy region",

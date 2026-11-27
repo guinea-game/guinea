@@ -2,21 +2,21 @@
 // `id` yet (with a small gift), and any time again from the settings. For each new update,
 // replace this with a fresh `id` (e.g. the release date) and its own list. Each line gets a
 // game icon (`image`) or, for a new companion, that companion's own sprite (`outfit`).
-import { icons, skillImages } from "../assets";
+import { icons, skillImages, uiImages } from "../assets";
 import type { Outfit } from "../types";
 
 type UpdateItem = { text: string; image?: number; outfit?: Outfit };
 
 export const LATEST_UPDATE: { id: string; title: string; gems: number; items: UpdateItem[] } = {
-  id: "2026-11-07",
-  title: "새로운 모험이 기다려요!",
+  id: "2026-11-27",
+  title: "새 동료들과 기니상자가 찾아왔어요!",
   gems: 100,
   items: [
-    { image: icons.map, text: "새 지역: 꿀향기 귀갓길 · 기니 대도시 귀환길 · 무너진 성채 (37~39 스테이지)" },
-    { outfit: "witchGini", text: "새 동료 마녀기니 — 모든 공격이 마법!" },
-    { image: skillImages.meteor, text: "새 스킬 운석 낙하 — 몹 5마리를 한 번에!" },
-    { image: icons.chest, text: "매일 받는 출석 보상과 더 풍성해진 오프라인 보상" },
-    { image: icons.scroll, text: "기니의 발자취 · 게임 가이드 · 세이브 백업 추가" },
-    { image: icons.star, text: "시작 화면과 판타지 지역의 새 음악" },
+    { image: uiImages.guineaBox, text: "4회차부터 클리어하면 기니상자 등장 — 랜덤 동료를 구출해 보세요!" },
+    { image: icons.chest, text: "기니상자 전용 동료 6종 추가 — 누가 나올지는 열어 봐야 알아요!" },
+    { image: icons.scroll, text: "새 스토리 만화: 아가기니 유괴 사건" },
+    { image: skillImages.teleport, text: "2회차부터는 텔레포트 스테이지 제한이 풀려요" },
+    { image: icons.star, text: "동남아·서부·라틴 지역에 새 배경음악 적용" },
+    { image: icons.potionRed, text: "낚시 요리 미니게임 손맛이 더 좋아졌어요" },
   ],
 };
