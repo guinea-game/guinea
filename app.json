@@ -103,7 +103,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.guinea.adventure",
-      "versionCode": 26
+      "versionCode": 27
     },
     "web": {
       "favicon": "./assets/app-icon.png"
