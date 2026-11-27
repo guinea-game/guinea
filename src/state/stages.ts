@@ -4,7 +4,7 @@ import { t } from "../i18n";
 // Groups stages by region/mood for BGM — several stages share one field+boss pair (see
 // sound.ts's bgm lookup). Not every group has tracks yet; sound.ts falls back to
 // "countryside" for any group still missing one.
-export type BgmGroupId = "countryside" | "tropical" | "desert" | "china" | "korea" | "japan" | "dragonPalace" | "europe" | "hauntedHouse" | "fantasy" | "india";
+export type BgmGroupId = "countryside" | "tropical" | "desert" | "china" | "korea" | "japan" | "dragonPalace" | "europe" | "hauntedHouse" | "fantasy" | "india" | "country" | "latin";
 
 export const BGM_GROUP: Record<EnemyKind, BgmGroupId> = {
   // 뒷산~부잣집 주방
@@ -63,11 +63,13 @@ export const BGM_GROUP: Record<EnemyKind, BgmGroupId> = {
   coconutCrab: "tropical",
   paddyDuck: "tropical",
   hulaPineapple: "tropical",
-  prairieDog: "desert",
-  pinataDonkey: "desert",
-  cacaoSloth: "tropical",
-  grapeSnail: "desert",
-  llamaCook: "fantasy",
+  // 바비큐 협곡: 동남아(tropical) 다음, 아메리카 대륙으로 넘어가는 첫 지역 — 서부/컨트리 풍.
+  prairieDog: "country",
+  // 타코 축제부터 고산 포도밭·태양의 공중도시까지는 라틴 풍으로 쭉 이어진다.
+  pinataDonkey: "latin",
+  cacaoSloth: "latin",
+  grapeSnail: "latin",
+  llamaCook: "latin",
 };
 
 export const ENEMY_NAME: Record<EnemyKind, string> = {

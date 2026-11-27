@@ -1525,6 +1525,16 @@ export const bgm = {
     field: require("../assets/bgm/field-india.mp3"),
     boss: require("../assets/bgm/boss-india.mp3"),
   },
+  // 바비큐 협곡: 아메리카 대륙 시작, 서부/컨트리 풍. "Campfire Quest" and "Hoedown of the Behemoth".
+  country: {
+    field: require("../assets/bgm/field-country.mp3"),
+    boss: require("../assets/bgm/boss-country.mp3"),
+  },
+  // 타코 축제~태양의 공중도시: 라틴 풍. "Jungle to Vineyard" and "Sun-temple Conquest".
+  latin: {
+    field: require("../assets/bgm/field-latin.mp3"),
+    boss: require("../assets/bgm/boss-latin.mp3"),
+  },
 };
 
 // The title screen's own theme (마을 대기 화면), looping until the player taps in.
