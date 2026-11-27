@@ -40,6 +40,13 @@ export const COMPANION_SKILL_NAMES: Record<Outfit, string> = {
   witchGini: "마력 폭발",
   cowboyGini: "연속 사격",
   boxerGini: "어퍼컷",
+  transparentGini: "사라지기",
+  nurseGini: "응급처치",
+  archerGini: "조준 사격",
+  detectiveGini: "탐문",
+  plainGini: "그냥 있기",
+  knightGini: "방패 태세",
+  sageGini: "주문 영창",
 };
 
 // SkillCallout colors — same theme color as each companion's own icon border (companions.ts
@@ -55,6 +62,13 @@ export const COMPANION_SKILL_CALLOUT_COLOR: Record<Outfit, { color: string; stro
   witchGini: { color: "#d6a0ff", strokeColor: "#2a0a40" },
   cowboyGini: { color: "#e0a868", strokeColor: "#3a2000" },
   boxerGini: { color: "#ff7a6a", strokeColor: "#4a0a06" },
+  transparentGini: { color: "#eaf6f4", strokeColor: "#39504c" },
+  nurseGini: { color: "#ffd9e6", strokeColor: "#5a1a30" },
+  archerGini: { color: "#d8f0a0", strokeColor: "#2a4a0a" },
+  detectiveGini: { color: "#e0c090", strokeColor: "#4a3010" },
+  plainGini: { color: "#fff3d6", strokeColor: "#6b5a30" },
+  knightGini: { color: "#dce4f0", strokeColor: "#2a3a5a" },
+  sageGini: { color: "#f3d9d9", strokeColor: "#5a1a1a" },
 };
 
 export const COMPANION_SKILL_SUMMARIES: Record<Outfit, string> = {
@@ -68,4 +82,15 @@ export const COMPANION_SKILL_SUMMARIES: Record<Outfit, string> = {
   witchGini: "즉시 마법 공격 1회, 치명타로 적용",
   cowboyGini: `${COMPANION_SKILL_WINDOW_MS / 1000}초간 재장전 없이 연속 발사`,
   boxerGini: `즉시 강타 ${COMPANION_UPPERCUT_HITS}회 (각 평타의 ${Math.round(COMPANION_UPPERCUT_HIT_RATIO * 100)}%)`,
+  // No case for it in castCompanionSkill's switch — tapping it starts the cooldown and shows
+  // this callout, same as every other companion skill, but nothing actually happens.
+  transparentGini: "...아무 일도 일어나지 않는다",
+  // 기니상자 전용 동료 3종 — 아직 전용 스킬 없음, castCompanionSkill의 switch에도 케이스 없음
+  // (쿨다운만 돌고 실제 효과 없음). 사용자가 추후 직접 설계 예정.
+  nurseGini: "...아무 일도 일어나지 않는다",
+  archerGini: "...아무 일도 일어나지 않는다",
+  detectiveGini: "...아무 일도 일어나지 않는다",
+  plainGini: "...아무 일도 일어나지 않는다",
+  knightGini: "...아무 일도 일어나지 않는다",
+  sageGini: "...아무 일도 일어나지 않는다",
 };

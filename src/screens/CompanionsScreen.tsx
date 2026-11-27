@@ -26,7 +26,7 @@ import {
 } from "../state/buffs";
 import type { BuffEffect } from "../state/buffs";
 import { LockBadge } from "../components/LockBadge";
-import { getOutfitGemPrice, isOutfitUnlocked, OUTFIT_EARLY_UNLOCK_GEMS, OUTFIT_GEM_PRICE, OUTFIT_LOOP_GRANT, OUTFIT_UNLOCK_STAGE } from "../state/unlocks";
+import { BOX_RESCUE_OUTFITS, getOutfitGemPrice, isOutfitUnlocked, OUTFIT_EARLY_UNLOCK_GEMS, OUTFIT_GEM_PRICE, OUTFIT_LOOP_GRANT, OUTFIT_UNLOCK_STAGE } from "../state/unlocks";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { COMPANION_MAX_LEVEL, COMPANION_SHARD_STAGE, getCompanionLevel, getCompanionShards, getShardCost, SHARDS_PER_BOSS } from "../state/progression";
 import { getCompanionLevelCap } from "../state/lab";
@@ -238,11 +238,62 @@ export const COMPANIONS: { outfit: Outfit; name: string; blurb: string; detail: 
     blurb: "총을 뽑아 든 서부의 총잡이 기니. 3회차를 마치면 합류한다.",
     detail: companionDetail("cowboyGini"),
   },
+  // 기니상자 전용 (BOX_RESCUE_OUTFITS) — 전투 보너스가 전혀 없어 companionDetail("transparentGini")
+  // 그대로 쓰면 "동료 없이 다닐 때"(장비 안 한 기본값 문구)가 나와 헷갈려서, noEffectDetail()로 대체.
+  {
+    outfit: "transparentGini",
+    name: "투명기니",
+    blurb: "눈에 거의 안 보이는 투명한 기니. 4회차부터 기니상자에서 무작위로 나타난다.",
+    detail: noEffectDetail(),
+  },
+  {
+    outfit: "nurseGini",
+    name: "간호사기니",
+    blurb: "주사기를 든 상냥한 간호사 기니. 기니상자에서 무작위로 나타난다.",
+    detail: noEffectDetail(),
+  },
+  {
+    outfit: "archerGini",
+    name: "궁수기니",
+    blurb: "활과 화살을 다루는 숲의 궁수 기니. 기니상자에서 무작위로 나타난다.",
+    detail: noEffectDetail(),
+  },
+  {
+    outfit: "detectiveGini",
+    name: "탐정기니",
+    blurb: "돋보기를 든 명탐정 기니. 기니상자에서 무작위로 나타난다.",
+    detail: noEffectDetail(),
+  },
+  {
+    outfit: "plainGini",
+    name: "그냥기니",
+    blurb: "아무 꾸밈도 없는 그냥 기니. 기니상자에서 무작위로 나타난다.",
+    detail: noEffectDetail(),
+  },
+  {
+    outfit: "knightGini",
+    name: "기사기니",
+    blurb: "검과 방패를 든 용맹한 기사 기니. 기니상자에서 무작위로 나타난다.",
+    detail: noEffectDetail(),
+  },
+  {
+    outfit: "sageGini",
+    name: "현자기니",
+    blurb: "지팡이와 마법서를 든 늙은 현자 기니. 기니상자에서 무작위로 나타난다.",
+    detail: noEffectDetail(),
+  },
 ];
 
 // witchGini's extra " · 모든 공격이 마법" suffix on its detail (baked in above) — translated
 // separately so the live companionDetail() call at display time can append it too.
 const WITCH_EXTRA_DETAIL = "모든 공격이 마법";
+
+// 기니상자 전용 코스메틱 동료(BOX_RESCUE_OUTFITS) 전부가 쓰는 공용 문구 — companionDetail은
+// 쓸 게 없으면 "동료 없이 다닐 때"(장비 안 한 기본값 문구)로 빠지는데, 진짜로 장비 중인 동료에
+// 쓰면 헷갈려서 이걸로 대체한다.
+function noEffectDetail() {
+  return t("딱히 효과는 없음 (장식용 동료)", "No real effect (cosmetic companion)", "特に効果はない（装飾用の仲間）", "没有实际效果（装饰用同伴）");
+}
 
 // One fact about a companion on a soft cream plate: a small label over its value.
 function InfoTile({ label, children }: { label: string; children: React.ReactNode }) {
@@ -329,6 +380,13 @@ function unlockCondition(outfit: Outfit) {
   }
   if (loopGrant !== undefined)
     return t(`${loopGrant}회차 완료 시 합류`, `Joins after loop ${loopGrant}`, `${loopGrant}周目クリアで加入`, `完成第${loopGrant}周目后加入`);
+  if (BOX_RESCUE_OUTFITS.includes(outfit))
+    return t(
+      "4회차부터, 회차를 마칠 때 기니상자에서 무작위로 발견",
+      "Found at random from the Gini Box, starting loop 4's clear",
+      "4周目から、周回クリア時にギニー箱からランダムに発見",
+      "从第4周目开始，通关时从吉妮宝箱中随机发现",
+    );
   return t(
     `${OUTFIT_UNLOCK_STAGE[outfit]}스테이지 도달 시 합류 · 보석 ${OUTFIT_EARLY_UNLOCK_GEMS}개로 미리 해금`,
     `Joins on reaching stage ${OUTFIT_UNLOCK_STAGE[outfit]} · unlock early for ${OUTFIT_EARLY_UNLOCK_GEMS} gems`,
@@ -415,7 +473,14 @@ export function CompanionsScreen({
             <Text style={styles.previewTitle}>{t(companionDisplay(equippedItem).name)}</Text>
             <Text style={styles.previewBlurb}>{t(companionDisplay(equippedItem).blurb)}</Text>
             <Text style={styles.previewSub}>
-              {equippedItem.outfit === "witchGini" ? `${companionDetail(equippedItem.outfit, getCompanionLevel(progress, equippedItem.outfit))} · ${t(WITCH_EXTRA_DETAIL, "Every attack is magic")}` : companionDetail(equippedItem.outfit, getCompanionLevel(progress, equippedItem.outfit))}
+              {equippedItem.outfit === "witchGini"
+                ? `${companionDetail(equippedItem.outfit, getCompanionLevel(progress, equippedItem.outfit))} · ${t(WITCH_EXTRA_DETAIL, "Every attack is magic")}`
+                : // companionDetail falls back to "동료 없이 다닐 때" (meant for having none
+                  // equipped at all) when there's nothing to list — wrong message for a real,
+                  // equipped companion that's just permanently statless.
+                  BOX_RESCUE_OUTFITS.includes(equippedItem.outfit)
+                  ? noEffectDetail()
+                  : companionDetail(equippedItem.outfit, getCompanionLevel(progress, equippedItem.outfit))}
             </Text>
           </View>
           <View style={styles.previewSprite}>

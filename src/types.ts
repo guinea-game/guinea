@@ -6,7 +6,7 @@ export type BattlePhase = "idle" | "attacking" | "hit" | "defeated" | "entering"
 export type PlayerAnimation = "idle" | "attack" | "critical" | "win";
 export type EnemyAnimation = "idle" | "hit" | "die";
 export type EnemyKind = "slime" | "mushroom" | "carrot" | "chicken" | "potato" | "mouse" | "cauldron" | "mudskipper" | "bluefish" | "salamander" | "monkey" | "carp" | "cactus" | "fox" | "lizard" | "mantou" | "pig" | "magpie" | "snowRabbit" | "drunkCat" | "flowerSnake" | "riceSack" | "mackerel" | "blossomCrab" | "shrineFox" | "armorBeetle" | "onsenMonkey" | "ninjaFrog" | "lanternAngler" | "clamMaid" | "gondolaDuck" | "bellCalf" | "croissantKid" | "sleepyGini" | "sleepwalkerGini" | "candyBasketSlime" | "bee" | "angryCandyBasketSlime" | "thiefCrow" | "spiceElephant" | "teaYak" | "saffronParrot" | "coconutCrab" | "paddyDuck" | "hulaPineapple" | "prairieDog" | "pinataDonkey" | "cacaoSloth" | "grapeSnail" | "llamaCook";
-export type Outfit = "default" | "explorerHamster" | "tetoGini" | "assassinGini" | "egenGini" | "samuraiGini" | "chefGini" | "boxerGini" | "witchGini" | "cowboyGini";
+export type Outfit = "default" | "explorerHamster" | "tetoGini" | "assassinGini" | "egenGini" | "samuraiGini" | "chefGini" | "boxerGini" | "witchGini" | "cowboyGini" | "transparentGini" | "nurseGini" | "archerGini" | "detectiveGini" | "plainGini" | "knightGini" | "sageGini";
 export type SkillId = "beam" | "steal" | "focus" | "execute" | "shout" | "diligent" | "glutton" | "barrage" | "teleport" | "carrotThrow" | "chiliThrow" | "meteor";
 export type UpgradeMode = 1 | 10 | 100 | "next" | "max";
 

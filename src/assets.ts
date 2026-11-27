@@ -65,6 +65,51 @@ export const spriteSheets = {
       critical: require("../assets/sprites/cowboy-gini-critical-strip.webp"),
       win: require("../assets/sprites/cowboy-gini-win-strip.webp"),
     },
+    // No art of its own — it's 모험기니 at reduced opacity (CharacterSprite's OPACITY table),
+    // which is the entire point: there's nothing to it besides being see-through.
+    transparentGini: {
+      idle: require("../assets/sprites/guinea-idle-strip.webp"),
+      attack: require("../assets/sprites/guinea-attack-strip.webp"),
+      critical: require("../assets/sprites/guinea-critical-strip.webp"),
+      win: require("../assets/sprites/guinea-win-strip.webp"),
+    },
+    // 기니상자 전용 코스메틱 동료 — 능력 없음, 전용 스프라이트만 있음.
+    nurseGini: {
+      idle: require("../assets/sprites/nurse-gini-idle-strip.webp"),
+      attack: require("../assets/sprites/nurse-gini-attack-strip.webp"),
+      critical: require("../assets/sprites/nurse-gini-critical-strip.webp"),
+      win: require("../assets/sprites/nurse-gini-win-strip.webp"),
+    },
+    archerGini: {
+      idle: require("../assets/sprites/archer-gini-idle-strip.webp"),
+      attack: require("../assets/sprites/archer-gini-attack-strip.webp"),
+      critical: require("../assets/sprites/archer-gini-critical-strip.webp"),
+      win: require("../assets/sprites/archer-gini-win-strip.webp"),
+    },
+    detectiveGini: {
+      idle: require("../assets/sprites/detective-gini-idle-strip.webp"),
+      attack: require("../assets/sprites/detective-gini-attack-strip.webp"),
+      critical: require("../assets/sprites/detective-gini-critical-strip.webp"),
+      win: require("../assets/sprites/detective-gini-win-strip.webp"),
+    },
+    plainGini: {
+      idle: require("../assets/sprites/plain-gini-idle-strip.webp"),
+      attack: require("../assets/sprites/plain-gini-attack-strip.webp"),
+      critical: require("../assets/sprites/plain-gini-critical-strip.webp"),
+      win: require("../assets/sprites/plain-gini-win-strip.webp"),
+    },
+    knightGini: {
+      idle: require("../assets/sprites/knight-gini-idle-strip.webp"),
+      attack: require("../assets/sprites/knight-gini-attack-strip.webp"),
+      critical: require("../assets/sprites/knight-gini-critical-strip.webp"),
+      win: require("../assets/sprites/knight-gini-win-strip.webp"),
+    },
+    sageGini: {
+      idle: require("../assets/sprites/sage-gini-idle-strip.webp"),
+      attack: require("../assets/sprites/sage-gini-attack-strip.webp"),
+      critical: require("../assets/sprites/sage-gini-critical-strip.webp"),
+      win: require("../assets/sprites/sage-gini-win-strip.webp"),
+    },
   },
   slime: {
     idle: require("../assets/sprites/slime-idle-strip.webp"),
@@ -1652,6 +1697,16 @@ export const companionSkillImages: Record<Outfit, number> = {
   witchGini: require("../assets/companions/skill-witch.webp"),
   cowboyGini: require("../assets/companions/skill-cowboy.webp"),
   boxerGini: require("../assets/companions/skill-boxer.webp"),
+  // Its "skill" does nothing (companionSkills.ts) — reuses 모험기니's card rather than
+  // drawing a new icon for an ability that has no actual effect to illustrate.
+  transparentGini: require("../assets/companions/skill-default.webp"),
+  // 기니상자 전용 동료들 — 능력 없음(전용 스킬도 추후 작업), 아이콘은 일단 재사용.
+  nurseGini: require("../assets/companions/skill-default.webp"),
+  archerGini: require("../assets/companions/skill-default.webp"),
+  detectiveGini: require("../assets/companions/skill-default.webp"),
+  plainGini: require("../assets/companions/skill-default.webp"),
+  knightGini: require("../assets/companions/skill-default.webp"),
+  sageGini: require("../assets/companions/skill-default.webp"),
 };
 
 // Wood frame sheet (frames-wood/, cut in reading order: row-column). Row 1 plain wood (wide,

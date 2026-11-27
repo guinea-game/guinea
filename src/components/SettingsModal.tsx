@@ -26,6 +26,7 @@ export function SettingsModal({
   onUnlockAllStages,
   onAddGems,
   onUnlockAllOutfits,
+  onOpenLoopBox,
   onReplayTutorial,
   onOpenComics,
   onUnlockAllComics,
@@ -41,6 +42,7 @@ export function SettingsModal({
   onUnlockAllStages: () => void;
   onAddGems: () => void;
   onUnlockAllOutfits: () => void;
+  onOpenLoopBox: () => void;
   onReplayTutorial: () => void;
   // Opens the comic album (추억 앨범).
   onOpenComics: () => void;
@@ -275,6 +277,16 @@ export function SettingsModal({
                 style={styles.button}
               >
                 {t("동료 다 해금", "Unlock All Companions")}
+              </GameButton>
+              <GameButton
+                variant="green"
+                onPress={() => {
+                  onOpenLoopBox();
+                  onClose();
+                }}
+                style={styles.button}
+              >
+                {t("기니상자 열기", "Open Gini Box")}
               </GameButton>
               <GameButton
                 variant="green"

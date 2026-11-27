@@ -15,6 +15,14 @@ export const OUTFIT_UNLOCK_STAGE: Record<Outfit, number> = {
   boxerGini: Infinity,
   witchGini: 36, // 기니 대도시(35스테이지) 보스 첫 처치 보상
   cowboyGini: Infinity,
+  // Never reached by stage either — only found in 기니상자 (BOX_RESCUE_OUTFITS below).
+  transparentGini: Infinity,
+  nurseGini: Infinity,
+  archerGini: Infinity,
+  detectiveGini: Infinity,
+  plainGini: Infinity,
+  knightGini: Infinity,
+  sageGini: Infinity,
 };
 
 // Companions bought with gems instead of joining at a stage (checked before
@@ -35,16 +43,24 @@ export const OUTFIT_LOOP_GRANT: Partial<Record<Outfit, number>> = {
   cowboyGini: 3,
 };
 
+// 기니상자 (the gift-chest reveal on a loop-4+ clear, see useGameState's confirmLoopAdvance/
+// openLoopBox): a random companion from this pool the player doesn't already own pops out.
+// Add a new companion's Outfit id here whenever one's meant to be found this way instead of
+// by stage/gems/loop — opening the box checks this list fresh each time, so a save that's
+// already past loop 4 picks a newly-added one up automatically, no migration needed.
+export const BOX_RESCUE_OUTFITS: Outfit[] = ["transparentGini", "nurseGini", "archerGini", "detectiveGini", "plainGini", "knightGini", "sageGini"];
+
 // Any stage companion can also be brought along early, before reaching its stage, for this.
 export const OUTFIT_EARLY_UNLOCK_GEMS = 1000;
 
 // What it costs in gems to unlock this companion right now: its own price for gem-only ones
-// (OUTFIT_GEM_PRICE), the early-unlock price for stage ones, nothing for the starter or for
-// a loop-granted one without its own gem price.
+// (OUTFIT_GEM_PRICE), the early-unlock price for stage ones, nothing for the starter, a
+// loop-granted one without its own gem price, or a 기니상자-only one (BOX_RESCUE_OUTFITS) —
+// none of those can be bought at all, early or otherwise.
 export function getOutfitGemPrice(outfit: Outfit): number | undefined {
   if (outfit === "default") return undefined;
   if (outfit in OUTFIT_GEM_PRICE) return OUTFIT_GEM_PRICE[outfit];
-  if (outfit in OUTFIT_LOOP_GRANT) return undefined;
+  if (outfit in OUTFIT_LOOP_GRANT || BOX_RESCUE_OUTFITS.includes(outfit)) return undefined;
   return OUTFIT_EARLY_UNLOCK_GEMS;
 }
 

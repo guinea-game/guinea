@@ -25,6 +25,16 @@ export const COMPANION_SHARD_STAGE: Record<Outfit, number> = {
   chefGini: 32, // 바게트 기사
   witchGini: 34, // 마녀 기니
   cowboyGini: 12, // 탈수 직전 낙타 (desert — the closest thing to a Wild West boss)
+  // Box-only (unlocks.ts's BOX_RESCUE_OUTFITS), so it has no stage story of its own to tie
+  // this to — same boss as default. Harmless either way: leveling it doesn't change
+  // anything (see getOutfitStats' switch, no case for it at all).
+  transparentGini: 0,
+  nurseGini: 0,
+  archerGini: 0,
+  detectiveGini: 0,
+  plainGini: 0,
+  knightGini: 0,
+  sageGini: 0,
 };
 
 export function getShardCompanion(stageNumber: number) {

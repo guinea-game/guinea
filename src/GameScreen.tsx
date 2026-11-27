@@ -32,6 +32,7 @@ import { DAILY_LOWER_COLOR, DailyScreen } from "./screens/DailyScreen";
 import { TutorialOverlay } from "./components/TutorialOverlay";
 import { BagFullModal } from "./components/BagFullModal";
 import { FirstClearCelebration } from "./components/FirstClearCelebration";
+import { LoopBoxModal } from "./components/LoopBoxModal";
 import { RecipeTutorial } from "./components/RecipeTutorial";
 import { SkillTutorial } from "./components/SkillTutorial";
 import { CookCompleteBurst } from "./components/CookCompleteBurst";
@@ -512,6 +513,7 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
         onUnlockAllStages={game.cheatUnlockAllStages}
         onAddGems={() => game.cheatAddGems(10000)}
         onUnlockAllOutfits={game.cheatUnlockAllOutfits}
+        onOpenLoopBox={game.forceOpenLoopBox}
         onOpenShop={() => onSelectTab("shop")}
         onOpenStats={() => onSelectTab("stats")}
         onReplayTutorial={() => setState((previous) => ({ ...previous, selectedTab: "battle", tutorialDone: false }))}
@@ -629,6 +631,15 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             cancelLabel={t("아니요", "No")}
             onConfirm={() => game.confirmLoopAdvance(true)}
             onCancel={() => game.confirmLoopAdvance(false)}
+          />
+        )}
+        {game.loopBox && (
+          <LoopBoxModal
+            opened={game.loopBox.opened}
+            companionName={game.loopBox.outfit ? t(getOutfitName(game.loopBox.outfit, state)) : null}
+            companionOutfit={game.loopBox.outfit}
+            onOpen={game.openLoopBox}
+            onDismiss={game.dismissLoopBox}
           />
         )}
         {game.bagFullAt !== null && (

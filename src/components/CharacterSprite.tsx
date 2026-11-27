@@ -21,6 +21,18 @@ const DURATIONS: Record<PlayerAnimation, number> = {
 // so one factor brings every animation back to the other companions' size.
 const CHEF_FIT = 1.16;
 const CHEF_SCALE = { idle: CHEF_FIT, attack: CHEF_FIT, critical: CHEF_FIT, win: CHEF_FIT };
+// 그냥기니의 레퍼런스 시트는 캐릭터가 칸 안에서 유독 작게 그려져 있어(다른 동료 대비 체감 왜소함),
+// 다른 동료들 비율에 맞춰 키워준다.
+const PLAIN_FIT = 1.35;
+const PLAIN_SCALE = { idle: PLAIN_FIT, attack: PLAIN_FIT, critical: PLAIN_FIT, win: PLAIN_FIT };
+// 간호사/기사/현자기니도 같은 이유로 체감상 작아서(각각 다른 레퍼런스지만 셋 다 다른 동료 대비
+// 왜소함) 하나씩 키워준다 — 수치는 디자인 캐릭터(궁수/탐정 등)와 눈대중으로 맞춘 값.
+const NURSE_FIT = 1.2;
+const NURSE_SCALE = { idle: NURSE_FIT, attack: NURSE_FIT, critical: NURSE_FIT, win: NURSE_FIT };
+const KNIGHT_FIT = 1.25;
+const KNIGHT_SCALE = { idle: KNIGHT_FIT, attack: KNIGHT_FIT, critical: KNIGHT_FIT, win: KNIGHT_FIT };
+const SAGE_FIT = 1.3;
+const SAGE_SCALE = { idle: SAGE_FIT, attack: SAGE_FIT, critical: SAGE_FIT, win: SAGE_FIT };
 
 const CONFIG: Record<Outfit, Record<PlayerAnimation, { frameCount: number; frameSize: number; scale: number; offsetY?: number }>> = {
   default: {
@@ -108,6 +120,58 @@ const CONFIG: Record<Outfit, Record<PlayerAnimation, { frameCount: number; frame
     critical: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1 },
     win: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1 },
   },
+  // Reuses "default"'s own strips/layout verbatim (see assets.ts) — OPACITY below is what
+  // actually makes it its own outfit.
+  transparentGini: {
+    idle: { frameCount: 5, frameSize: FRAME_SIZE, scale: 1 },
+    attack: { frameCount: 5, frameSize: FRAME_SIZE, scale: 1 },
+    critical: { frameCount: 5, frameSize: 320, scale: 2.52 },
+    win: { frameCount: 5, frameSize: FRAME_SIZE, scale: 1 },
+  },
+  // 기니상자 전용 코스메틱 동료 3종 — 4프레임짜리 전용 스트립, 생성 시점부터 160px 기준으로
+  // 크롭해서 추가 scale/offsetY 보정 없이 그대로 맞음.
+  nurseGini: {
+    idle: { frameCount: 4, frameSize: FRAME_SIZE, scale: NURSE_SCALE.idle },
+    attack: { frameCount: 4, frameSize: FRAME_SIZE, scale: NURSE_SCALE.attack },
+    critical: { frameCount: 4, frameSize: FRAME_SIZE, scale: NURSE_SCALE.critical },
+    win: { frameCount: 4, frameSize: FRAME_SIZE, scale: NURSE_SCALE.win },
+  },
+  archerGini: {
+    idle: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1 },
+    attack: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1 },
+    critical: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1 },
+    win: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1 },
+  },
+  detectiveGini: {
+    idle: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1 },
+    attack: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1 },
+    critical: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1 },
+    win: { frameCount: 4, frameSize: FRAME_SIZE, scale: 1 },
+  },
+  plainGini: {
+    idle: { frameCount: 4, frameSize: FRAME_SIZE, scale: PLAIN_SCALE.idle },
+    attack: { frameCount: 4, frameSize: FRAME_SIZE, scale: PLAIN_SCALE.attack },
+    critical: { frameCount: 4, frameSize: FRAME_SIZE, scale: PLAIN_SCALE.critical },
+    win: { frameCount: 4, frameSize: FRAME_SIZE, scale: PLAIN_SCALE.win },
+  },
+  knightGini: {
+    idle: { frameCount: 4, frameSize: FRAME_SIZE, scale: KNIGHT_SCALE.idle },
+    attack: { frameCount: 4, frameSize: FRAME_SIZE, scale: KNIGHT_SCALE.attack },
+    critical: { frameCount: 4, frameSize: FRAME_SIZE, scale: KNIGHT_SCALE.critical },
+    win: { frameCount: 4, frameSize: FRAME_SIZE, scale: KNIGHT_SCALE.win },
+  },
+  sageGini: {
+    idle: { frameCount: 4, frameSize: FRAME_SIZE, scale: SAGE_SCALE.idle },
+    attack: { frameCount: 4, frameSize: FRAME_SIZE, scale: SAGE_SCALE.attack },
+    critical: { frameCount: 4, frameSize: FRAME_SIZE, scale: SAGE_SCALE.critical },
+    win: { frameCount: 4, frameSize: FRAME_SIZE, scale: SAGE_SCALE.win },
+  },
+};
+
+// Faded well below "default"'s full strength, but never all the way to 0 — fully invisible
+// would make the companion impossible to confirm as equipped, select in a list, etc.
+const OPACITY: Partial<Record<Outfit, number>> = {
+  transparentGini: 0.38,
 };
 
 export function CharacterSprite({
@@ -146,6 +210,7 @@ export function CharacterSprite({
       style={{
         width: size,
         height: size,
+        opacity: OPACITY[outfit] ?? 1,
         transform: [{ scale: scale * config.scale }, { translateY: offsetYPx }],
         transformOrigin: "50% 100%",
       }}

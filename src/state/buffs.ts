@@ -256,6 +256,13 @@ export const OUTFIT_NAMES: Record<Outfit, string> = {
   boxerGini: "복서기니",
   witchGini: "마녀기니",
   cowboyGini: "카우보이기니",
+  transparentGini: "투명기니",
+  nurseGini: "간호사기니",
+  archerGini: "궁수기니",
+  detectiveGini: "탐정기니",
+  plainGini: "그냥기니",
+  knightGini: "기사기니",
+  sageGini: "현자기니",
 };
 
 // egenGini travels in disguise as "꽃잎기니" — a dormant 벚꽃 지팡이 기니 — until the player
@@ -458,6 +465,15 @@ export const OUTFIT_GROWTH_HINT: Record<Outfit, [string, string, string, string]
   witchGini: ["치명 피해 +3 (Lv10 치명 확률 +5)", "Crit damage +3 (Lv10: +5 crit chance)", "クリダメ +3（Lv10 クリ率 +5）", "暴伤 +3（Lv10 暴击率 +5）"],
   boxerGini: ["공격력 +5%", "Attack +5%", "攻撃力 +5%", "攻击力 +5%"],
   cowboyGini: ["재장전 -0.08초 (Lv5·10 탄창 +1)", "Reload -0.08s (Lv5/10: +1 round)", "リロード -0.08秒（Lv5・10 装弾数 +1）", "装填 -0.08秒（Lv5/10 弹仓 +1）"],
+  // No stat is tied to its level — see getOutfitStats' switch, which has no case for it at all.
+  transparentGini: ["성장 효과 없음 (그냥 투명해요)", "No growth effect (just transparent)", "成長効果なし（ただ透明なだけ）", "没有成长效果（只是透明而已）"],
+  // 기니상자 전용 코스메틱 동료 3종 — 역시 레벨에 붙은 스탯이 없음(getOutfitStats에 케이스 없음).
+  nurseGini: ["성장 효과 없음 (장식용 동료)", "No growth effect (cosmetic companion)", "成長効果なし（装飾用の仲間）", "没有成长效果（装饰用同伴）"],
+  archerGini: ["성장 효과 없음 (장식용 동료)", "No growth effect (cosmetic companion)", "成長効果なし（装飾用の仲間）", "没有成长效果（装饰用同伴）"],
+  detectiveGini: ["성장 효과 없음 (장식용 동료)", "No growth effect (cosmetic companion)", "成長効果なし（装飾用の仲間）", "没有成长效果（装饰用同伴）"],
+  plainGini: ["성장 효과 없음 (장식용 동료)", "No growth effect (cosmetic companion)", "成長効果なし（装飾用の仲間）", "没有成长效果（装饰用同伴）"],
+  knightGini: ["성장 효과 없음 (장식용 동료)", "No growth effect (cosmetic companion)", "成長効果なし（装飾用の仲間）", "没有成长效果（装饰用同伴）"],
+  sageGini: ["성장 효과 없음 (장식용 동료)", "No growth effect (cosmetic companion)", "成長効果なし（装飾用の仲間）", "没有成长效果（装饰用同伴）"],
 };
 
 const signed = (value: number) => `${value >= 0 ? "+" : ""}${value}`;

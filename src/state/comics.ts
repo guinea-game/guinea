@@ -39,7 +39,7 @@ export const LOOP_COMICS: LoopComic[] = [
   { comic: "apprenticeMisfire", afterLoop: 2, afterStage: 5 }, // during 3회차, 평범한 마을 (stage 6): a different 견습기니's first try at fighting from range, badly
   { comic: "apprenticeQuickdraw", afterLoop: 2, afterStage: 22 }, // during 3회차, 수군 포구 (stage 23): the same one's first real hit
   { comic: "cowboyEvolution", afterLoop: 3 }, // 3회차's last boss: that 견습기니 evolves into 카우보이기니
-  { comic: "giniBoxRescue", afterLoop: 4 }, // 4회차's last boss: the box-reward reveal's setup — a village gini gets taken
+  { comic: "giniBoxRescue", afterLoop: 3 }, // 3회차's last boss, right before 4회차 starts: the box-reward reveal's setup — a village gini gets taken
 ];
 
 export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = {
@@ -1614,11 +1614,13 @@ export const COMICS: Record<ComicId, { title: string; panels: ComicPanel[] }> = 
       },
     ],
   },
-  // Plays once loopsCompleted first reaches 4 (see LOOP_COMICS below) — 4회차의 마지막 보스를
-  // 잡자마자. 집에 돌아오고(1) → 아가기니들의 환영을 받다가(2) → 마지막 보스가 들이닥쳐 아가기니
-  // 하나를 채가고(3) → 모험기니가 쫓아 나서는(4) 데까지 — 결말(상자를 찾아 구해 오는 장면)은
-  // 아직 없음, 다음 편에서. 이게 바로 그동안 마지막 보스가 기니들을 수프 재료로 알고 잡아갔던
-  // 진짜 이유 — 보스를 잡을 때마다 기니태초마을에서 또 한 마리씩 없어지고 있었다는 뒷이야기.
+  // Plays once loopsCompleted first reaches 3 (see LOOP_COMICS below) — 3회차의 마지막 보스를
+  // 잡자마자, 4회차가 시작되기 직전: 기니상자(LOOP_BOX_STARTS_AT=4)가 처음 뜨는 건 그 다음
+  // 전환(4회차 클리어 시점)이라 한 루프 앞서 미리 보여주는 설정편이다. 집에 돌아오고(1) →
+  // 아가기니들의 환영을 받다가(2) → 마지막 보스가 들이닥쳐 아가기니 하나를 채가고(3) →
+  // 모험기니가 쫓아 나서는(4) 데까지 — 결말(상자를 찾아 구해 오는 장면)은 아직 없음, 다음
+  // 편에서. 이게 바로 그동안 마지막 보스가 기니들을 수프 재료로 알고 잡아갔던 진짜 이유 —
+  // 보스를 잡을 때마다 기니태초마을에서 또 한 마리씩 없어지고 있었다는 뒷이야기.
   giniBoxRescue: {
     title: "아가기니 유괴 사건",
     panels: [

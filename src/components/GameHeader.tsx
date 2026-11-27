@@ -32,6 +32,7 @@ export function GameHeader({
   onUnlockAllStages,
   onAddGems,
   onUnlockAllOutfits,
+  onOpenLoopBox,
   onOpenShop,
   onOpenStats,
   onReplayTutorial,
@@ -49,6 +50,7 @@ export function GameHeader({
   onUnlockAllStages: () => void;
   onAddGems: () => void;
   onUnlockAllOutfits: () => void;
+  onOpenLoopBox: () => void;
   onOpenShop: () => void;
   onOpenStats: () => void;
   onReplayTutorial: () => void;
@@ -107,6 +109,7 @@ export function GameHeader({
           onUnlockAllStages={onUnlockAllStages}
           onAddGems={onAddGems}
           onUnlockAllOutfits={onUnlockAllOutfits}
+          onOpenLoopBox={onOpenLoopBox}
           onReplayTutorial={onReplayTutorial}
           onOpenComics={onOpenComics}
           onUnlockAllComics={onUnlockAllComics}

@@ -26,7 +26,7 @@ import { claimHiddenQuest, claimMission, migrateQuestClaims } from "./quests";
 import { claimLevelReward as payLevelReward } from "./levelRewards";
 import { completeLabResearch, getEffectiveStatCap, getLabBagStackSize, getLabCookSpeedBonus, getLabBossDoubleBonus, getLabBossTimeBonusMs, getLabMobHpScale, getLabGoldenChance, getLabSkillCooldownSec, getOfflineCapMs, startLabResearch, type LabResearchId } from "./lab";
 import { deliverOrder, needsNewDaily, startDaily } from "./daily";
-import { getOutfitGemPrice, getOutfitsGrantedByLoop, getOutfitsUnlockedByStage, getUnlocksAtLevel, isOutfitUnlocked, isSkillUnlocked, syncStageUnlockedOutfits } from "./unlocks";
+import { BOX_RESCUE_OUTFITS, getOutfitGemPrice, getOutfitsGrantedByLoop, getOutfitsUnlockedByStage, getUnlocksAtLevel, isOutfitUnlocked, isSkillUnlocked, syncStageUnlockedOutfits } from "./unlocks";
 import { fitItems, getBagCapacity, getBagExpandCost, BAG_MAX_SLOTS, slotsUsed } from "./bag";
 import { BOSS_NAME, getClearedBosses, BOSS_PHASE_TWO_HP_MULTIPLIER, getDifficultyStage, getEffectiveDifficultyStage, getEnemyKind, getEnemyMaxHp, getEnemyRewardHp, getStageLabel, LAST_STAGE_NUMBER, isMiniBossDue, isGoldenMiniBoss, getMiniBossSalt, GOLDEN_GEMS, GOLDEN_MINI_CHANCE, GOLDEN_GOLD_MULTIPLIER, STRAY_MOB_CHANCE, MINI_BOSS_COUNT, MINI_BOSS_EXP_MULTIPLIER, MINI_BOSS_HP_MULTIPLIER, STAGE_KILL_TARGET } from "./stages";
 import { rollDrops, type DropModifiers } from "./drops";
@@ -333,7 +333,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
       if (save) {
         // Guards against a save written before an outfit was retired (e.g. "forest") —
         // falls back to default rather than crashing when looking up its sprite sheet.
-        const validOutfits = ["default", "explorerHamster", "tetoGini", "assassinGini", "egenGini", "samuraiGini", "chefGini", "boxerGini", "witchGini", "cowboyGini"];
+        const validOutfits = ["default", "explorerHamster", "tetoGini", "assassinGini", "egenGini", "samuraiGini", "chefGini", "boxerGini", "witchGini", "cowboyGini", "transparentGini", "nurseGini", "archerGini", "detectiveGini", "plainGini", "knightGini", "sageGini"];
         const equippedOutfit = validOutfits.includes(save.state.equippedOutfit)
           ? save.state.equippedOutfit
           : "default";
@@ -772,23 +772,23 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     });
   }, [boss, bossPhase, bossHasPhaseTwo, miniBoss, goldenMini, strayKind, state.stageKills, state.stageMiniBosses, state.bossKills, state.runSeed, state.stageNumber, state.inventory, state.bagExpansions, state.bossesCleared, state.highestStageNumber, state.loopsCompleted, state.purchasedOutfits, state.equippedOutfit, dropRate, vegetableDrop, seafoodDrop, dropDouble, bossDropSure, expBonus, startBossFight, state.giftKills, state.giftLootExplained, bossTimeLimitMs, state.buffSlots, state.stageStars, companionChefDropBoost, bagStackSize, labBossDoubleBonus, goldenChance, labBossTimeMs]);
 
-  // Answers loopPrompt (see handleEnemyDefeat's atLastStage branch). 아니요 just closes it —
-  // the state's already sitting on the last stage, same as a boss kill with nowhere new to
-  // go would leave it. 예 is what actually loops: stage 1, highestStageNumber re-locked,
-  // loopsCompleted +1 (still climbing forever, for the loop-gated outfits/comics below —
-  // only the difficulty curve itself no longer scales off it, see getDifficultyStage), and
-  // 공격력/치명타 피해/치명타 확률/골드 획득 reset to their fresh-save values so every loop
-  // climbs the exact same curve instead of starting instantly overpowered — 공속(보석 스탯)은 그대로 둠.
-  const confirmLoopAdvance = (proceed: boolean) => {
-    setLoopPrompt(false);
-    if (!proceed) return;
+  // The loop-4+ 기니상자 reveal (see loopBox below) holds the actual transition back a beat
+  // so the box can be opened first; this is the part that was previously confirmLoopAdvance's
+  // whole body — stage 1, highestStageNumber re-locked, loopsCompleted +1 (still climbing
+  // forever, for the loop-gated outfits/comics below — only the difficulty curve itself no
+  // longer scales off it, see getDifficultyStage), and 공격력/치명타 피해/치명타 확률/골드
+  // 획득 reset to their fresh-save values so every loop climbs the exact same curve instead
+  // of starting instantly overpowered — 공속(보석 스탯)은 그대로 둠. `wonOutfit` is whatever
+  // openLoopBox found in the box (or null, including every loop before 4 — there's no box then).
+  const applyLoopAdvance = (wonOutfit: Outfit | null) => {
     setState((previous) => {
       const loopsCompleted = (previous.loopsCompleted ?? 0) + 1;
       // Loop-granted outfits (currently just 복서기니, see unlocks.ts's OUTFIT_LOOP_GRANT)
       // join outright the instant loopsCompleted first reaches their number — same beat as
       // comics.ts's LOOP_COMICS plays their evolution/reveal comic.
       const loopGrantedOutfits = getOutfitsGrantedByLoop(loopsCompleted).filter((outfit) => !(previous.purchasedOutfits ?? []).includes(outfit));
-      const purchasedOutfits = loopGrantedOutfits.length > 0 ? [...(previous.purchasedOutfits ?? []), ...loopGrantedOutfits] : previous.purchasedOutfits;
+      const newOutfits = [...loopGrantedOutfits, ...(wonOutfit && !(previous.purchasedOutfits ?? []).includes(wonOutfit) ? [wonOutfit] : [])];
+      const purchasedOutfits = newOutfits.length > 0 ? [...(previous.purchasedOutfits ?? []), ...newOutfits] : previous.purchasedOutfits;
       return {
         ...previous,
         stageNumber: 0,
@@ -809,6 +809,55 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     // rescale on its own. Force a fresh one at stage 1's real HP, the same way selectStage/
     // leaveBossFight do after any other stage jump that isn't a natural kill-chain respawn.
     battle.resetEnemy(getEnemyMaxHp(0, false) * mobHpScale);
+  };
+
+  // Loop 4 is when 기니상자 starts showing up (see comics.ts's giniBoxRescue — this is the
+  // actual feature that comic was setting up the story for): closed until tapped open
+  // (`opened: false`), then holds whichever companion it found (or null — BOX_RESCUE_OUTFITS
+  // is empty for now, so it's always null until a new companion is added there).
+  const [loopBox, setLoopBox] = useState<{ opened: boolean; outfit: Outfit | null } | null>(null);
+  const LOOP_BOX_STARTS_AT = 4;
+
+  // Answers loopPrompt (see handleEnemyDefeat's atLastStage branch). 아니요 just closes it —
+  // the state's already sitting on the last stage, same as a boss kill with nowhere new to go
+  // would leave it. 예 either loops straight away (loop 2/3) or, from loop 4 on, shows the
+  // closed box first — openLoopBox/dismissLoopBox carry the actual transition the rest of
+  // the way from there instead of this doing it directly.
+  const confirmLoopAdvance = (proceed: boolean) => {
+    setLoopPrompt(false);
+    if (!proceed) return;
+    if ((state.loopsCompleted ?? 0) + 1 >= LOOP_BOX_STARTS_AT) {
+      setLoopBox({ opened: false, outfit: null });
+      return;
+    }
+    applyLoopAdvance(null);
+  };
+
+  // Taps the closed box: picks a random not-yet-owned companion out of BOX_RESCUE_OUTFITS (or
+  // null if every one of them — currently all of them, it's empty — is already owned/doesn't exist).
+  const openLoopBox = () => {
+    if (!loopBox || loopBox.opened) return;
+    const owned = state.purchasedOutfits ?? [];
+    const pool = BOX_RESCUE_OUTFITS.filter((outfit) => !owned.includes(outfit));
+    const won = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : null;
+    setLoopBox({ opened: true, outfit: won });
+  };
+
+  // Closes the open box and finally applies the loop advance it was holding back, handing
+  // whatever it found (or null) to applyLoopAdvance so a real win actually joins the roster.
+  const dismissLoopBox = () => {
+    if (!loopBox) return;
+    const won = loopBox.outfit;
+    setLoopBox(null);
+    applyLoopAdvance(won);
+  };
+
+  // Dev cheat (SettingsModal, __DEV__ only): pops the closed box on demand, without actually
+  // having cleared a loop 4+ run — same state confirmLoopAdvance sets, so it plays out and
+  // dismisses exactly like the real thing (loop still advances on 확인, same as always).
+  const forceOpenLoopBox = () => {
+    if (loopBox) return;
+    setLoopBox({ opened: false, outfit: null });
   };
 
   // Gold that isn't a kill reward (the Steal skill) still counts toward the gold quest.
@@ -900,7 +949,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   // kill's loot is being explained. !appActive covers the app/tab being backgrounded — see its
   // declaration above.
   const battlePaused =
-    skillTutorialActive || bossRetryAvailable || bossIntroPending || stageAnnouncement !== null || firstClear !== null || loopPrompt || externallyPaused || !state.tutorialDone || heldLoot !== null || !appActive || adShowing;
+    skillTutorialActive || bossRetryAvailable || bossIntroPending || stageAnnouncement !== null || firstClear !== null || loopPrompt || loopBox !== null || externallyPaused || !state.tutorialDone || heldLoot !== null || !appActive || adShowing;
 
   // The boss clock stands still with the fight: time spent paused (an ad for 2x speed, the app
   // in the background, ...) is added back onto the fight's start. Kept per fight — keyed by
@@ -1775,6 +1824,10 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     firstClear,
     loopPrompt,
     confirmLoopAdvance,
+    loopBox,
+    openLoopBox,
+    dismissLoopBox,
+    forceOpenLoopBox,
     // What's been opened in the album and the recipe shop stays open.
     clearedStages: getClearedBosses(state),
     // Closing without the ad still pays the base gems.
