@@ -131,7 +131,7 @@ export function GroceryScreen({
       <ShopHero speaker={t("할멈 기니", "Grandma Gini")} talk={talk} />
 
       {/* More categories than fit across, so the row scrolls sideways. */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScroll} contentContainerStyle={styles.tabs}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" style={styles.tabScroll} contentContainerStyle={styles.tabs}>
         {TABS.map((tab) => {
           const active = tab.id === filter;
           return (

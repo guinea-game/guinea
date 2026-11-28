@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Image, StyleSheet, View } from "react-native";
+import { Image, StyleSheet, View, Pressable } from "react-native";
 import { Text } from "./GameText";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from "react-native-reanimated";
 import { SearchBox } from "./SearchBox";
@@ -64,6 +64,8 @@ export function IngredientCodex({
   priceStage,
   fresh = [],
   initialQuery,
+  reachedStage,
+  onGoStage,
 }: {
   discovered: string[];
   dropped: string[] | undefined;
@@ -72,6 +74,10 @@ export function IngredientCodex({
   // Arriving here from an ingredient tapped elsewhere (a recipe card, its "i" info) — the
   // search box starts on that ingredient's name instead of empty.
   initialQuery?: string;
+  // The furthest stage reached (0-based), and going to a stage — tapping a reached stage's
+  // pill under 얻는 곳 takes you there to farm it.
+  reachedStage: number;
+  onGoStage: (stage: number) => void;
 }) {
   const found = GROCERY.filter((item) => discovered.includes(item.name)).length;
   // Search by ingredient name or a dish that uses it; undiscovered ones only show unfiltered.
@@ -116,13 +122,24 @@ export function IngredientCodex({
                     <Text style={styles.sectionLabel}>{t("얻는 곳", "Found In")}</Text>
                     <View style={styles.pills}>
                       {sources.length > 0 ? (
-                        sources.map((stage) => (
-                          <View key={stage} style={styles.pill}>
-                            <Text style={styles.pillText} numberOfLines={1}>
-                              {getStageCode(stage)} {t(STAGES[stage].area)}
-                            </Text>
-                          </View>
-                        ))
+                        sources.map((stage) => {
+                          const reached = stage <= reachedStage;
+                          return (
+                            <Pressable
+                              key={stage}
+                              disabled={!reached}
+                              onPress={() => onGoStage(stage)}
+                              accessibilityRole="button"
+                              accessibilityLabel={reached ? t(`${STAGES[stage].area}(으)로 이동`, `Go to ${t(STAGES[stage].area)}`) : t(`${STAGES[stage].area}, 아직 못 가요`, `${t(STAGES[stage].area)}, not reached yet`)}
+                              hitSlop={4}
+                              style={({ pressed }) => [styles.pill, !reached && styles.pillLocked, pressed && styles.pillPressed]}
+                            >
+                              <Text style={[styles.pillText, !reached && styles.pillTextLocked]} numberOfLines={1}>
+                                {getStageCode(stage)} {t(STAGES[stage].area)}
+                              </Text>
+                            </Pressable>
+                          );
+                        })
                       ) : (
                         <View style={[styles.pill, styles.pillShop]}>
                           <Text style={styles.pillText}>{t("할머니 식료품점", "Grandma's Grocery")}</Text>
@@ -203,6 +220,9 @@ const styles = StyleSheet.create({
     borderColor: "#c9a86e",
   },
   pillShop: { backgroundColor: "#f3d9cf", borderColor: "#c98a6e" },
+  pillLocked: { opacity: 0.5 },
+  pillPressed: { transform: [{ scale: 0.95 }] },
+  pillTextLocked: { color: colors.muted },
   pillText: { fontSize: 12, fontWeight: "800", fontFamily: fonts.bold, color: colors.brown },
   dishes: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 3 },
   dish: { width: 22, height: 22 },

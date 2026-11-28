@@ -38,6 +38,8 @@ export function InventoryScreen({
   onSell,
   focusItemName,
   onFocusHandled,
+  reachedStage,
+  onGoStage,
 }: {
   inventory: GameState["inventory"];
   discoveredItems: string[];
@@ -63,6 +65,9 @@ export function InventoryScreen({
   // on this mount, then cleared by the caller so a plain "가방" tap later opens normally.
   focusItemName?: string | null;
   onFocusHandled?: () => void;
+  // For the codex's 얻는 곳 pills: how far the player has got, and going to a stage.
+  reachedStage: number;
+  onGoStage: (stage: number) => void;
 }) {
   const capacity = getBagCapacity(expansions);
   const cost = getBagExpandCost(expansions);
@@ -132,7 +137,7 @@ export function InventoryScreen({
         </Pressable>
       </View>
       {codex ? (
-        <IngredientCodex discovered={discoveredItems} dropped={droppedItems} priceStage={priceStage} fresh={newInCodex} initialQuery={focusItemName ?? undefined} />
+        <IngredientCodex discovered={discoveredItems} dropped={droppedItems} priceStage={priceStage} fresh={newInCodex} initialQuery={focusItemName ?? undefined} reachedStage={reachedStage} onGoStage={onGoStage} />
       ) : (
       <>
       <Panel slice={kit.buttonBeige} style={styles.summary}>

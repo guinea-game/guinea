@@ -30,6 +30,7 @@ export function FadedScroll({
         style={styles.scroll}
         contentContainerStyle={contentContainerStyle}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
         scrollEventThrottle={32}
         onLayout={(event: LayoutChangeEvent) => {
           const view = event.nativeEvent.layout.height;

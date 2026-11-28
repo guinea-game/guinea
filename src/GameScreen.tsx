@@ -263,10 +263,6 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
   const markComicSeen = (id: ComicId) =>
     setState((previous) => ({ ...previous, seenComics: [...new Set([...(previous.seenComics ?? []), id])] }));
   const collectCount = useRef(0);
-  // The page scroller, and how tall its window is — the map uses both to open with the
-  // stage being fought in the middle of the screen.
-  const contentScroll = useRef<ScrollView>(null);
-  const contentHeight = useRef(0);
   // The cooking minigame resolved with `grade` (see CookingMinigame/KitchenScreen) — takes
   // the dish out at that grade and plays the "완성!" burst (nothing on a 망함).
   const onCollect = (recipeId: string, grade: CookGrade) => {
@@ -389,6 +385,8 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             onSell={game.sellIngredient}
             focusItemName={ingredientFocus}
             onFocusHandled={() => setIngredientFocus(null)}
+            reachedStage={state.highestStageNumber ?? state.stageNumber}
+            onGoStage={game.selectStage}
           />
         );
       case "skills":
@@ -480,7 +478,6 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
             stageStars={state.stageStars}
             stageStarsClaimed={state.stageStarsClaimed}
             onClaimStars={game.claimStars}
-            onFocusStage={(y, height) => contentScroll.current?.scrollTo({ y: Math.max(0, y + height / 2 - contentHeight.current / 2), animated: false })}
             loopsCompleted={state.loopsCompleted}
           />
         );
@@ -532,18 +529,24 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
       <SafeAreaView style={styles.frame} edges={["top"]}>
         {/* 일일 의뢰 draws the header inside its own page, over the restaurant (see below). */}
         {state.selectedTab !== "daily" && headerElement}
-        <ScrollView
-          key={state.selectedTab}
-          ref={contentScroll}
-          showsVerticalScrollIndicator={false}
-          onLayout={(event) => {
-            contentHeight.current = event.nativeEvent.layout.height;
-          }}
-          style={[styles.content, state.selectedTab === "daily" && { backgroundColor: DAILY_LOWER_COLOR }]}
-          contentContainerStyle={styles.contentContainer}
-        >
-          {renderContent()}
-        </ScrollView>
+        {/* The map scrolls itself, to keep its heading pinned on top (MilestoneScreen). */}
+        {state.selectedTab === "milestone" ? (
+          <View key={state.selectedTab} style={styles.content}>
+            {renderContent()}
+          </View>
+        ) : (
+          <ScrollView
+            key={state.selectedTab}
+            showsVerticalScrollIndicator={false}
+            // A tap on a button while a search box's keyboard is up presses the button (and the
+            // keyboard closes) — instead of the first tap only dismissing the keyboard.
+            keyboardShouldPersistTaps="handled"
+            style={[styles.content, state.selectedTab === "daily" && { backgroundColor: DAILY_LOWER_COLOR }]}
+            contentContainerStyle={styles.contentContainer}
+          >
+            {renderContent()}
+          </ScrollView>
+        )}
         <BottomNavigation selected={state.selectedTab} onSelect={onSelectTab} badges={{ kitchen: newRecipeOffer }} />
         {exitConfirmOpen && (
           <ConfirmModal
@@ -567,7 +570,16 @@ export function GameScreen({ onRestoreSave }: { onRestoreSave: (state: GameState
           <LevelRewardModal state={state} onClose={() => setLevelRewardOpen(false)} onClaim={claimLevelReward} />
         )}
         {labOpen && (
-          <LabModal state={state} now={game.now} onClose={() => setLabOpen(false)} onStartResearch={startResearch} />
+          <LabModal
+            state={state}
+            now={game.now}
+            onClose={() => setLabOpen(false)}
+            onStartResearch={startResearch}
+            onFindDish={(recipeName) => {
+              setLabOpen(false);
+              openKitchenFor(recipeName);
+            }}
+          />
         )}
         {game.offlineSummary && (
           <OfflineRewardModal

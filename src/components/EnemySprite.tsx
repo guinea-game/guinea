@@ -583,6 +583,11 @@ const BOSS_SHEET_FOR: Record<EnemyKind, "bossSlime" | "bossMushroom" | "bossCarr
   llamaCook: "bossSunCondor",
 };
 
+// For the still (single-frame) pose: a frame other than the first where the first is
+// damaged in the art itself — the desert fox's idle frames 0–1 have their tail sliced off by
+// a straight cut at the right edge of the cell (in the strip since it was added).
+const STILL_FRAME: Partial<Record<EnemyKind, number>> = { fox: 2 };
+
 export function EnemySprite({
   boss,
   kind = "slime",
@@ -618,6 +623,7 @@ export function EnemySprite({
         displaySize={size}
         durationMs={config.durationMs}
         mode={still ? "still" : config.mode}
+        startFrame={still && !boss ? (STILL_FRAME[kind] ?? 0) : undefined}
         restartKey={restartKey}
         tintColor={tintColor}
       />

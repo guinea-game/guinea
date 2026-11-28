@@ -490,7 +490,7 @@ function MashRound({
     <View style={styles.round}>
       <Text style={styles.mashTarget}>{t(`${target}번 두드려 봐!`, `Tap it ${target} times!`)}</Text>
       <Animated.View style={countStyle}>
-        <StrokedText style={styles.mashCount} strokeColor={colors.line} strokeWidth={2}>
+        <StrokedText style={styles.mashCount} strokeColor={colors.line} strokeWidth={2.5}>
           {t(`${tapCount}회!`, `${tapCount}!`)}
         </StrokedText>
       </Animated.View>
@@ -655,10 +655,10 @@ const styles = StyleSheet.create({
   // 낚시's own indicator — same shape as the sweep's, just flame-colored instead of gold.
   holdIndicator: { backgroundColor: "#ff6b3a" },
   resultWrap: { width: "100%", height: TRACK_HEIGHT + 56, marginTop: 14, alignItems: "center", justifyContent: "center", gap: 4 },
-  // Fairly thick but not as heavy as 900 — at mashCount's size, the stroke fake (StrokedText
-  // stacks 8 offset copies) plus 900-weight glyphs filled in Korean counters like 회 solid.
+  // Cream inside a dark outline: a dark fill under the same dark stroke merged into one blob
+  // (the counters of 회 filled in), so the fill stays light and the outline draws the letters.
   mashTarget: { fontSize: 15, fontWeight: "800", fontFamily: fonts.bold, color: colors.green, letterSpacing: -0.2 },
-  mashCount: { marginTop: 4, fontSize: 44, fontWeight: "800", fontFamily: fonts.bold, color: colors.ink, letterSpacing: 1 },
+  mashCount: { marginTop: 4, fontSize: 40, fontWeight: "800", fontFamily: fonts.bold, color: colors.cream, letterSpacing: 1.5 },
   mashTimeTrack: { width: 160, height: 6, borderRadius: 3, marginTop: 10, backgroundColor: colors.paper, borderWidth: 1.5, borderColor: colors.line, overflow: "hidden" },
   mashTimeFill: { height: "100%", backgroundColor: colors.gold, borderRadius: 3 },
   resultText: { fontSize: 28, fontWeight: "900", fontFamily: fonts.bold },

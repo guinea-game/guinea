@@ -126,11 +126,14 @@ export function LabModal({
   now,
   onClose,
   onStartResearch,
+  onFindDish,
 }: {
   state: GameState;
   now: number;
   onClose: () => void;
   onStartResearch: (id: LabResearchId) => void;
+  // To the kitchen, filtered to the dish a research eats (tapping it in the card).
+  onFindDish: (recipeName: string) => void;
 }) {
   const busy = isLabBusy(state, now);
   const active = state.labResearch && state.labResearch.readyAt > now ? state.labResearch : undefined;
@@ -276,6 +279,7 @@ export function LabModal({
             busy={busy}
             researching={activeNode?.id === selected.id ? active!.readyAt : undefined}
             onStart={() => onStartResearch(selected.research)}
+            onFindDish={onFindDish}
           />
         </View>
       </View>
@@ -292,6 +296,7 @@ function NodeCard({
   busy,
   researching,
   onStart,
+  onFindDish,
 }: {
   state: GameState;
   node: LabNode;
@@ -299,6 +304,7 @@ function NodeCard({
   busy: boolean;
   researching?: number;
   onStart: () => void;
+  onFindDish: (recipeName: string) => void;
 }) {
   const done = isLabNodeDone(state, node);
   const cost = nodeCost(state, node);
@@ -325,7 +331,14 @@ function NodeCard({
         {/* The dish it eats: how many the bag holds against how many it needs
             (already handed over once the research is running). */}
         {!done && researching === undefined && (
-          <View style={styles.dishRow}>
+          // Tapping the dish goes to the kitchen, filtered to it, to cook more.
+          <Pressable
+            onPress={() => onFindDish(dish.name)}
+            accessibilityRole="button"
+            accessibilityLabel={t(`${dish.name} 요리하러 가기`, `Go cook ${t(dish.name)}`)}
+            hitSlop={6}
+            style={({ pressed }) => [styles.dishRow, pressed && styles.pressed]}
+          >
             <Image source={dish.image} style={styles.dishIcon} />
             <Text style={styles.dishName} numberOfLines={1}>
               {t(dish.name)}
@@ -333,7 +346,7 @@ function NodeCard({
             <Text style={[styles.dishCount, enoughDish ? styles.dishCountOk : styles.dishCountShort]}>
               {dish.have}/{dish.count}
             </Text>
-          </View>
+          </Pressable>
         )}
         <View style={styles.cardDishSpacer} />
         <View style={styles.cardAction}>

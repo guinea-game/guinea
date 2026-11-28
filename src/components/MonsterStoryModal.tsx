@@ -16,12 +16,17 @@ export function MonsterStoryModal({
   boss,
   stageIndex,
   area,
+  canGo,
+  onGo,
   onClose,
 }: {
   kind: EnemyKind;
   boss: boolean;
   stageIndex: number;
   area: string;
+  // Whether its stage has been reached, and going there (tapping the stage tag).
+  canGo: boolean;
+  onGo: () => void;
   onClose: () => void;
 }) {
   const lore = boss ? BOSS_LORE[kind] : MOB_LORE[kind];
@@ -34,9 +39,19 @@ export function MonsterStoryModal({
             <View style={[styles.tag, boss ? styles.tagBoss : styles.tagMob]}>
               <Text style={styles.tagText}>{boss ? t("보스", "Boss") : t("일반", "Normal")}</Text>
             </View>
-            <Text style={styles.where}>
-              {getStageCode(stageIndex)} {t(area)}
-            </Text>
+            {/* Where it lives — tapping the tag goes to that stage (once it's been reached). */}
+            <Pressable
+              disabled={!canGo}
+              onPress={onGo}
+              accessibilityRole="button"
+              accessibilityLabel={canGo ? t(`${area}(으)로 이동`, `Go to ${t(area)}`) : t(area)}
+              hitSlop={6}
+              style={({ pressed }) => [styles.stageTag, pressed && styles.stageTagPressed]}
+            >
+              <Text style={styles.stageTagText}>
+                {getStageCode(stageIndex)} {t(area)}
+              </Text>
+            </Pressable>
           </View>
           <View style={styles.portrait}>
             <EnemySprite boss={boss} kind={kind} animation="idle" size={boss ? 130 : 110} restartKey={`story-${kind}-${boss}`} />
@@ -69,7 +84,9 @@ const styles = StyleSheet.create({
   tagMob: { backgroundColor: colors.green },
   tagBoss: { backgroundColor: colors.red },
   tagText: { fontSize: 9, fontWeight: "900", fontFamily: fonts.bold, color: colors.cream },
-  where: { fontSize: 12, fontWeight: "800", fontFamily: fonts.bold, color: colors.brown },
+  stageTag: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, backgroundColor: "#e9d6ae" },
+  stageTagPressed: { transform: [{ scale: 0.95 }] },
+  stageTagText: { fontSize: 12, fontWeight: "800", fontFamily: fonts.bold, color: colors.brown },
   portrait: { height: 130, justifyContent: "flex-end", alignItems: "center" },
   name: { marginTop: 4, fontSize: 24, fontWeight: "900", fontFamily: fonts.bold, color: colors.ink },
   traits: { marginTop: 6, flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 5 },

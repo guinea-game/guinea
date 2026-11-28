@@ -14,7 +14,8 @@ import { t } from "../i18n";
 
 // Every stage's mob and boss. A mob is discovered once its stage is reached, a boss once
 // it's been beaten; undiscovered ones show as a dark silhouette with "???".
-export function MonsterCodex({ highestStageNumber }: { highestStageNumber: number }) {
+// `reachedStage`/`onGoStage`: the stage tag in a monster's story takes you to that stage.
+export function MonsterCodex({ highestStageNumber, reachedStage, onGoStage }: { highestStageNumber: number; reachedStage: number; onGoStage: (stage: number) => void }) {
   const entries = STAGES.flatMap((stage, index) => [
     { key: `${stage.enemyKind}-mob`, kind: stage.enemyKind, boss: false, index, area: stage.area, found: index <= highestStageNumber },
     { key: `${stage.enemyKind}-boss`, kind: stage.enemyKind, boss: true, index, area: stage.area, found: index < highestStageNumber },
@@ -41,7 +42,18 @@ export function MonsterCodex({ highestStageNumber }: { highestStageNumber: numbe
         ))}
       </View>
       {open && (
-        <MonsterStoryModal kind={open.kind} boss={open.boss} stageIndex={open.index} area={open.area} onClose={() => setOpen(null)} />
+        <MonsterStoryModal
+          kind={open.kind}
+          boss={open.boss}
+          stageIndex={open.index}
+          area={open.area}
+          canGo={open.index <= reachedStage}
+          onGo={() => {
+            setOpen(null);
+            onGoStage(open.index);
+          }}
+          onClose={() => setOpen(null)}
+        />
       )}
     </View>
   );
@@ -110,7 +122,9 @@ const styles = StyleSheet.create({
   grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: 10 },
   cardWrap: { width: "48.5%" },
   pressed: { transform: [{ scale: 0.97 }] },
-  card: { alignItems: "center", paddingHorizontal: 14, paddingTop: 13, paddingBottom: 15 },
+  // Fills its wrapper, which the wrapped row stretches to the taller card beside it — so both
+  // cards in a row end level however many drops each lists.
+  card: { flexGrow: 1, alignItems: "center", paddingHorizontal: 14, paddingTop: 13, paddingBottom: 15 },
   tag: { position: "absolute", top: 8, left: 8, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, zIndex: 1 },
   tagMob: { backgroundColor: colors.green },
   tagBoss: { backgroundColor: colors.red },

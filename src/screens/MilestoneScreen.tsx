@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Image, Modal, Pressable, StyleSheet, View } from "react-native";
+import { Image, Modal, Pressable, StyleSheet, View, ScrollView } from "react-native";
 import Svg, { Polyline } from "react-native-svg";
 import { Text } from "../components/GameText";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from "react-native-reanimated";
@@ -20,18 +20,17 @@ type Page = "map" | "monsters";
 
 // A function (not a module-level constant) so every field re-translates on each render —
 // t() needs to run at render/call time to react to a language switch.
-function getHeadings(loopNumber: number): Record<Page, { kicker: string; title: string; description: string; icon: number; open: string; caption: string }> {
+function getHeadings(loopNumber: number): Record<Page, { title: string; badge?: string; description: string; icon: number; open: string; caption: string }> {
   return {
     map: {
-      kicker: "MILESTONE",
-      title: `${t("모험 지도", "Adventure Map")} · ${t(`${loopNumber}회차`, `Loop ${loopNumber}`)}`,
+      title: t("모험 지도", "Adventure Map"),
+      badge: t(`${loopNumber}회차`, `Loop ${loopNumber}`),
       description: t("보스를 쓰러뜨리면 다음 스테이지가 열려요.", "Defeat the boss to open the next stage."),
       icon: icons.map,
       open: t("모험 지도로 돌아가기", "Back to Adventure Map"),
       caption: t("지도", "Map"),
     },
     monsters: {
-      kicker: "BESTIARY",
       title: t("몬스터 도감", "Monster Codex"),
       description: t("만난 몬스터와 떨어뜨리는 재료를 모아봐요.", "Collect the monsters you've met and what they drop."),
       icon: icons.codexMonster,
@@ -52,7 +51,6 @@ export function MilestoneScreen({
   stageStars,
   stageStarsClaimed,
   onClaimStars,
-  onFocusStage,
   loopsCompleted,
 }: {
   // Each stage's stars (STAR_* bits in state/progression.ts).
@@ -67,9 +65,6 @@ export function MilestoneScreen({
   // Furthest stage ever reached: monsters already met stay in the codex.
   codexStageNumber: number;
   onSelectStage: (stageNumber: number) => void;
-  // Where the stage being fought sits on the page (top and height), once it's laid out —
-  // so the page can open with it in the middle of the screen.
-  onFocusStage?: (y: number, height: number) => void;
   // Which stars' gems were already collected, and collecting a stage's waiting ones.
   stageStarsClaimed: Record<string, number> | undefined;
   onClaimStars: (stage: number) => void;
@@ -90,25 +85,45 @@ export function MilestoneScreen({
   useEffect(() => () => latest.current.onSeen(latest.current.highestStageNumber), []);
   // The current stage's card, nested page → list → card: each offset is reported by its own
   // layout; once all three are in, the page is scrolled to it (just the first time).
-  const focus = useRef<{ page?: number; list?: number; card?: { y: number; height: number }; done?: boolean }>({});
+  // This page scrolls itself (so its heading can stay pinned on top): its own scroller, the
+  // window's height, and the pinned heading's height feed the "open on the current stage" jump.
+  const scroll = useRef<ScrollView>(null);
+  const focus = useRef<{ view?: number; header?: number; list?: number; card?: { y: number; height: number }; done?: boolean }>({});
   const tryFocus = () => {
-    const { page, list, card, done } = focus.current;
-    if (done || page === undefined || list === undefined || !card) return;
+    const { view: viewHeight, header, list, card, done } = focus.current;
+    if (done || viewHeight === undefined || header === undefined || list === undefined || !card) return;
     focus.current.done = true;
-    onFocusStage?.(page + list + card.y, card.height);
+    // The card sits below the pinned heading, so it's centred in the space left under it.
+    const y = header + list + card.y;
+    const target = Math.max(0, y + card.height / 2 - header - (viewHeight - header) / 2);
+    // Deferred a couple of frames: jumping in the same frame the page mounts scrolled before
+    // the pinned heading had measured itself, and on iOS it then rode up with the stages
+    // until the first manual scroll (arriving from the battle screen hit this every time).
+    requestAnimationFrame(() => requestAnimationFrame(() => scroll.current?.scrollTo({ y: target, animated: false })));
   };
 
   return (
-    <View
-      style={styles.page}
+    <ScrollView
+      ref={scroll}
+      style={styles.scroller}
+      contentContainerStyle={styles.page}
+      showsVerticalScrollIndicator={false}
+      // The heading (title + 도감/만화보기) stays pinned at the top while the stages scroll.
+      stickyHeaderIndices={[0]}
       onLayout={(event) => {
-        focus.current.page = event.nativeEvent.layout.y;
+        focus.current.view = event.nativeEvent.layout.height;
         tryFocus();
       }}
     >
-      <View style={styles.headingRow}>
+      <View
+        style={styles.headingRow}
+        onLayout={(event) => {
+          focus.current.header = event.nativeEvent.layout.height;
+          tryFocus();
+        }}
+      >
         <View style={styles.heading}>
-          <PageHeading kicker={heading.kicker} title={heading.title} description={heading.description} />
+          <PageHeading title={heading.title} badge={heading.badge} description={heading.description} />
         </View>
         {/* Bare icon: the purple book opens the monster codex, the map brings you back. */}
         <View style={styles.toggles}>
@@ -139,8 +154,9 @@ export function MilestoneScreen({
           </Pressable>
         </View>
       </View>
+      <View style={styles.body}>
       {view === "monsters" ? (
-        <MonsterCodex highestStageNumber={codexStageNumber} />
+        <MonsterCodex highestStageNumber={codexStageNumber} reachedStage={highestStageNumber} onGoStage={onSelectStage} />
       ) : (
       <View
         style={styles.list}
@@ -211,8 +227,10 @@ export function MilestoneScreen({
                     hitSlop={8}
                     style={({ pressed }) => [styles.infoButton, pressed && styles.togglePressed]}
                   >
-                    <View style={styles.infoRing}>
-                      <Text style={styles.infoText}>i</Text>
+                    {/* With star gems waiting it's a filled button, so it reads as "tap me" rather
+                        than a faint, disabled-looking ring. */}
+                    <View style={[styles.infoRing, getUnclaimedStars({ stageStars, stageStarsClaimed }, index) !== 0 && styles.infoRingReady]}>
+                      <Text style={[styles.infoText, getUnclaimedStars({ stageStars, stageStarsClaimed }, index) !== 0 && styles.infoTextReady]}>i</Text>
                     </View>
                   </Pressable>
                 )}
@@ -237,7 +255,8 @@ export function MilestoneScreen({
           onClose={() => setStarInfo(null)}
         />
       )}
-    </View>
+      </View>
+    </ScrollView>
   );
 }
 
@@ -394,13 +413,19 @@ const CARD_PAD_BOTTOM = 16;
 
 const styles = StyleSheet.create({
   pathSlot: { height: PATH_GAP, zIndex: 0 },
-  headingRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
-  heading: { flex: 1 },
-  toggles: { flexDirection: "row", gap: 14, marginTop: 4 },
+  headingRow: { flexDirection: "row", alignItems: "flex-start", gap: 8, paddingHorizontal: 16, paddingTop: 20, backgroundColor: "#e8dcc4" },
+  // Leaves room on the right for the two corner icons.
+  heading: { flex: 1, paddingRight: 128 },
+  // Pinned to the heading's top-right corner (absolute, so the title's wrapping or the sticky
+  // header's own wrapper can't push them around).
+  toggles: { position: "absolute", top: 14, right: 16, flexDirection: "row", gap: 14 },
   toggle: {},
   togglePressed: { transform: [{ scale: 0.92 }] },
   toggleIcon: { width: 46, height: 46 },
-  page: { backgroundColor: "#e8dcc4", paddingHorizontal: 16, paddingTop: 20, paddingBottom: 25 },
+  scroller: { flex: 1, backgroundColor: "#e8dcc4" },
+  page: { paddingBottom: 37 },
+  // The pinned heading carries the page colour so the stages scroll under it, not through it.
+  body: { paddingHorizontal: 16 },
   list: {},
   stars: { flexDirection: "row", alignItems: "center", gap: 1 },
   starRow: { marginTop: 3, marginBottom: 2, flexDirection: "row", alignItems: "center", gap: 8 },
@@ -408,6 +433,8 @@ const styles = StyleSheet.create({
   infoButton: { position: "absolute", top: CARD_PAD_TOP, right: CARD_PAD_X, zIndex: 2 },
   cardStrongLocked: { color: colors.muted },
   infoRing: { width: 19, height: 19, borderRadius: 10, borderWidth: 1.5, borderColor: "#b9a487", alignItems: "center", justifyContent: "center" },
+  infoRingReady: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.line, backgroundColor: colors.green },
+  infoTextReady: { fontSize: 13, lineHeight: 16, color: colors.cream },
   cardDot: { position: "absolute", top: -5, right: -5, width: 18, height: 18, zIndex: 3 },
   moveLink: { position: "absolute", right: CARD_PAD_X, bottom: CARD_PAD_BOTTOM, flexDirection: "row", alignItems: "center", gap: 3 },
   moveLinkText: { fontSize: 13, fontWeight: "900", fontFamily: fonts.bold, color: colors.green },

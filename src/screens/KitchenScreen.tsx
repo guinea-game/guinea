@@ -145,7 +145,7 @@ export function KitchenScreen({
 
       {/* Effect tabs, the same green/beige buttons as the bag's and skills' tabs. Scrolls
           sideways if they don't fit. */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScroll} contentContainerStyle={styles.tabs}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" style={styles.tabScroll} contentContainerStyle={styles.tabs}>
         {CATEGORY_TABS.map((tab) => {
           const active = tab.id === category;
           return (
@@ -260,6 +260,12 @@ export function KitchenScreen({
               <View style={[styles.ingredients, styles.gridIngredients]}>{ingredients}</View>
               {cookButton}
               {infoButton}
+              {/* How many of this dish the bag holds, mirroring the "i" in the top-left corner. */}
+              <View style={styles.ownedBadge} pointerEvents="none">
+                <Text style={[styles.ownedText, getItemQuantity(inventory, recipe.name) === 0 && styles.ownedTextNone]}>
+                  {t(`보유 ${getItemQuantity(inventory, recipe.name)}`, `Own ${getItemQuantity(inventory, recipe.name)}`)}
+                </Text>
+              </View>
             </Panel>
           );
         })}
@@ -277,7 +283,6 @@ export function KitchenScreen({
       {infoRecipe && (
         <RecipeInfoModal
           recipe={infoRecipe}
-          owned={getItemQuantity(inventory, infoRecipe.name)}
           onClose={() => setInfoRecipeId(null)}
           onOpenIngredient={(name) => {
             setInfoRecipeId(null);
@@ -356,6 +361,9 @@ const styles = StyleSheet.create({
   // The "i" info button on each card's top-right corner: a soft ⓘ in the card's muted ink,
   // ringed so it reads as something to tap without shouting over the card.
   infoButton: { position: "absolute", top: 8, right: 9, zIndex: 1 },
+  ownedBadge: { position: "absolute", top: 9, left: 11, zIndex: 1 },
+  ownedText: { fontSize: 12, fontWeight: "900", fontFamily: fonts.bold, color: colors.brown },
+  ownedTextNone: { color: colors.muted },
   infoRing: { width: 19, height: 19, borderRadius: 10, borderWidth: 1.5, borderColor: "#b9a487", alignItems: "center", justifyContent: "center" },
   infoText: { fontSize: 12, lineHeight: 14, fontWeight: "900", fontFamily: fonts.bold, color: "#a48d6c" },
   effectBox: { marginTop: 3, alignItems: "center" },

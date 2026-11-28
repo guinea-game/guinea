@@ -29,17 +29,15 @@ function ingredientSource(name: string) {
   return `${getStageCode(first)} ${t(STAGES[first].area)}${bossOnly ? ` ${t("보스", "Boss")}` : ""}`;
 }
 
-// A recipe's details behind the "i" on its kitchen card: the story line, set and partner
-// companion, how hard its minigame is, and how many are in the bag. The card itself keeps
-// just the picture, name, effect and ingredients.
+// A recipe's details behind the "i" on its kitchen card: the story line, set, how hard its
+// minigame is, and its ingredients with where they come from. (How many are in the bag sits
+// on the card itself, top-left.)
 export function RecipeInfoModal({
   recipe,
-  owned,
   onClose,
   onOpenIngredient,
 }: {
   recipe: Recipe;
-  owned: number;
   onClose: () => void;
   // Tapping an ingredient closes this modal and jumps to the ingredient codex, searched down to it.
   onOpenIngredient: (name: string) => void;
@@ -55,7 +53,6 @@ export function RecipeInfoModal({
       label: t("요리 난이도", "Cooking Difficulty"),
       value: t(MINIGAME_DIFFICULTY[tier].label, DIFFICULTY_LABEL_EN[tier], DIFFICULTY_LABEL_JA[tier], DIFFICULTY_LABEL_ZH[tier]),
     },
-    { label: t("보유", "In Bag"), value: t(`${owned}개`, `${owned}`) },
   ];
   return (
     <Modal visible animationType="fade" transparent onRequestClose={onClose}>
