@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 import type { EnemyKind, GameState, Outfit, SkillId, StatKey, UpgradeMode } from "../types";
 import { ATTENDANCE_REWARDS, getAttendance, todayKey } from "./attendance";
-import { subscribeAdShowing } from "../ads";
+import { showRewardedAd, subscribeAdShowing } from "../ads";
 import { LATEST_UPDATE } from "./updates";
 import { GLUTTON_FOOD_MULTIPLIER, INITIAL_SKILL_TIMERS, SKILL_SWAP_LOCK_MS, getSkill } from "./skills";
 import { initialState } from "./initialState";
@@ -91,6 +91,11 @@ export const LOOT_COIN_GAP_MS = 280;
 // celebration's ad adds on top.
 export const FIRST_CLEAR_GEMS = 25;
 export const FIRST_CLEAR_AD_GEMS = 25;
+// From loop 2 on (loopsCompleted > 0 — repeat clears, so the first-clear celebration above
+// no longer applies), every STAGE_CLEAR_AD_STAGES'th stage cleared plays a rewarded ad the
+// moment the player taps past the stage-clear banner, for a small gem top-up.
+export const STAGE_CLEAR_AD_STAGES = 4;
+export const STAGE_CLEAR_AD_GEMS = 5;
 // A retry after the boss fled (watching an ad) gets this share of the usual time limit: the
 // boss keeps its remaining HP, so a near miss still has plenty, while one far off is better
 // served by getting stronger first.
@@ -186,6 +191,10 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     stage: "gold" | "goldFlying" | "items" | "itemsFlying";
   } | null>(null);
   const [firstClear, setFirstClear] = useState<{ key: number; stageNumber: number; bossName: string; gems: number; companions: string[] } | null>(null);
+  // The loop-2+ every-STAGE_CLEAR_AD_STAGES-stages ad: set in handleEnemyDefeat, fired from
+  // continueStage (the stage-clear banner's own "터치해서 계속" tap) rather than the instant the
+  // boss falls, so it rides the same user gesture that was already dismissing that banner.
+  const [stageClearAdPending, setStageClearAdPending] = useState(false);
   // Beating the very last stage's boss while already there doesn't auto-loop any more — it
   // asks first (see handleEnemyDefeat's atLastStage branch and confirmLoopAdvance below).
   // Declining just leaves the state exactly as a normal boss kill with nowhere new to go
@@ -707,6 +716,14 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
       setState((previous) => ({ ...previous, pendingFirstClear: pending }));
     }
 
+    // Loop 2+ (repeat clears, so firstClear above no longer fires), every STAGE_CLEAR_AD_STAGES
+    // stages: flags the ad to fire on continueStage's tap, not this instant. Skipped on the
+    // same clear as firstClear (and naturally never on the last stage, which doesn't divide
+    // evenly) so only one thing happens per clear.
+    if (boss && !firstClear && state.stageNumber < LAST_STAGE_NUMBER && (state.loopsCompleted ?? 0) > 0 && (state.stageNumber + 1) % STAGE_CLEAR_AD_STAGES === 0) {
+      setStageClearAdPending(true);
+    }
+
     setState((previous) => {
       if (boss) setDefeatedStageNumber(previous.stageNumber);
       const cleared = getClearedBosses(previous);
@@ -860,6 +877,7 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     setLoopBox({ opened: false, outfit: null });
   };
 
+
   // Gold that isn't a kill reward (the Steal skill) still counts toward the gold quest.
   const addBonusGold = useCallback((amount: number) => {
     setState((previous) => {
@@ -949,7 +967,18 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   // kill's loot is being explained. !appActive covers the app/tab being backgrounded — see its
   // declaration above.
   const battlePaused =
-    skillTutorialActive || bossRetryAvailable || bossIntroPending || stageAnnouncement !== null || firstClear !== null || loopPrompt || loopBox !== null || externallyPaused || !state.tutorialDone || heldLoot !== null || !appActive || adShowing;
+    skillTutorialActive ||
+    bossRetryAvailable ||
+    bossIntroPending ||
+    stageAnnouncement !== null ||
+    firstClear !== null ||
+    loopPrompt ||
+    loopBox !== null ||
+    externallyPaused ||
+    !state.tutorialDone ||
+    heldLoot !== null ||
+    !appActive ||
+    adShowing;
 
   // The boss clock stands still with the fight: time spent paused (an ad for 2x speed, the app
   // in the background, ...) is added back onto the fight's start. Kept per fight — keyed by
@@ -1221,9 +1250,18 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   }, [boss, bossPhase, bossTimerStartedAt, state.stageNumber, battle.enemyHp, battle.enemyId, enemyMaxHp]);
 
   // Tapping on past the stage-clear banner used to show an interstitial every time; removed
-  // per user request (2026-11-20) — clearing a stage no longer shows any ad.
+  // per user request (2026-11-20). Brought back per later request, but narrower: only loop 2+,
+  // only every STAGE_CLEAR_AD_STAGES stages (stageClearAdPending, set in handleEnemyDefeat) —
+  // and fired from this same tap rather than a popup of our own, so it rides the gesture that
+  // was already dismissing the banner instead of surprising the player with a second prompt.
   const continueStage = () => {
     setStageAnnouncement(null);
+    if (stageClearAdPending) {
+      setStageClearAdPending(false);
+      showRewardedAd().then((result) => {
+        if (result === "earned") setState((previous) => ({ ...previous, gems: previous.gems + STAGE_CLEAR_AD_GEMS }));
+      });
+    }
   };
 
   // The first-clear celebration's "watch an ad" reward. Clears `firstClear` in the same

@@ -87,6 +87,7 @@ Expo 관련 일반 규칙은 [AGENTS.md](AGENTS.md)를 따른다 (단, 이 프�
 - **보스 최초 토벌**: 보석 25개(`FIRST_CLEAR_GEMS`) + 광고 시청 시 25개 더(`FIRST_CLEAR_AD_GEMS`, 합쳐서 최대 50개) + 화려한 축하 화면(햇살·색종이, 빨간 리본이 가운데서 펼쳐지며 "최초 토벌!" 글씨 — 튕기는 글씨 대신 리본). 잡은 보스는 `bossesCleared`에 기록(예전 세이브는 최고 스테이지 아래 전부 처리된 것으로).
 - **날아다니는 코인**: 전투 중 15~30초 뒤 첫 등장, 이후 35~75초마다 날개 코인/보석이 7초간 화면을 가로지름(20%는 보석, `GEM_FLIGHT_CHANCE`). 코인을 잡으면 즉시 현재 스테이지 일반 몹 골드의 5배 지급. 보석은 잡으면 즉시 1개(`FLYING_GEM_CATCH_REWARD`), 이어서 광고를 보면 4개 더(`FLYING_GEM_AD_REWARD`) — 광고는 하루 8번(`FLYING_GEM_ADS_PER_DAY`)까지.
 - 광고 보고 2배속: 15분(`SPEED_BOOST_DURATION_MS`), `speedBoostUntil`로 저장.
+- **스테이지 클리어 강제 광고**: 2회차부터(`loopsCompleted > 0`), 4스테이지(`STAGE_CLEAR_AD_STAGES`)마다 보스를 잡으면 "스테이지 클리어! 다음 지역으로 출발! 터치해서 계속" 배너를 터치해서 넘길 때 그 자리에서 네이티브 광고가 바로 재생된다(`stageClearAdPending`, `useGameState.ts`의 `continueStage`가 `showRewardedAd()` 직접 호출 — 우리 쪽 팝업 없음). 끝까지 보면 보석 5개(`STAGE_CLEAR_AD_GEMS`) 지급, 로드 실패·중간 이탈은 조용히 넘어감. 최초 토벌(`firstClear`)과 겹치는 클리어엔 안 뜸.
 
 **능력치 강화** (`statInfo`, `gameMath.ts`)
 - 공격력: 레벨마다 ×1.13 복리 증가(`ATTACK_UPGRADE_RATE`, 고정 수치를 더하는 게 아님) / 120G, 상한 없음.
