@@ -84,6 +84,7 @@ export function BattleScreen({ game }: { game: UseGameState }) {
         enemyKind={regularEnemyKind}
         foeKind={game.displayStrayKind ?? regularEnemyKind}
         phase={battle.phase}
+        skipped={battle.skipped}
         enemyId={battle.enemyId}
         reloadInfo={battle.reloadInfo}
         shotId={battle.shotId}

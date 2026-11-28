@@ -45,6 +45,9 @@ export const SYSTEMS_DICT_JA: Record<string, string> = {
   "기사기니": "騎士ギニー",
   "현자기니": "賢者ギニー",
 
+  // companionSkills.ts COMPANION_SKILL_SUMMARIES (transparentGini only so far)
+  "지금 상대 중인 몹/중간보스를 즉시 지나침 (보스는 효과 없음)": "今戦っているモンスターや中ボスを即座にすり抜ける（ボスには効果なし）",
+
   // buffs.ts DISH_SETS names
   "바다 한 상": "海の膳",
   "고기 파티": "肉パーティー",

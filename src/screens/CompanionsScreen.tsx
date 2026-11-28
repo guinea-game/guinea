@@ -238,13 +238,14 @@ export const COMPANIONS: { outfit: Outfit; name: string; blurb: string; detail: 
     blurb: "총을 뽑아 든 서부의 총잡이 기니. 3회차를 마치면 합류한다.",
     detail: companionDetail("cowboyGini"),
   },
-  // 기니상자 전용 (BOX_RESCUE_OUTFITS) — 전투 보너스가 전혀 없어 companionDetail("transparentGini")
-  // 그대로 쓰면 "동료 없이 다닐 때"(장비 안 한 기본값 문구)가 나와 헷갈려서, noEffectDetail()로 대체.
+  // 기니상자 전용 (BOX_RESCUE_OUTFITS). 다른 상자 전용 동료와 달리 진짜 능력이 있어서
+  // transparentGiniDetail()로 따로 설명 — OUTFIT_NO_ATTACK(공격 불가) + 3초마다 일반 몹을
+  // 공짜로 지나침(useGameState.ts의 스킵 타이머), 보스는 지나칠 수 없어 장착 스킬로만 잡는다.
   {
     outfit: "transparentGini",
     name: "투명기니",
-    blurb: "눈에 거의 안 보이는 투명한 기니. 4회차부터 기니상자에서 무작위로 나타난다.",
-    detail: noEffectDetail(),
+    blurb: "너무 투명해서 몹들도 눈치를 못 채는 기니. 슬쩍 지나가면 몹은 자기가 왜 없어졌는지도 모른다 — 그치만 보스는 눈치가 빨라서 안 통한다. 4회차부터 기니상자에서 무작위로 나타난다.",
+    detail: transparentGiniDetail(),
   },
   {
     outfit: "nurseGini",
@@ -293,6 +294,16 @@ const WITCH_EXTRA_DETAIL = "모든 공격이 마법";
 // 쓰면 헷갈려서 이걸로 대체한다.
 function noEffectDetail() {
   return t("딱히 효과는 없음 (장식용 동료)", "No real effect (cosmetic companion)", "特に効果はない（装飾用の仲間）", "没有实际效果（装饰用同伴）");
+}
+
+// 투명기니만의 진짜 능력 — companionDetail()이 읽는 숫자 스탯(OutfitStats)에 없는 거라 직접 쓴다.
+function transparentGiniDetail() {
+  return t(
+    "공격을 하지 않음 — 대신 3초마다 몹이나 중간보스를 슬쩍 지나침(골드·재료 없이 처치 처리, 보스는 못 지나침)",
+    "Never attacks — instead slips past a mob or mini-boss every 3s (counts as defeated, no gold or materials; can't skip a real boss)",
+    "攻撃はしない — 代わりに3秒ごとにモンスターや中ボスをこっそりすり抜ける（撃破扱いだが金貨・素材はなし、ボスには通用しない）",
+    "不进行攻击——取而代之，每3秒悄悄放过小怪或中boss（算作击败但没有金币和材料，对真正的boss无效）",
+  );
 }
 
 // One fact about a companion on a soft cream plate: a small label over its value.
@@ -475,12 +486,14 @@ export function CompanionsScreen({
             <Text style={styles.previewSub}>
               {equippedItem.outfit === "witchGini"
                 ? `${companionDetail(equippedItem.outfit, getCompanionLevel(progress, equippedItem.outfit))} · ${t(WITCH_EXTRA_DETAIL, "Every attack is magic")}`
-                : // companionDetail falls back to "동료 없이 다닐 때" (meant for having none
-                  // equipped at all) when there's nothing to list — wrong message for a real,
-                  // equipped companion that's just permanently statless.
-                  BOX_RESCUE_OUTFITS.includes(equippedItem.outfit)
-                  ? noEffectDetail()
-                  : companionDetail(equippedItem.outfit, getCompanionLevel(progress, equippedItem.outfit))}
+                : equippedItem.outfit === "transparentGini"
+                  ? transparentGiniDetail()
+                  : // companionDetail falls back to "동료 없이 다닐 때" (meant for having none
+                    // equipped at all) when there's nothing to list — wrong message for a real,
+                    // equipped companion that's just permanently statless.
+                    BOX_RESCUE_OUTFITS.includes(equippedItem.outfit)
+                    ? noEffectDetail()
+                    : companionDetail(equippedItem.outfit, getCompanionLevel(progress, equippedItem.outfit))}
             </Text>
           </View>
           <View style={styles.previewSprite}>

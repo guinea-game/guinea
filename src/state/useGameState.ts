@@ -38,7 +38,7 @@ import {
   COMPANION_SKILL_COOLDOWN_MS,
   COMPANION_SKILL_WINDOW_MS,
 } from "./companionSkills";
-import { BUFF_SLOT_PRICES, BUFFS, DISH_BUFF_DURATION_MS, getOutfitName, GRADE_GOLD_MULTIPLIER, INSTANT_DISHES, OUTFIT_FORCED_MANUAL, OUTFIT_NAMES, OUTFIT_SKILL_POWER, OUTFIT_SURE_DROPS, emptyBuffSlots, getOutfitStats, getBuffTotals, peekGrade, pushGrade, shiftGrade, type CookGrade } from "./buffs";
+import { BUFF_SLOT_PRICES, BUFFS, DISH_BUFF_DURATION_MS, getOutfitName, GRADE_GOLD_MULTIPLIER, INSTANT_DISHES, OUTFIT_FORCED_MANUAL, OUTFIT_NAMES, OUTFIT_NO_ATTACK, OUTFIT_SKILL_POWER, OUTFIT_SURE_DROPS, emptyBuffSlots, getOutfitStats, getBuffTotals, peekGrade, pushGrade, shiftGrade, type CookGrade } from "./buffs";
 import { GROCERY, applyDiscount, getSellPrice, getShortfall } from "./grocery";
 import { canCook, consumeIngredients, getKnownRecipes, isRecipeForSale, RECIPES } from "./recipes";
 import { canQueuePotJob, collectPotJob, queuePotJob, rushPotJob } from "./pot";
@@ -96,6 +96,8 @@ export const FIRST_CLEAR_AD_GEMS = 25;
 // moment the player taps past the stage-clear banner, for a small gem top-up.
 export const STAGE_CLEAR_AD_STAGES = 4;
 export const STAGE_CLEAR_AD_GEMS = 5;
+// 투명기니 (OUTFIT_NO_ATTACK, buffs.ts): how long each regular mob gets before it's passed by.
+export const TRANSPARENT_SKIP_MS = 3000;
 // A retry after the boss fled (watching an ad) gets this share of the usual time limit: the
 // boss keeps its remaining HP, so a near miss still has plenty, while one far off is better
 // served by getting stronger first.
@@ -576,7 +578,21 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
   };
 
   const { dropRate, vegetableDrop, seafoodDrop, dropDouble, bossDropSure, exp: expBonus } = foodBuffs;
-  const handleEnemyDefeat = useCallback((rawGold: number) => {
+  const handleEnemyDefeat = useCallback((rawGold: number, free = false) => {
+    // 투명기니's periodic pass-by (skipEnemy, only ever called for a regular mob or mini-boss —
+    // never a real boss): counts toward stage progress exactly like that same kill would
+    // normally (mini-bosses don't advance stageKills, just stageMiniBosses), but nothing is
+    // paid out at all — no gold, no exp, no drops, no shards.
+    if (free) {
+      const wasMiniBoss = miniBoss && !boss;
+      setState((previous) => ({
+        ...previous,
+        kills: previous.kills + 1,
+        stageKills: wasMiniBoss ? previous.stageKills : previous.stageKills + 1,
+        stageMiniBosses: wasMiniBoss ? (previous.stageMiniBosses ?? 0) + 1 : previous.stageMiniBosses,
+      }));
+      return;
+    }
     // A gift kill (right after the intro) pays at least enough for the first upgrade over
     // the three of them, and always drops one 초록 젤리 for the recipe tutorial.
     const gift = (state.giftKills ?? 0) > 0 && !boss;
@@ -1041,7 +1057,19 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
     autoStunned: now < bossStunnedUntil,
     reviveHpRatio: boss && getEnemyKind(state.stageNumber) === GHOST_GOAT_REVIVE_KIND ? GHOST_GOAT_REVIVE_HP_RATIO : undefined,
     instantKill: (state.giftKills ?? 0) > 0 && !boss && now >= (state.giftStartsAt ?? 0) && heldLoot === null,
+    attacksDisabled: OUTFIT_NO_ATTACK[state.equippedOutfit] ?? false,
   });
+
+  // 투명기니: TRANSPARENT_SKIP_MS after each regular mob or mini-boss shows up, it's passed by
+  // for free (skipEnemy — see useAutoBattle.ts and handleEnemyDefeat's `free` branch). Never a
+  // real boss, and re-armed per enemy (battle.enemyId) so every fresh one gets its own full
+  // window rather than inheriting whatever was left of the last one's.
+  useEffect(() => {
+    if (!OUTFIT_NO_ATTACK[state.equippedOutfit] || boss || battlePaused || battle.phase !== "idle") return;
+    const timer = setTimeout(() => battle.skipEnemy(), TRANSPARENT_SKIP_MS / battleSpeed);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.equippedOutfit, boss, battlePaused, battle.phase, battle.enemyId, battle.skipEnemy, battleSpeed]);
 
   // Whether the companion skill button can be tapped right now — off cooldown, and not
   // mid-cutscene/intro (same gate the equipped skill slot uses).
@@ -1084,9 +1112,15 @@ export function useGameState({ externallyPaused = false }: { externallyPaused?: 
       case "boxerGini":
         battle.strikeUppercut();
         break;
+      case "transparentGini":
+        // 사라지기: an on-demand version of the passive skip (OUTFIT_NO_ATTACK) — clears
+        // whatever mob or mini-boss is up right now instead of waiting out the usual
+        // TRANSPARENT_SKIP_MS. Does nothing against a real boss, same as the passive.
+        if (!boss) battle.skipEnemy();
+        break;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.equippedOutfit, companionSkillReadyAt, battlePaused, bossIntroPending, battle.phase, battle]);
+  }, [state.equippedOutfit, companionSkillReadyAt, battlePaused, bossIntroPending, battle.phase, battle, boss]);
 
   // Personal best: the biggest single hit.
   useEffect(() => {

@@ -374,10 +374,21 @@ export const OUTFIT_FORCED_MANUAL: Partial<Record<Outfit, boolean>> = {
   boxerGini: true,
 };
 
+// 투명기니: never lands a normal attack at all, auto or manual (useAutoBattle's
+// attacksDisabled) — equipped active skills still work normally. Its own thing instead is
+// periodically passing a regular mob by for free, no reward, no fanfare (see useGameState's
+// skip timer and skipEnemy, useAutoBattle.ts).
+export const OUTFIT_NO_ATTACK: Partial<Record<Outfit, boolean>> = {
+  transparentGini: true,
+};
+
 // This outfit never fights while the app is closed — simulateOfflineProgress skips it
-// outright (offline.ts), since a boxer only throws punches with someone actually tapping.
+// outright (offline.ts), since a boxer only throws punches with someone actually tapping, and
+// an invisible gini has nothing honest to simulate either (no normal-attack income, and boss
+// damage depends on the player actually casting skills).
 export const OUTFIT_NO_OFFLINE: Partial<Record<Outfit, boolean>> = {
   boxerGini: true,
+  transparentGini: true,
 };
 
 // --- 동료 승급 (조각): each level grows the companion's OWN quirk instead of a flat attack

@@ -82,9 +82,8 @@ export const COMPANION_SKILL_SUMMARIES: Record<Outfit, string> = {
   witchGini: "즉시 마법 공격 1회, 치명타로 적용",
   cowboyGini: `${COMPANION_SKILL_WINDOW_MS / 1000}초간 재장전 없이 연속 발사`,
   boxerGini: `즉시 강타 ${COMPANION_UPPERCUT_HITS}회 (각 평타의 ${Math.round(COMPANION_UPPERCUT_HIT_RATIO * 100)}%)`,
-  // No case for it in castCompanionSkill's switch — tapping it starts the cooldown and shows
-  // this callout, same as every other companion skill, but nothing actually happens.
-  transparentGini: "...아무 일도 일어나지 않는다",
+  // 즉시 스킵(OUTFIT_NO_ATTACK 패시브의 수동 버전) — 보스전엔 효과 없음, castCompanionSkill 참고.
+  transparentGini: "지금 상대 중인 몹/중간보스를 즉시 지나침 (보스는 효과 없음)",
   // 기니상자 전용 동료 3종 — 아직 전용 스킬 없음, castCompanionSkill의 switch에도 케이스 없음
   // (쿨다운만 돌고 실제 효과 없음). 사용자가 추후 직접 설계 예정.
   nurseGini: "...아무 일도 일어나지 않는다",

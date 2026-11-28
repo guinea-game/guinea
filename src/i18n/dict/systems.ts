@@ -45,6 +45,9 @@ export const SYSTEMS_DICT: Record<string, string> = {
   "기사기니": "Knight Gini",
   "현자기니": "Sage Gini",
 
+  // companionSkills.ts COMPANION_SKILL_SUMMARIES (transparentGini only so far)
+  "지금 상대 중인 몹/중간보스를 즉시 지나침 (보스는 효과 없음)": "Instantly skips the mob or mini-boss you're fighting right now (no effect on a real boss)",
+
   // buffs.ts DISH_SETS names
   "바다 한 상": "Seaside Spread",
   "고기 파티": "Meat Party",

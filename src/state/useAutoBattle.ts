@@ -82,6 +82,7 @@ export function useAutoBattle({
   instantKill = false,
   shotsBeforeReload = 0,
   reloadMs = 0,
+  attacksDisabled = false,
 }: {
   attack: number;
   criticalDamage: number;
@@ -115,7 +116,8 @@ export function useAutoBattle({
   boss: boolean;
   // Scales down every auto-battle timer delay — e.g. 2 halves them, doubling the pace.
   speedMultiplier?: number;
-  onDefeat: (goldReward: number) => void;
+  // `free` is true only for skipEnemy's no-reward clears (투명기니) — never for a real kill.
+  onDefeat: (goldReward: number, free?: boolean) => void;
   // Gold earned outside a kill (the Steal skill's per-hit scatter).
   onBonusGold: (amount: number) => void;
   // Called on every whiffed strike (for the hidden "missed N times" quest).
@@ -141,9 +143,16 @@ export function useAutoBattle({
   // the usual gap while it reloads. 0 = off (every other outfit).
   shotsBeforeReload?: number;
   reloadMs?: number;
+  // 투명기니: normal attacks never happen at all — no auto swings, no manual taps either
+  // (equipped active skills still work fine; see skipEnemy below for how it still clears
+  // regular mobs).
+  attacksDisabled?: boolean;
 }) {
   const [enemyHp, setEnemyHp] = useState(enemyMaxHp);
   const [phase, setPhase] = useState<BattlePhase>("idle");
+  // True for the "defeated" phase skipEnemy caused, false for a real kill's — so the scene
+  // can play a plain fade instead of the usual death pose/win pose for a pass-by.
+  const [skipped, setSkipped] = useState(false);
   const [skillTimers, setSkillTimers] = useState<SkillTimers>(INITIAL_SKILL_TIMERS);
   const autoLocked = firstStrikeMultiplier > 0;
   // Manual taps are never allowed by default — only while one of these short burst skills
@@ -153,7 +162,7 @@ export function useAutoBattle({
   // outfit like 사무라이기니 (autoLocked) — but a manual-window skill the player chose to equip
   // and cast still opens its tap window even then, or that skill would just be a dead slot.
   const manualWindowOpen = forcedManual || (equippedSkill !== null && MANUAL_WINDOW_SKILLS.includes(equippedSkill) && isSkillActive(skillTimers, equippedSkill, now));
-  const isAutoBattle = !paused && !autoStunned && !manualWindowOpen;
+  const isAutoBattle = !paused && !autoStunned && !manualWindowOpen && !attacksDisabled;
   // Bumped on each first-strike draw, so the scene can play its slash.
   const [firstStrikeId, setFirstStrikeId] = useState(0);
   const [enemyId, setEnemyId] = useState(1);
@@ -345,6 +354,7 @@ export function useAutoBattle({
     setLastGoldReward(reward);
     phaseRef.current = "defeated";
     setPhase("defeated");
+    setSkipped(false);
     onDefeatRef.current(reward);
 
     const respawnTimer = setTimeout(() => {
@@ -353,6 +363,27 @@ export function useAutoBattle({
       setEnemyId((value) => value + 1);
       enterEnemy();
     }, (bossRef.current ? BOSS_RESPAWN_DELAY : MOB_RESPAWN_DELAY) / speedMultiplierRef.current);
+    respawnTimersRef.current.push(respawnTimer);
+  }, [enterEnemy]);
+
+  // 투명기니's periodic pass-by (the caller times this — every few seconds, regular mobs
+  // only, see useGameState): no attack plays, no gold, nothing dealt — the current mob just
+  // isn't there any more. Mirrors defeatEnemy's epoch/respawn plumbing exactly, minus the
+  // reward and the sfx/pose a real hit would trigger.
+  const skipEnemy = useCallback(() => {
+    enemyEpochRef.current += 1;
+    clearTimers(manualTimersRef);
+    clearTimers(respawnTimersRef);
+    phaseRef.current = "defeated";
+    setPhase("defeated");
+    setSkipped(true);
+    onDefeatRef.current(0, true);
+    const respawnTimer = setTimeout(() => {
+      hpRef.current = maxHpRef.current;
+      setEnemyHp(maxHpRef.current);
+      setEnemyId((value) => value + 1);
+      enterEnemy();
+    }, MOB_RESPAWN_DELAY / speedMultiplierRef.current);
     respawnTimersRef.current.push(respawnTimer);
   }, [enterEnemy]);
 
@@ -572,7 +603,7 @@ export function useAutoBattle({
   }, [isAutoBattle, paused, dealDamage, pushMissEvent, rollAttack, rollStrikes]);
 
   const manualAttack = useCallback(() => {
-    if (paused) return;
+    if (paused || attacksDisabled) return;
     // While auto-battle runs, a tap only does something for a reloading gun (카우보이기니):
     // it fans the hammer.
     if (isAutoBattle) {
@@ -630,7 +661,7 @@ export function useAutoBattle({
       manualTimersRef.current.push(readyTimer);
     }, 260);
     manualTimersRef.current.push(hitTimer);
-  }, [paused, isAutoBattle, autoStunned, forcedManual, dealDamage, pushMissEvent, rollAttack, rollStrikes]);
+  }, [paused, attacksDisabled, isAutoBattle, autoStunned, forcedManual, dealDamage, pushMissEvent, rollAttack, rollStrikes]);
 
   // Whether the equipped skill can be cast right now (an active skill, off cooldown, with
   // an enemy present). `now` is passed in so the UI can re-check on its own clock.
@@ -919,6 +950,7 @@ export function useAutoBattle({
   return {
     enemyHp,
     phase,
+    skipped,
     isAutoBattle,
     // Hand-fighting right now (난타 and the like) — unlike !isAutoBattle, not just paused.
     manualActive: manualWindowOpen && !autoLocked,
@@ -938,6 +970,7 @@ export function useAutoBattle({
     healEnemy,
     manualAttack,
     killEnemy,
+    skipEnemy,
     castSkill,
     canCastSkill,
     resetSkillCooldown,

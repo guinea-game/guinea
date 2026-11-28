@@ -327,6 +327,7 @@ export function BattleScene({
   enemyKind,
   foeKind,
   phase,
+  skipped = false,
   enemyId,
   lastGoldReward,
   reloadInfo = { endsAt: 0, totalMs: 0 },
@@ -401,6 +402,9 @@ export function BattleScene({
   // before); the stage's look (backdrop, ambience, boss) still follows `enemyKind`.
   foeKind?: EnemyKind;
   phase: BattlePhase;
+  // True while the current "defeated" phase is 투명기니's free pass-by (skipEnemy), not a
+  // real kill — swaps the usual win/die poses and kill flourishes for a plain fade.
+  skipped?: boolean;
   enemyId: number;
   lastGoldReward: number;
   // 카우보이기니's reload (see useAutoBattle's reloadInfo): drawn as a yellow bar over the
@@ -496,13 +500,14 @@ export function BattleScene({
 
   // 연속 처치: bumps on every fresh transition into "defeated" for a regular mob (not a
   // boss/mid-boss — see KILL_STREAK_MILESTONES above), popping a banner only at a milestone.
+  // A skipped pass-by isn't a kill at all, so it doesn't feed the streak either.
   const killStreakRef = useRef(0);
   const wasDefeatedRef = useRef(phase === "defeated");
   const [streakMilestone, setStreakMilestone] = useState<{ id: number; count: number } | null>(null);
   useEffect(() => {
     if (boss || miniBoss) {
       killStreakRef.current = 0;
-    } else if (phase === "defeated" && !wasDefeatedRef.current) {
+    } else if (phase === "defeated" && !wasDefeatedRef.current && !skipped) {
       const count = (killStreakRef.current += 1);
       if (isKillStreakMilestone(count)) {
         setStreakMilestone({ id: count, count });
@@ -510,7 +515,7 @@ export function BattleScene({
       }
     }
     wasDefeatedRef.current = phase === "defeated";
-  }, [phase, boss, miniBoss]);
+  }, [phase, boss, miniBoss, skipped]);
 
   const { id: executeId } = useSkillEvent(rawExecuteId, 0);
   const { id: firstStrikeId } = useSkillEvent(rawFirstStrikeId, 0);
@@ -562,7 +567,7 @@ export function BattleScene({
           ? critical ? "critical" : "attack"
           : phase === "hit" && critical
             ? "critical"
-            : phase === "defeated"
+            : phase === "defeated" && !skipped
               ? "win"
               : "idle";
   // A skill pose pins the guinea pig in place and always restarts its strip, even if the
@@ -592,7 +597,7 @@ export function BattleScene({
   }, [phase, isWitch]);
 
   const enemyAnimation: EnemyAnimation =
-    phase === "hit" ? "hit" : phase === "defeated" ? "die" : "idle";
+    phase === "hit" ? "hit" : phase === "defeated" && !skipped ? "die" : "idle";
   const fighterKind = boss ? enemyKind : (foeKind ?? enemyKind);
   // A mob wandered over from the stage before: named and talking like one that's lost.
   const stray = !boss && !miniBoss && fighterKind !== enemyKind;
@@ -606,16 +611,17 @@ export function BattleScene({
   const stageProgress = (Math.min(stageKills, STAGE_KILL_TARGET) / STAGE_KILL_TARGET) * 100;
 
   // Finishing-blow punch: a quick zoom on both fighters, on every kill (not just
-  // bosses) — re-fires each time `phase` cycles back to "defeated".
+  // bosses) — re-fires each time `phase` cycles back to "defeated". Not for a skipped
+  // pass-by — nothing was actually hit.
   const killPunch = useSharedValue(1);
   useEffect(() => {
-    if (phase !== "defeated") return;
+    if (phase !== "defeated" || skipped) return;
     killPunch.value = withSequence(
       withTiming(1.07, { duration: 90, easing: Easing.out(Easing.quad) }),
       withTiming(1, { duration: 220, easing: Easing.inOut(Easing.quad) }),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase]);
+  }, [phase, skipped]);
   const sceneShake = useSharedValue(0);
   // A mid-boss arriving: a thud and a hard shake of the scene.
   const miniShake = useSharedValue(0);
@@ -828,6 +834,7 @@ export function BattleScene({
               currentHp={enemyHp}
               maxHp={enemyMaxHp}
               phase={phase}
+              skipped={skipped}
               size={enemySize}
               critical={critical}
               beamId={beamId}
@@ -841,7 +848,7 @@ export function BattleScene({
               {damageEvents.map((event) => (
                 <DamageNumber key={event.id} amount={event.amount} critical={event.critical} missed={event.missed} />
               ))}
-              {phase === "defeated" && !heldLoot && <CoinPopup key={`coin-${enemyId}`} amount={lastGoldReward} />}
+              {phase === "defeated" && !heldLoot && !skipped && <CoinPopup key={`coin-${enemyId}`} amount={lastGoldReward} />}
               {goldEvents.map((event) => (
                 <CoinPopup key={`steal-${event.id}`} amount={event.amount} />
               ))}
@@ -1238,6 +1245,7 @@ function EnemyFighter({
   currentHp,
   maxHp,
   phase,
+  skipped,
   size,
   critical,
   beamId,
@@ -1256,6 +1264,9 @@ function EnemyFighter({
   currentHp: number;
   maxHp: number;
   phase: BattlePhase;
+  // True while the current "defeated" phase is 투명기니's free pass-by — a plain fade
+  // instead of the usual shrink/sink/rotate death.
+  skipped: boolean;
   size: number;
   critical: boolean;
   beamId: number;
@@ -1269,6 +1280,7 @@ function EnemyFighter({
   const knockback = useSharedValue(0);
   const hitFlash = useSharedValue(0);
   const defeat = useSharedValue(0);
+  const fade = useSharedValue(1);
   const split = useSharedValue(0);
   const cutFlash = useSharedValue(0);
   const enter = useSharedValue(phase === "entering" ? 0 : 1);
@@ -1310,7 +1322,12 @@ function EnemyFighter({
       shake.value = withSequence(withTiming(0, { duration: holdMs }), withTiming(shakePeak, { duration: 160 }), withTiming(0, { duration: 160 }));
       hitFlash.value = withSequence(withTiming(1, { duration: holdMs }), withTiming(0.85, { duration: 40 }), withTiming(0, { duration: 110 }));
     }
-    if (phase === "defeated") {
+    if (phase === "defeated" && skipped) {
+      // 투명기니's pass-by: a plain fade, none of the usual shrink/sink/rotate (defeat stays
+      // 0 so that whole formula is a no-op below) — it just isn't there any more.
+      fade.value = 1;
+      fade.value = withTiming(0, { duration: 420, easing: Easing.out(Easing.quad) });
+    } else if (phase === "defeated") {
       defeat.value = withTiming(1, { duration: 620, easing: Easing.in(Easing.quad) });
       if (executedKill) {
         // The split itself carries the sprite's exit motion, so the container's own
@@ -1322,6 +1339,7 @@ function EnemyFighter({
       defeat.value = 0;
       split.value = 0;
       cutFlash.value = 0;
+      fade.value = 1;
     }
     if (phase === "entering") {
       enter.value = 0;
@@ -1330,10 +1348,10 @@ function EnemyFighter({
       enter.value = 1;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, executedKill, critical]);
+  }, [phase, executedKill, critical, skipped]);
 
   const style = useAnimatedStyle(() => ({
-    opacity: (1 - defeat.value) * (0.4 + enter.value * 0.6),
+    opacity: (1 - defeat.value) * (0.4 + enter.value * 0.6) * fade.value,
     transform: [
       {
         translateX:
